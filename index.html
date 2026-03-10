@@ -11,7 +11,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 <style>
-  /* ── v1.3.2 — Gold / Brass theme (pure black, no tint) ── */
+  /* ── v1.4.0 — Installable PWA + push notifications ── */
   :root {
     --bg:       #0a0a0a;
     --surface:  #141414;
@@ -202,7 +202,18 @@
   .loading-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;color:var(--accent-bright)}
   .spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
-  .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 18px;border-radius:12px;font-size:0.85rem;opacity:0;transition:all 0.3s;z-index:1000;white-space:nowrap;box-shadow:var(--shadow)}
+  .install-banner{position:fixed;bottom:90px;left:14px;right:14px;z-index:300;background:var(--surface);border:1px solid var(--accent-dim);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,0.5);transform:translateY(20px);opacity:0;transition:all 0.3s;pointer-events:none}
+  .install-banner.show{transform:translateY(0);opacity:1;pointer-events:all}
+  .install-banner-icon{font-size:1.6rem;flex-shrink:0}
+  .install-banner-text{flex:1}
+  .install-banner-text strong{display:block;font-family:'Syne',sans-serif;font-size:0.9rem;color:var(--text);margin-bottom:2px}
+  .install-banner-text span{font-size:0.76rem;color:var(--text2)}
+  .install-banner-btns{display:flex;gap:6px;flex-shrink:0}
+  .ibtn{padding:7px 14px;border-radius:10px;border:none;font-family:'Syne',sans-serif;font-weight:700;font-size:0.78rem;cursor:pointer;transition:all 0.15s}
+  .ibtn-yes{background:var(--accent);color:#0a0a0a}
+  .ibtn-yes:hover{background:var(--accent-bright)}
+  .ibtn-no{background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
+left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 18px;border-radius:12px;font-size:0.85rem;opacity:0;transition:all 0.3s;z-index:1000;white-space:nowrap;box-shadow:var(--shadow)}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
   .overdue-banner{margin:0 14px 8px;background:var(--danger-dim);border:1px solid rgba(239,68,68,0.3);border-radius:12px;padding:10px 14px;font-size:0.82rem;color:var(--danger);font-weight:600;display:flex;align-items:center;gap:8px}
   #other-label-wrap{margin-top:8px}
@@ -221,7 +232,7 @@
 <!-- AUTH -->
 <div id="auth-screen" style="display:none">
   <div class="auth-logo">Amar Furniture</div>
-  <div class="auth-sub">Order Tracker · v1.3.3</div>
+  <div class="auth-sub">Order Tracker · v1.4.0</div>
   <div class="auth-card">
     <h2>Sign In</h2>
     <div class="field"><label>Email</label><input type="email" id="auth-email" placeholder="you@email.com" autocomplete="email"></div>
@@ -236,7 +247,7 @@
   <div class="topbar">
     <div class="topbar-logo">AF Orders</div>
     <div class="topbar-right">
-      <span style="font-size:0.62rem;color:var(--text3);font-family:'Syne',sans-serif">v1.3.3</span>
+      <span style="font-size:0.62rem;color:var(--text3);font-family:'Syne',sans-serif">v1.4.0</span>
       <span class="role-badge" id="role-badge">admin</span>
       <div class="icon-btn" onclick="signOut()">⏻</div>
     </div>
@@ -293,7 +304,8 @@
     <div class="field"><label>Project Description</label><input type="text" id="f-item" placeholder="Brief description of the work"></div>
     <div class="field"><label>Order Date *</label><input type="date" id="f-date"></div>
     <div class="field"><label>Deadline Date *</label><input type="date" id="f-deadline"></div>
-    <div class="field"><label>Amount (₹)</label><input type="number" id="f-amount" placeholder="0"></div>
+    <div class="field"><label>Total Amount (₹)</label><input type="number" id="f-amount" placeholder="0"></div>
+    <div class="field"><label>Advance Received (₹)</label><input type="number" id="f-advance" placeholder="0"></div>
 
     <div class="field" id="items-field">
       <label>Items &amp; Qty</label>
@@ -330,6 +342,17 @@
   </div>
 </div>
 
+<div class="install-banner" id="install-banner">
+  <div class="install-banner-icon">📲</div>
+  <div class="install-banner-text">
+    <strong>Install AF Orders</strong>
+    <span>Add to home screen for the best experience</span>
+  </div>
+  <div class="install-banner-btns">
+    <button class="ibtn ibtn-yes" onclick="doInstall()">Install</button>
+    <button class="ibtn ibtn-no"  onclick="dismissInstall()">✕</button>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <!-- FIREBASE -->
@@ -381,6 +404,7 @@ onAuthStateChanged(auth, user => {
     document.getElementById('role-badge').className    = 'role-badge ' + (isAdmin ? 'role-admin' : 'role-staff');
     document.getElementById('fab-btn').style.display   = isAdmin ? 'flex' : 'none';
     startListening();
+    requestNotificationPermission();
   } else {
     window._currentUser = null; window._isAdmin = false;
     document.getElementById('auth-screen').style.display = 'flex';
@@ -429,6 +453,7 @@ window.saveProject = async function() {
     phone:     document.getElementById('f-phone').value.trim(),
     orderDate: date, deadline,
     amount:    parseFloat(document.getElementById('f-amount').value) || 0,
+    advance:   parseFloat(document.getElementById('f-advance').value) || 0,
     items, status: window._editStatus ?? 0,
     notes:     document.getElementById('f-notes').value.trim(),
     updatedAt: _serverTimestamp()
@@ -460,8 +485,53 @@ window.saveStatusUpdate = async function() {
 </script>
 
 <script>
-// ── v1.3.0 ──
-const APP_VERSION = 'v1.3.3';
+// ── v1.4.0 ──
+const APP_VERSION = 'v1.4.0';
+
+// ── PWA INSTALL PROMPT ──
+let _deferredInstall = null;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _deferredInstall = e;
+  setTimeout(() => { if (window._currentUser) showInstallBanner(); }, 3000);
+});
+
+window.addEventListener('appinstalled', () => {
+  hideInstallBanner();
+  showToast('App installed! ✓');
+  _deferredInstall = null;
+});
+
+function showInstallBanner() {
+  document.getElementById('install-banner').classList.add('show');
+}
+function hideInstallBanner() {
+  document.getElementById('install-banner').classList.remove('show');
+}
+window.doInstall = async function() {
+  if (!_deferredInstall) return;
+  _deferredInstall.prompt();
+  const { outcome } = await _deferredInstall.userChoice;
+  if (outcome === 'accepted') showToast('Installing…');
+  hideInstallBanner(); _deferredInstall = null;
+};
+window.dismissInstall = function() { hideInstallBanner(); };
+
+// ── NOTIFICATIONS ──
+async function requestNotificationPermission() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission !== 'default') return;
+  setTimeout(async () => {
+    const p = await Notification.requestPermission();
+    if (p === 'granted') showToast('Notifications enabled ✓');
+  }, 2500);
+}
+
+// ── SERVICE WORKER ──
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(e => console.warn('SW:', e));
+}
 
 const TYPES = {
   woodwork: { icon:'🪵', label:'Woodwork',        chip:'chip-wood',    items:true  },
@@ -564,7 +634,14 @@ function renderProjects() {
     const date      = p.deadline ? new Date(p.deadline+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'}) : '';
 
     const typeChip  = `<div class="meta-chip ${typeInfo.chip}">${typeInfo.icon} ${typeLabel}</div>`;
-    const amtChip   = p.amount ? `<div class="meta-chip amount">₹${(+p.amount).toLocaleString('en-IN')}</div>` : '';
+    let amtChip = '';
+    if (window._isAdmin && p.amount) {
+      if (p.advance) {
+        amtChip = `<div class="meta-chip amount">₹${fmtAmt(p.advance)} adv / ₹${fmtAmt(p.amount)}</div>`;
+      } else {
+        amtChip = `<div class="meta-chip amount">₹${fmtAmt(p.amount)}</div>`;
+      }
+    }
     const descHtml  = p.item ? `<div class="card-desc">${escHtml(p.item)}</div>` : '';
 
     let itemsHtml = '';
@@ -617,7 +694,7 @@ function openAddModal() {
   window._editId = null; window._editStatus = 0; window._editType = 'woodwork';
   document.getElementById('modal-title').textContent = 'New Order';
   document.getElementById('delete-btn').style.display = 'none';
-  ['f-client','f-phone','f-item','f-amount','f-notes','other-label-inp'].forEach(id => document.getElementById(id).value = '');
+  ['f-client','f-phone','f-item','f-amount','f-advance','f-notes','other-label-inp'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
   document.getElementById('f-deadline').value = '';
   document.getElementById('items-edit-list').innerHTML = '';
@@ -639,6 +716,7 @@ function openEditModal(id) {
   document.getElementById('f-date').value              = p.orderDate || '';
   document.getElementById('f-deadline').value          = p.deadline || '';
   document.getElementById('f-amount').value            = p.amount || '';
+  document.getElementById('f-advance').value           = p.advance || '';
   document.getElementById('f-notes').value             = p.notes || '';
   document.getElementById('other-label-inp').value     = p.otherLabel || '';
   document.getElementById('items-edit-list').innerHTML = '';
@@ -712,6 +790,12 @@ function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
+}
+function fmtAmt(n) {
+  const num = +n;
+  if (num >= 100000) return (num/100000).toFixed(num%100000===0?0:1)+'L';
+  if (num >= 1000)   return (num/1000).toFixed(num%1000===0?0:1)+'k';
+  return num.toLocaleString('en-IN');
 }
 function escHtml(s) {
   if (!s) return '';
