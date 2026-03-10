@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#0f1a0f">
+<meta name="theme-color" content="#1a1400">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="AF Orders">
@@ -11,34 +11,48 @@
 <title>Amar Furniture — Order Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 <style>
+  /* ── v1.3.0 — Gold / Brass theme ── */
   :root {
-    --bg:#0a110a; --surface:#111a11; --surface2:#172017; --border:#1e2e1e;
-    --accent:#4ade80; --accent-dim:#2d6e47; --accent-glow:rgba(74,222,128,0.12);
-    --warn:#f59e0b; --danger:#ef4444;
-    --danger-dim:rgba(239,68,68,0.15); --warn-dim:rgba(245,158,11,0.15); --ok-dim:rgba(74,222,128,0.1);
-    --text:#e8f5e8; --text2:#7a9e7a; --text3:#4a6a4a;
-    --radius:14px; --shadow:0 4px 24px rgba(0,0,0,0.4);
+    --bg:       #100e00;
+    --surface:  #1a1600;
+    --surface2: #211c00;
+    --border:   #2e2800;
+    --accent:   #d4a017;
+    --accent-bright: #f0c040;
+    --accent-dim:    #7a5c0a;
+    --accent-glow:   rgba(212,160,23,0.13);
+    --ok-dim:        rgba(212,160,23,0.10);
+    --warn:     #f97316;
+    --danger:   #ef4444;
+    --danger-dim:rgba(239,68,68,0.15);
+    --warn-dim: rgba(249,115,22,0.15);
+    --text:     #f5e9c8;
+    --text2:    #a08c55;
+    --text3:    #5a4e2a;
+    --radius:   14px;
+    --shadow:   0 4px 24px rgba(0,0,0,0.5);
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100dvh;overflow-x:hidden}
 
   /* ── AUTH ── */
-  #auth-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100dvh;padding:24px;background:radial-gradient(ellipse at 50% 0%,#1a3320 0%,var(--bg) 65%)}
-  .auth-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:2rem;letter-spacing:-0.03em;color:var(--accent);margin-bottom:6px}
+  #auth-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100dvh;padding:24px;
+    background:radial-gradient(ellipse at 50% 0%,#2a2000 0%,var(--bg) 65%)}
+  .auth-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:2rem;letter-spacing:-0.03em;color:var(--accent-bright);margin-bottom:6px}
   .auth-sub{color:var(--text2);font-size:0.85rem;margin-bottom:40px}
   .auth-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px;width:100%;max-width:380px;box-shadow:var(--shadow)}
-  .auth-card h2{font-family:'Syne',sans-serif;font-size:1.1rem;margin-bottom:20px}
+  .auth-card h2{font-family:'Syne',sans-serif;font-size:1.1rem;margin-bottom:20px;color:var(--text)}
 
   .field{margin-bottom:16px}
   .field label{display:block;font-size:0.78rem;color:var(--text2);margin-bottom:6px;letter-spacing:0.04em;text-transform:uppercase}
   .field input,.field select,.field textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.95rem;outline:none;transition:border-color 0.2s}
   .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent-dim)}
   .field textarea{resize:none;min-height:72px}
-  .field select option{background:#1a2a1a}
+  .field select option{background:#1a1600}
 
   .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border-radius:12px;border:none;font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem;cursor:pointer;transition:all 0.18s;letter-spacing:0.02em}
-  .btn-primary{background:var(--accent);color:#0a110a}
-  .btn-primary:hover{background:#6ee79a;transform:translateY(-1px)}
+  .btn-primary{background:var(--accent);color:#100e00}
+  .btn-primary:hover{background:var(--accent-bright);transform:translateY(-1px)}
   .btn-primary:active{transform:translateY(0)}
   .btn-outline{background:transparent;color:var(--accent);border:1px solid var(--accent-dim)}
   .btn-outline:hover{background:var(--accent-glow)}
@@ -46,14 +60,14 @@
   .btn-ghost{background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
   #auth-error{color:var(--danger);font-size:0.82rem;margin-top:12px;text-align:center;min-height:18px}
 
-  /* ── APP SHELL ── */
+  /* ── APP ── */
   #app{display:none}
-  .topbar{position:sticky;top:0;z-index:100;background:rgba(10,17,10,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between}
-  .topbar-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;color:var(--accent)}
+  .topbar{position:sticky;top:0;z-index:100;background:rgba(16,14,0,0.93);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between}
+  .topbar-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;color:var(--accent-bright)}
   .topbar-right{display:flex;align-items:center;gap:10px}
   .role-badge{font-size:0.7rem;padding:3px 8px;border-radius:20px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase}
-  .role-admin{background:rgba(74,222,128,0.15);color:var(--accent);border:1px solid var(--accent-dim)}
-  .role-staff{background:rgba(245,158,11,0.15);color:var(--warn);border:1px solid rgba(245,158,11,0.3)}
+  .role-admin{background:rgba(212,160,23,0.15);color:var(--accent-bright);border:1px solid var(--accent-dim)}
+  .role-staff{background:rgba(249,115,22,0.15);color:var(--warn);border:1px solid rgba(249,115,22,0.3)}
   .icon-btn{width:36px;height:36px;border-radius:10px;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);font-size:1rem;transition:all 0.15s}
   .icon-btn:hover{background:var(--surface2);color:var(--text)}
 
@@ -63,69 +77,72 @@
   .stat-num{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;line-height:1}
   .stat-lbl{font-size:0.65rem;color:var(--text3);margin-top:3px;text-transform:uppercase;letter-spacing:0.05em}
   .stat-total .stat-num{color:var(--text)}
-  .stat-ok .stat-num{color:var(--accent)}
-  .stat-warn .stat-num{color:var(--warn)}
+  .stat-ok    .stat-num{color:var(--accent-bright)}
+  .stat-warn  .stat-num{color:var(--warn)}
+  .stat-danger.stat-num{color:var(--danger)}
   .stat-danger .stat-num{color:var(--danger)}
 
   /* ── FILTERS ── */
   .filter-row{display:flex;gap:6px;padding:12px 14px;overflow-x:auto;scrollbar-width:none}
   .filter-row::-webkit-scrollbar{display:none}
   .filter-tab{flex-shrink:0;padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:0.8rem;font-weight:500;cursor:pointer;transition:all 0.15s;white-space:nowrap}
-  .filter-tab.active{background:var(--accent);color:#0a110a;border-color:var(--accent);font-weight:700}
+  .filter-tab.active{background:var(--accent);color:#100e00;border-color:var(--accent);font-weight:700}
 
   /* ── SEARCH ── */
   .search-wrap{padding:0 14px 10px}
-  .search-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 14px 10px 38px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.9rem;outline:none;transition:border-color 0.2s;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%234a6a4a' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:12px center}
+  .search-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 14px 10px 38px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.9rem;outline:none;transition:border-color 0.2s;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235a4e2a' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:12px center}
   .search-input:focus{border-color:var(--accent-dim)}
 
   /* ── CARDS ── */
   .projects-list{padding:0 14px 100px;display:flex;flex-direction:column;gap:10px}
   .project-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:transform 0.15s;position:relative}
   .project-card:active{transform:scale(0.99)}
-  .project-card.urgent{border-color:rgba(239,68,68,0.4)}
-  .project-card.warning{border-color:rgba(245,158,11,0.4)}
-  .project-card.delivered{opacity:0.6}
+  .project-card.urgent {border-color:rgba(239,68,68,0.45)}
+  .project-card.warning{border-color:rgba(249,115,22,0.45)}
+  .project-card.delivered{opacity:0.55}
 
   .card-urgency-bar{height:3px;width:100%}
-  .card-urgency-bar.ok{background:var(--accent)}
-  .card-urgency-bar.warn{background:var(--warn)}
+  .card-urgency-bar.ok    {background:var(--accent)}
+  .card-urgency-bar.warn  {background:var(--warn)}
   .card-urgency-bar.danger{background:var(--danger)}
-  .card-urgency-bar.done{background:var(--text3)}
+  .card-urgency-bar.done  {background:var(--text3)}
 
   .card-body{padding:14px}
   .card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px}
-  .card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;line-height:1.2}
+  .card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;line-height:1.2;color:var(--text)}
   .card-desc{font-size:0.78rem;color:var(--text3);margin-top:3px}
 
   .days-badge{flex-shrink:0;font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;padding:6px 10px;border-radius:10px;text-align:center;min-width:52px}
-  .days-badge.ok{background:var(--ok-dim);color:var(--accent)}
-  .days-badge.warn{background:var(--warn-dim);color:var(--warn)}
+  .days-badge.ok    {background:var(--ok-dim);color:var(--accent-bright)}
+  .days-badge.warn  {background:var(--warn-dim);color:var(--warn)}
   .days-badge.danger{background:var(--danger-dim);color:var(--danger)}
-  .days-badge.done{background:rgba(74,222,128,0.08);color:var(--text3)}
+  .days-badge.done  {background:rgba(212,160,23,0.06);color:var(--text3)}
   .days-badge-lbl{font-size:0.55rem;display:block;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;line-height:1;margin-top:1px}
 
   .card-meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
   .meta-chip{font-size:0.72rem;padding:3px 8px;border-radius:6px;background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
-  .meta-chip.amount{color:var(--accent)}
-  /* per-type chip colours */
-  .chip-wood{background:rgba(192,132,252,0.12);color:#c084fc;border-color:rgba(192,132,252,0.25)}
-  .chip-plywood{background:rgba(96,165,250,0.1);color:#60a5fa;border-color:rgba(96,165,250,0.25)}
-  .chip-modular{background:rgba(251,146,60,0.1);color:#fb923c;border-color:rgba(251,146,60,0.25)}
-  .chip-lathe{background:rgba(52,211,153,0.1);color:#34d399;border-color:rgba(52,211,153,0.25)}
-  .chip-other{background:rgba(148,163,184,0.1);color:#94a3b8;border-color:rgba(148,163,184,0.2)}
+  .meta-chip.amount{color:var(--accent-bright)}
+  /* project type chip colours */
+  .chip-wood   {background:rgba(192,132,252,0.10);color:#c084fc;border-color:rgba(192,132,252,0.22)}
+  .chip-plywood{background:rgba(96,165,250,0.10); color:#60a5fa;border-color:rgba(96,165,250,0.22)}
+  .chip-modular{background:rgba(251,146,60,0.10); color:#fb923c;border-color:rgba(251,146,60,0.22)}
+  .chip-lathe  {background:rgba(52,211,153,0.10); color:#34d399;border-color:rgba(52,211,153,0.22)}
+  .chip-other  {background:rgba(148,163,184,0.10);color:#94a3b8;border-color:rgba(148,163,184,0.18)}
 
   /* ── PIPELINE ── */
   .status-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
   .status-stepper{display:flex;gap:3px;flex:1}
-  .step{flex:1;height:4px;border-radius:2px;background:var(--surface2);transition:background 0.3s}
-  .step.done-ok{background:var(--accent)}
+  .step{flex:1;height:4px;border-radius:2px;background:var(--border);transition:background 0.3s}
+  .step.done-ok {background:var(--accent)}
   .step.done-del{background:var(--text3)}
   .status-label{font-size:0.72rem;font-weight:600;padding:3px 8px;border-radius:6px;letter-spacing:0.03em;white-space:nowrap}
-  .s0{background:rgba(74,222,128,0.1);color:var(--accent)}
+  .s0{background:rgba(212,160,23,0.12);color:var(--accent-bright)}
   .s1{background:rgba(96,165,250,0.12);color:#60a5fa}
   .s2{background:rgba(192,132,252,0.12);color:#c084fc}
-  .s3{background:rgba(245,158,11,0.12);color:var(--warn)}
-  .s4{background:rgba(74,222,128,0.08);color:#86efac}
+  .s3{background:rgba(249,115,22,0.12);color:var(--warn)}
+  .s4{background:rgba(212,160,23,0.08);color:var(--text2)}
 
   /* ── ITEMS ON CARD ── */
   .card-items{margin-top:10px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);overflow:hidden}
@@ -139,17 +156,17 @@
   .card-actions{display:flex;gap:6px;padding:0 14px 14px}
   .card-actions .btn{padding:9px;font-size:0.8rem;border-radius:10px}
 
-  .fab{position:fixed;bottom:24px;right:20px;z-index:200;width:56px;height:56px;border-radius:18px;background:var(--accent);color:#0a110a;border:none;font-size:1.5rem;font-weight:700;cursor:pointer;box-shadow:0 8px 24px rgba(74,222,128,0.35);display:flex;align-items:center;justify-content:center;transition:all 0.2s}
-  .fab:hover{transform:scale(1.08)}
+  .fab{position:fixed;bottom:24px;right:20px;z-index:200;width:56px;height:56px;border-radius:18px;background:var(--accent);color:#100e00;border:none;font-size:1.5rem;font-weight:700;cursor:pointer;box-shadow:0 8px 24px rgba(212,160,23,0.4);display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+  .fab:hover{transform:scale(1.08);background:var(--accent-bright)}
   .fab:active{transform:scale(0.96)}
 
   /* ── MODAL ── */
-  .modal-backdrop{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s}
+  .modal-backdrop{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.80);backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s}
   .modal-backdrop.open{opacity:1;pointer-events:all}
-  .modal{background:var(--surface);border:1px solid var(--border);border-radius:24px 24px 0 0;width:100%;max-width:520px;max-height:92dvh;overflow-y:auto;padding:0 20px 40px;transform:translateY(40px);transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1)}
+  .modal{background:var(--surface);border:1px solid var(--border);border-top:1px solid #3a3000;border-radius:24px 24px 0 0;width:100%;max-width:520px;max-height:92dvh;overflow-y:auto;padding:0 20px 40px;transform:translateY(40px);transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1)}
   .modal-backdrop.open .modal{transform:translateY(0)}
   .modal-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 20px}
-  .modal-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;margin-bottom:20px}
+  .modal-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;margin-bottom:20px;color:var(--text)}
   .modal-actions{display:flex;flex-direction:column;gap:10px;margin-top:20px}
 
   /* ── PROJECT TYPE GRID ── */
@@ -158,10 +175,7 @@
   .type-opt .t-icon{font-size:1.4rem;display:block;margin-bottom:4px}
   .type-opt .t-lbl{font-size:0.75rem;font-weight:600;color:var(--text2);line-height:1.2}
   .type-opt.sel{border-color:var(--accent);background:var(--ok-dim)}
-  .type-opt.sel .t-lbl{color:var(--accent)}
-
-  /* other label input */
-  #other-label-wrap{margin-top:8px}
+  .type-opt.sel .t-lbl{color:var(--accent-bright)}
 
   /* ── ITEMS EDITOR ── */
   .items-list-edit{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
@@ -178,19 +192,23 @@
   /* ── STATUS OPTS ── */
   .status-selector{display:flex;flex-direction:column;gap:6px;margin-top:6px}
   .status-opt{padding:11px 14px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;font-size:0.85rem;font-weight:600;color:var(--text2);transition:all 0.15s;display:flex;align-items:center;gap:8px}
-  .status-opt.selected{border-color:var(--accent);background:var(--ok-dim);color:var(--accent)}
+  .status-opt.selected{border-color:var(--accent);background:var(--ok-dim);color:var(--accent-bright)}
 
   /* ── MISC ── */
   .empty-state{text-align:center;padding:60px 20px;color:var(--text3)}
-  .empty-state .icon{font-size:3rem;margin-bottom:16px;opacity:0.5}
+  .empty-state .icon{font-size:3rem;margin-bottom:16px;opacity:0.4}
   .empty-state p{font-size:0.9rem;line-height:1.6}
   .loading-screen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:999}
-  .loading-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;color:var(--accent)}
+  .loading-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;color:var(--accent-bright)}
   .spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
   .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 18px;border-radius:12px;font-size:0.85rem;opacity:0;transition:all 0.3s;z-index:1000;white-space:nowrap;box-shadow:var(--shadow)}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
   .overdue-banner{margin:0 14px 8px;background:var(--danger-dim);border:1px solid rgba(239,68,68,0.3);border-radius:12px;padding:10px 14px;font-size:0.82rem;color:var(--danger);font-weight:600;display:flex;align-items:center;gap:8px}
+  #other-label-wrap{margin-top:8px}
+  #other-label-inp{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.9rem;outline:none;transition:border-color 0.2s}
+  #other-label-inp:focus{border-color:var(--accent-dim)}
+  .version-tag{position:absolute;bottom:2px;right:8px;font-size:0.6rem;color:var(--text3);opacity:0.5;font-family:'Syne',sans-serif}
 </style>
 </head>
 <body>
@@ -203,7 +221,7 @@
 <!-- AUTH -->
 <div id="auth-screen" style="display:none">
   <div class="auth-logo">Amar Furniture</div>
-  <div class="auth-sub">Order Tracker</div>
+  <div class="auth-sub">Order Tracker · v1.3.0</div>
   <div class="auth-card">
     <h2>Sign In</h2>
     <div class="field"><label>Email</label><input type="email" id="auth-email" placeholder="you@email.com" autocomplete="email"></div>
@@ -218,15 +236,16 @@
   <div class="topbar">
     <div class="topbar-logo">AF Orders</div>
     <div class="topbar-right">
+      <span style="font-size:0.62rem;color:var(--text3);font-family:'Syne',sans-serif">v1.3.0</span>
       <span class="role-badge" id="role-badge">admin</span>
       <div class="icon-btn" onclick="signOut()">⏻</div>
     </div>
   </div>
 
   <div class="stats-row">
-    <div class="stat-card stat-total"><div class="stat-num" id="stat-total">0</div><div class="stat-lbl">Total</div></div>
-    <div class="stat-card stat-ok"><div class="stat-num" id="stat-ok">0</div><div class="stat-lbl">On Track</div></div>
-    <div class="stat-card stat-warn"><div class="stat-num" id="stat-warn">0</div><div class="stat-lbl">Due Soon</div></div>
+    <div class="stat-card stat-total" ><div class="stat-num" id="stat-total">0</div><div class="stat-lbl">Total</div></div>
+    <div class="stat-card stat-ok"    ><div class="stat-num" id="stat-ok">0</div><div class="stat-lbl">On Track</div></div>
+    <div class="stat-card stat-warn"  ><div class="stat-num" id="stat-warn">0</div><div class="stat-lbl">Due Soon</div></div>
     <div class="stat-card stat-danger"><div class="stat-num" id="stat-danger">0</div><div class="stat-lbl">Overdue</div></div>
   </div>
 
@@ -259,13 +278,13 @@
       <label>Project Type *</label>
       <div class="type-grid">
         <div class="type-opt sel" id="pt-woodwork" onclick="selectType('woodwork')"><span class="t-icon">🪵</span><span class="t-lbl">Woodworking</span></div>
-        <div class="type-opt" id="pt-plywood"   onclick="selectType('plywood')"><span class="t-icon">🏠</span><span class="t-lbl">Plywood / Home</span></div>
-        <div class="type-opt" id="pt-modular"   onclick="selectType('modular')"><span class="t-icon">🍳</span><span class="t-lbl">Modular Kitchen</span></div>
-        <div class="type-opt" id="pt-lathe"     onclick="selectType('lathe')"><span class="t-icon">⚙️</span><span class="t-lbl">Lathe Work</span></div>
-        <div class="type-opt" id="pt-other"     onclick="selectType('other')"><span class="t-icon">📝</span><span class="t-lbl">Other</span></div>
+        <div class="type-opt"    id="pt-plywood"   onclick="selectType('plywood')" ><span class="t-icon">🏠</span><span class="t-lbl">Plywood / Home</span></div>
+        <div class="type-opt"    id="pt-modular"   onclick="selectType('modular')" ><span class="t-icon">🍳</span><span class="t-lbl">Modular Kitchen</span></div>
+        <div class="type-opt"    id="pt-lathe"     onclick="selectType('lathe')"   ><span class="t-icon">⚙️</span><span class="t-lbl">Lathe Work</span></div>
+        <div class="type-opt"    id="pt-other"     onclick="selectType('other')"   ><span class="t-icon">📝</span><span class="t-lbl">Other</span></div>
       </div>
       <div id="other-label-wrap" style="display:none">
-        <input type="text" id="f-other-label" placeholder="Describe project type…" style="margin-top:8px;width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.9rem;outline:none">
+        <input type="text" id="other-label-inp" placeholder="Describe project type…">
       </div>
     </div>
 
@@ -276,7 +295,6 @@
     <div class="field"><label>Deadline Date *</label><input type="date" id="f-deadline"></div>
     <div class="field"><label>Amount (₹)</label><input type="number" id="f-amount" placeholder="0"></div>
 
-    <!-- Items — shown only for woodwork + other -->
     <div class="field" id="items-field">
       <label>Items &amp; Qty</label>
       <div class="items-list-edit" id="items-edit-list"></div>
@@ -292,8 +310,8 @@
 
     <div class="modal-actions">
       <button class="btn btn-primary" onclick="saveProject()">Save Order</button>
-      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-danger" id="delete-btn" style="display:none" onclick="deleteProject()">Delete Order</button>
+      <button class="btn btn-ghost"   onclick="closeModal()">Cancel</button>
+      <button class="btn btn-danger"  id="delete-btn" style="display:none" onclick="deleteProject()">Delete Order</button>
     </div>
   </div>
 </div>
@@ -307,7 +325,7 @@
     <div class="field"><label>New Status</label><div class="status-selector" id="status-update-opts"></div></div>
     <div class="modal-actions">
       <button class="btn btn-primary" onclick="saveStatusUpdate()">Update Status</button>
-      <button class="btn btn-ghost" onclick="closeStatusModal()">Cancel</button>
+      <button class="btn btn-ghost"   onclick="closeStatusModal()">Cancel</button>
     </div>
   </div>
 </div>
@@ -325,12 +343,12 @@ import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc,
 
 // ── YOUR FIREBASE CONFIG ──
 const firebaseConfig = {
-  apiKey: "REPLACE_WITH_YOUR_API_KEY",
-  authDomain: "REPLACE_WITH_YOUR_AUTH_DOMAIN",
-  projectId: "REPLACE_WITH_YOUR_PROJECT_ID",
-  storageBucket: "REPLACE_WITH_YOUR_STORAGE_BUCKET",
-  messagingSenderId: "REPLACE_WITH_YOUR_SENDER_ID",
-  appId: "REPLACE_WITH_YOUR_APP_ID"
+  apiKey:            "AIzaSyAKr07M-nZWl04JGkvmppt1pmUFBLrWiMg",
+  authDomain:        "amar-furniture-orders.firebaseapp.com",
+  projectId:         "amar-furniture-orders",
+  storageBucket:     "amar-furniture-orders.firebasestorage.app",
+  messagingSenderId: "460562943530",
+  appId:             "1:460562943530:web:d89b913ec8e6ecd85e7d53"
 };
 
 // ── ADMIN EMAILS ──
@@ -339,7 +357,7 @@ const ADMIN_EMAILS = [
   "father@amarfurniture.in"
 ];
 
-const app = initializeApp(firebaseConfig);
+const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
@@ -358,9 +376,9 @@ onAuthStateChanged(auth, user => {
     window._currentUser = user; window._isAdmin = isAdmin;
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
-    document.getElementById('role-badge').textContent = isAdmin ? 'Admin' : 'Staff';
-    document.getElementById('role-badge').className = 'role-badge ' + (isAdmin ? 'role-admin' : 'role-staff');
-    document.getElementById('fab-btn').style.display = isAdmin ? 'flex' : 'none';
+    document.getElementById('role-badge').textContent  = isAdmin ? 'Admin' : 'Staff';
+    document.getElementById('role-badge').className    = 'role-badge ' + (isAdmin ? 'role-admin' : 'role-staff');
+    document.getElementById('fab-btn').style.display   = isAdmin ? 'flex' : 'none';
     startListening();
   } else {
     window._currentUser = null; window._isAdmin = false;
@@ -393,7 +411,6 @@ window.saveProject = async function() {
   const date     = document.getElementById('f-date').value;
   const deadline = document.getElementById('f-deadline').value;
   if (!client || !date || !deadline) { showToast('Fill required fields'); return; }
-
   const type      = window._editType || 'woodwork';
   const showItems = TYPES[type]?.items;
   const items     = [];
@@ -404,19 +421,17 @@ window.saveProject = async function() {
       if (name) items.push({ name, qty: qty || '1' });
     });
   }
-
   const data = {
     client, projectType: type,
-    otherLabel: type === 'other' ? document.getElementById('f-other-label').value.trim() : '',
-    item:     document.getElementById('f-item').value.trim(),
-    phone:    document.getElementById('f-phone').value.trim(),
+    otherLabel: type === 'other' ? document.getElementById('other-label-inp').value.trim() : '',
+    item:      document.getElementById('f-item').value.trim(),
+    phone:     document.getElementById('f-phone').value.trim(),
     orderDate: date, deadline,
-    amount:   parseFloat(document.getElementById('f-amount').value) || 0,
+    amount:    parseFloat(document.getElementById('f-amount').value) || 0,
     items, status: window._editStatus ?? 0,
-    notes:    document.getElementById('f-notes').value.trim(),
+    notes:     document.getElementById('f-notes').value.trim(),
     updatedAt: _serverTimestamp()
   };
-
   if (window._editId) {
     await _updateDoc(_doc(_db, 'projects', window._editId), data);
     showToast('Order updated');
@@ -444,43 +459,44 @@ window.saveStatusUpdate = async function() {
 </script>
 
 <script>
-// ── PROJECT TYPE CONFIG ──
+// ── v1.3.0 ──
+const APP_VERSION = 'v1.3.0';
+
 const TYPES = {
-  woodwork: { icon:'🪵', label:'Woodwork',       chip:'chip-wood',    items:true  },
-  plywood:  { icon:'🏠', label:'Plywood / Home', chip:'chip-plywood', items:false },
+  woodwork: { icon:'🪵', label:'Woodwork',        chip:'chip-wood',    items:true  },
+  plywood:  { icon:'🏠', label:'Plywood / Home',  chip:'chip-plywood', items:false },
   modular:  { icon:'🍳', label:'Modular Kitchen', chip:'chip-modular', items:false },
-  lathe:    { icon:'⚙️', label:'Lathe Work',     chip:'chip-lathe',   items:false },
-  other:    { icon:'📝', label:'Other',           chip:'chip-other',   items:true  },
+  lathe:    { icon:'⚙️', label:'Lathe Work',      chip:'chip-lathe',   items:false },
+  other:    { icon:'📝', label:'Other',            chip:'chip-other',   items:true  },
 };
 
-// ── FIXED PIPELINE (all types) ──
+// Fixed 5-stage pipeline for all project types
 const PIPELINE = [
-  { v:0, icon:'📋', label:'Order Taken'  },
-  { v:1, icon:'🔨', label:'In Progress'  },
-  { v:2, icon:'✨', label:'Finishing'    },
-  { v:3, icon:'📦', label:'Ready'        },
-  { v:4, icon:'✅', label:'Delivered'    },
+  { v:0, icon:'📋', label:'Order Taken' },
+  { v:1, icon:'🔨', label:'In Progress' },
+  { v:2, icon:'✨', label:'Finishing'   },
+  { v:3, icon:'📦', label:'Ready'       },
+  { v:4, icon:'✅', label:'Delivered'   },
 ];
 const SSTYLES = ['s0','s1','s2','s3','s4'];
 
-window._projects      = [];
-window._editId        = null;
-window._editStatus    = 0;
-window._editType      = 'woodwork';
-window._activeFilter  = 'active';
+window._projects       = [];
+window._editId         = null;
+window._editStatus     = 0;
+window._editType       = 'woodwork';
+window._activeFilter   = 'active';
 window._statusUpdateId = null;
-window._updateStatusVal = null;
+window._updateStatusVal= null;
 
-function isDelivered(p) { return p.status >= 4; }
+const isDelivered = p => (p.status ?? 0) >= 4;
 
 function daysLeft(deadline) {
   const today = new Date(); today.setHours(0,0,0,0);
   const d = new Date(deadline); d.setHours(0,0,0,0);
   return Math.ceil((d - today) / 86400000);
 }
-
 function urgClass(days, del) {
-  if (del)      return 'done';
+  if (del) return 'done';
   if (days < 0) return 'danger';
   if (days <= 3) return 'warn';
   return 'ok';
@@ -499,8 +515,7 @@ function renderProjects() {
 
   let projects = (window._projects || []).filter(p => {
     if (q && !p.client?.toLowerCase().includes(q) && !p.item?.toLowerCase().includes(q)) return false;
-    const del  = isDelivered(p);
-    const days = daysLeft(p.deadline);
+    const del = isDelivered(p), days = daysLeft(p.deadline);
     if (window._activeFilter === 'active')    return !del;
     if (window._activeFilter === 'woodwork')  return !del && p.projectType === 'woodwork';
     if (window._activeFilter === 'plywood')   return !del && p.projectType === 'plywood';
@@ -512,7 +527,7 @@ function renderProjects() {
   });
 
   if (!projects.length) {
-    list.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>No orders here.<br>${window._isAdmin ? 'Tap + to add.' : 'Nothing to show.'}</p></div>`;
+    list.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>No orders here.<br>${window._isAdmin ? 'Tap + to add your first order.' : 'Nothing to show.'}</p></div>`;
     return;
   }
 
@@ -531,28 +546,26 @@ function renderProjects() {
     const del   = isDelivered(p);
     const urg   = urgClass(days, del);
     const cardCls = del ? 'delivered' : urg === 'danger' ? 'urgent' : urg === 'warn' ? 'warning' : '';
-
     const daysText = del ? '✓' : days < 0 ? Math.abs(days)+'d' : days === 0 ? 'Today' : days+'d';
     const daysLbl  = del ? 'done' : days < 0 ? 'overdue' : days === 0 ? 'due' : 'left';
 
-    // pipeline bar — 4 segments for 5-stage pipeline
+    // 4 pipeline segments
     let stepsHtml = '';
-    for (let i = 0; i < 4; i++) {
-      stepsHtml += `<div class="step ${i < p.status ? (del ? 'done-del' : 'done-ok') : ''}"></div>`;
-    }
+    for (let i = 0; i < 4; i++)
+      stepsHtml += `<div class="step ${i < (p.status||0) ? (del?'done-del':'done-ok') : ''}"></div>`;
 
-    const stage    = PIPELINE[Math.min(p.status, 4)];
-    const stageCls = SSTYLES[Math.min(p.status, 4)];
+    const stageIdx = Math.min(p.status || 0, 4);
+    const stage    = PIPELINE[stageIdx];
+    const stageCls = SSTYLES[stageIdx];
 
     const typeInfo  = TYPES[p.projectType] || TYPES.other;
     const typeLabel = p.projectType === 'other' && p.otherLabel ? p.otherLabel : typeInfo.label;
     const date      = p.deadline ? new Date(p.deadline+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'}) : '';
 
-    const typeChip = `<div class="meta-chip ${typeInfo.chip}">${typeInfo.icon} ${typeLabel}</div>`;
-    const amtChip  = p.amount ? `<div class="meta-chip amount">₹${(+p.amount).toLocaleString('en-IN')}</div>` : '';
-    const descHtml = p.item  ? `<div class="card-desc">${escHtml(p.item)}</div>` : '';
+    const typeChip  = `<div class="meta-chip ${typeInfo.chip}">${typeInfo.icon} ${typeLabel}</div>`;
+    const amtChip   = p.amount ? `<div class="meta-chip amount">₹${(+p.amount).toLocaleString('en-IN')}</div>` : '';
+    const descHtml  = p.item ? `<div class="card-desc">${escHtml(p.item)}</div>` : '';
 
-    // items list (woodwork + other)
     let itemsHtml = '';
     if (typeInfo.items && p.items?.length) {
       itemsHtml = `<div class="card-items">
@@ -570,9 +583,7 @@ function renderProjects() {
       <div class="card-urgency-bar ${urg}"></div>
       <div class="card-body">
         <div class="card-top">
-          <div style="min-width:0">
-            <div class="card-title">${escHtml(p.client)}</div>${descHtml}
-          </div>
+          <div style="min-width:0"><div class="card-title">${escHtml(p.client)}</div>${descHtml}</div>
           <div class="days-badge ${urg}">${daysText}<span class="days-badge-lbl">${daysLbl}</span></div>
         </div>
         <div class="card-meta">${typeChip}<div class="meta-chip">📅 ${date}</div>${amtChip}</div>
@@ -594,19 +605,18 @@ function renderProjects() {
 
 function updateStats() {
   const active = window._projects.filter(p => !isDelivered(p));
-  document.getElementById('stat-total').textContent   = window._projects.length;
-  document.getElementById('stat-ok').textContent      = active.filter(p => daysLeft(p.deadline) > 3).length;
-  document.getElementById('stat-warn').textContent    = active.filter(p => { const d = daysLeft(p.deadline); return d >= 0 && d <= 3; }).length;
-  document.getElementById('stat-danger').textContent  = active.filter(p => daysLeft(p.deadline) < 0).length;
+  document.getElementById('stat-total').textContent  = window._projects.length;
+  document.getElementById('stat-ok').textContent     = active.filter(p => daysLeft(p.deadline) > 3).length;
+  document.getElementById('stat-warn').textContent   = active.filter(p => { const d=daysLeft(p.deadline); return d>=0&&d<=3; }).length;
+  document.getElementById('stat-danger').textContent = active.filter(p => daysLeft(p.deadline) < 0).length;
 }
 
-// ── OPEN MODALS ──
 function openAddModal() {
   if (!window._isAdmin) return;
   window._editId = null; window._editStatus = 0; window._editType = 'woodwork';
   document.getElementById('modal-title').textContent = 'New Order';
   document.getElementById('delete-btn').style.display = 'none';
-  ['f-client','f-phone','f-item','f-amount','f-notes','f-other-label'].forEach(id => document.getElementById(id).value = '');
+  ['f-client','f-phone','f-item','f-amount','f-notes','other-label-inp'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
   document.getElementById('f-deadline').value = '';
   document.getElementById('items-edit-list').innerHTML = '';
@@ -620,16 +630,16 @@ function openEditModal(id) {
   const p = window._projects.find(x => x.id === id);
   if (!p) return;
   window._editId = id; window._editStatus = p.status ?? 0; window._editType = p.projectType || 'woodwork';
-  document.getElementById('modal-title').textContent = 'Edit Order';
-  document.getElementById('delete-btn').style.display = 'block';
-  document.getElementById('f-client').value   = p.client || '';
-  document.getElementById('f-phone').value    = p.phone || '';
-  document.getElementById('f-item').value     = p.item || '';
-  document.getElementById('f-date').value     = p.orderDate || '';
-  document.getElementById('f-deadline').value = p.deadline || '';
-  document.getElementById('f-amount').value   = p.amount || '';
-  document.getElementById('f-notes').value    = p.notes || '';
-  document.getElementById('f-other-label').value = p.otherLabel || '';
+  document.getElementById('modal-title').textContent   = 'Edit Order';
+  document.getElementById('delete-btn').style.display  = 'block';
+  document.getElementById('f-client').value            = p.client || '';
+  document.getElementById('f-phone').value             = p.phone || '';
+  document.getElementById('f-item').value              = p.item || '';
+  document.getElementById('f-date').value              = p.orderDate || '';
+  document.getElementById('f-deadline').value          = p.deadline || '';
+  document.getElementById('f-amount').value            = p.amount || '';
+  document.getElementById('f-notes').value             = p.notes || '';
+  document.getElementById('other-label-inp').value     = p.otherLabel || '';
   document.getElementById('items-edit-list').innerHTML = '';
   (p.items || []).forEach(it => addItemRow(it.name, it.qty));
   selectType(p.projectType || 'woodwork');
@@ -644,7 +654,8 @@ function openStatusModal(id) {
   const typeInfo  = TYPES[p.projectType] || TYPES.other;
   const typeLabel = p.projectType === 'other' && p.otherLabel ? p.otherLabel : typeInfo.label;
   document.getElementById('status-modal-info').innerHTML =
-    `<strong>${escHtml(p.client)}</strong> <span style="font-size:0.78rem;color:var(--text3)">${typeInfo.icon} ${typeLabel}</span>${p.item ? `<br><span style="font-size:0.78rem;color:var(--text3)">${escHtml(p.item)}</span>` : ''}`;
+    `<strong>${escHtml(p.client)}</strong> <span style="font-size:0.78rem;color:var(--text3)">${typeInfo.icon} ${typeLabel}</span>
+     ${p.item ? `<br><span style="font-size:0.78rem;color:var(--text3)">${escHtml(p.item)}</span>` : ''}`;
   renderStatusSel('status-update-opts', p.status ?? 0, true);
   openModal('status-modal');
 }
@@ -661,9 +672,10 @@ function selectType(type) {
   Object.keys(TYPES).forEach(k => {
     document.getElementById('pt-'+k).className = 'type-opt' + (k === type ? ' sel' : '');
   });
-  const showItems = TYPES[type]?.items;
-  document.getElementById('items-field').style.display      = showItems ? 'block' : 'none';
+  document.getElementById('items-field').style.display      = TYPES[type]?.items ? 'block' : 'none';
   document.getElementById('other-label-wrap').style.display = type === 'other' ? 'block' : 'none';
+  window._editStatus = 0;
+  renderStatusSel('status-selector-opts', 0, false);
 }
 
 function selectFormSt(v) {
@@ -680,8 +692,8 @@ function addItemRow(name = '', qty = '') {
   const row  = document.createElement('div');
   row.className = 'item-edit-row';
   row.innerHTML = `
-    <input class="item-name-inp" type="text" placeholder="Item name e.g. Chair" value="${escHtml(name)}">
-    <input class="item-qty-inp" type="number" placeholder="Qty" min="1" value="${escHtml(qty)}">
+    <input class="item-name-inp" type="text"   placeholder="Item e.g. Chair" value="${escHtml(name)}">
+    <input class="item-qty-inp"  type="number" placeholder="Qty" min="1"      value="${escHtml(qty)}">
     <button class="item-del-btn" onclick="this.parentElement.remove()">✕</button>`;
   list.appendChild(row);
   if (!name) row.querySelector('.item-name-inp').focus();
