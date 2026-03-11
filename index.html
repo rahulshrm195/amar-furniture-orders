@@ -11,7 +11,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 <style>
-/* ── v2.1.0 — Item measurements (L×B×W, Qty, Unit) ── */
+/* ── v2.2.0 — Dual filter popups (Type + Stage) ── */
 :root {
   --bg:#eef0f7; --surface:#ffffff; --surface2:#f4f5fb; --border:#e2e4f0;
   --purple:#4f46e5; --purple-dark:#312e81; --purple-mid:#6366f1;
@@ -77,10 +77,27 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .stat-total .stat-num{color:var(--purple)} .stat-ok .stat-num{color:var(--green)}
 .stat-warn .stat-num{color:var(--amber)} .stat-danger .stat-num{color:var(--red)}
 
-.filter-row{display:flex;gap:6px;padding:14px 14px 0;overflow-x:auto;scrollbar-width:none}
-.filter-row::-webkit-scrollbar{display:none}
-.filter-tab{flex-shrink:0;padding:7px 16px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-size:0.8rem;font-weight:600;cursor:pointer;transition:all 0.15s;white-space:nowrap;box-shadow:var(--shadow)}
-.filter-tab.active{background:var(--purple);color:#fff;border-color:var(--purple);box-shadow:0 4px 12px rgba(79,70,229,0.3)}
+.filter-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 14px 0}
+.filter-pill{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:10px 14px;border-radius:14px;border:1.5px solid var(--border);background:var(--surface);cursor:pointer;transition:all 0.15s;box-shadow:var(--shadow)}
+.filter-pill.has-filter{border-color:var(--purple);background:var(--purple-soft)}
+.filter-pill-left{display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.filter-pill-label{font-size:0.6rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700;line-height:1;margin-bottom:3px}
+.filter-pill-value{font-size:0.82rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.filter-pill.has-filter .filter-pill-value{color:var(--purple)}
+.filter-pill-arrow{font-size:0.7rem;color:var(--text3);flex-shrink:0}
+.fpop-backdrop{position:fixed;inset:0;z-index:600;background:rgba(30,27,75,0.45);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s}
+.fpop-backdrop.open{opacity:1;pointer-events:all}
+.fpop{background:var(--surface);border-radius:22px;padding:20px;width:calc(100vw - 48px);max-width:310px;box-shadow:var(--shadow-lg);transform:scale(0.94);transition:transform 0.22s cubic-bezier(0.34,1.4,0.64,1),opacity 0.2s;opacity:0}
+.fpop-backdrop.open .fpop{transform:scale(1);opacity:1}
+.fpop-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;color:var(--text);margin-bottom:12px}
+.fpop-opt{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;cursor:pointer;font-size:0.88rem;font-weight:600;color:var(--text2);border:1.5px solid transparent;transition:all 0.12s;user-select:none}
+.fpop-opt:hover{background:var(--surface2)}
+.fpop-opt.sel{background:var(--purple-soft);color:var(--purple);border-color:var(--purple-dim)}
+.fpop-dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all 0.12s}
+.fpop-opt.sel .fpop-dot{border-color:var(--purple);background:var(--purple)}
+.fpop-opt.sel .fpop-dot::after{content:'';width:6px;height:6px;border-radius:50%;background:#fff;display:block}
+.fpop-done{margin-top:14px;width:100%;padding:11px;border-radius:12px;border:none;background:var(--purple);color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;cursor:pointer;transition:opacity 0.15s}
+.fpop-done:hover{opacity:0.9}
 
 .search-wrap{padding:10px 14px}
 .search-input{width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:11px 14px 11px 40px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.9rem;outline:none;transition:all 0.2s;box-shadow:var(--shadow);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:14px center}
@@ -231,7 +248,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
       </div>
     </div>
     <div class="topbar-right">
-      <span class="ver-tag">v2.1.0</span>
+      <span class="ver-tag">v2.2.0</span>
       <span class="role-badge" id="role-badge">Admin</span>
       <button class="logout-btn" onclick="signOut()">Logout</button>
     </div>
@@ -245,14 +262,28 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
   </div>
 
   <div class="filter-row">
-    <div class="filter-tab active" onclick="setFilter('active',this)">Active</div>
-    <div class="filter-tab" onclick="setFilter('all',this)">All</div>
-    <div class="filter-tab" onclick="setFilter('woodwork',this)">🪵 Woodwork</div>
-    <div class="filter-tab" onclick="setFilter('plywood',this)">🏠 Plywood</div>
-    <div class="filter-tab" onclick="setFilter('modular',this)">🍳 Modular</div>
-    <div class="filter-tab" onclick="setFilter('lathe',this)">⚙️ Lathe</div>
-    <div class="filter-tab" onclick="setFilter('overdue',this)">Overdue</div>
-    <div class="filter-tab" onclick="setFilter('delivered',this)">Delivered</div>
+    <div class="filter-pill" id="type-pill" onclick="openFpop('type')">
+      <div class="filter-pill-left">
+        <span class="filter-pill-label">&#128194; Type</span>
+        <span class="filter-pill-value" id="type-pill-val">Active</span>
+      </div>
+      <span class="filter-pill-arrow">&#9660;</span>
+    </div>
+    <div class="filter-pill" id="stage-pill" onclick="openFpop('stage')">
+      <div class="filter-pill-left">
+        <span class="filter-pill-label">&#128260; Stage</span>
+        <span class="filter-pill-value" id="stage-pill-val">All Stages</span>
+      </div>
+      <span class="filter-pill-arrow">&#9660;</span>
+    </div>
+  </div>
+
+  <div class="fpop-backdrop" id="fpop-backdrop" onclick="closeFpop()">
+    <div class="fpop" onclick="event.stopPropagation()">
+      <div class="fpop-title" id="fpop-title">Filter</div>
+      <div id="fpop-opts"></div>
+      <button class="fpop-done" onclick="closeFpop()">Done</button>
+    </div>
   </div>
 
   <div class="search-wrap">
@@ -473,7 +504,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v2.1.0';
+const APP_VERSION = 'v2.2.0';
 
 // ── PWA INSTALL PROMPT ──
 let _deferredInstall = null;
@@ -542,7 +573,8 @@ window._projects       = [];
 window._editId         = null;
 window._editStatus     = 0;
 window._editType       = 'woodwork';
-window._activeFilter   = 'active';
+window._typeFilter     = 'active';
+window._stageFilter    = 'all';
 window._statusUpdateId = null;
 window._updateStatusVal= null;
 
@@ -560,11 +592,61 @@ function urgClass(days, del) {
   return 'ok';
 }
 
-function setFilter(f, el) {
-  window._activeFilter = f;
-  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
+const TYPE_OPTS = [
+  {v:'active',    label:'Active'},
+  {v:'all',       label:'All Orders'},
+  {v:'woodwork',  label:'🪵 Woodwork'},
+  {v:'plywood',   label:'🏠 Plywood'},
+  {v:'modular',   label:'🍳 Modular'},
+  {v:'lathe',     label:'⚙️ Lathe'},
+  {v:'other',     label:'📝 Other'},
+  {v:'overdue',   label:'⚠️ Overdue'},
+  {v:'delivered', label:'✅ Delivered'},
+];
+const STAGE_OPTS = [
+  {v:'all', label:'All Stages'},
+  {v:'0',   label:'📋 Order Taken'},
+  {v:'1',   label:'🔨 In Progress'},
+  {v:'2',   label:'✨ Finishing'},
+  {v:'3',   label:'📦 Ready'},
+  {v:'4',   label:'✅ Delivered'},
+];
+
+let _fpopType = null;
+
+function openFpop(kind) {
+  _fpopType = kind;
+  const opts = kind === 'type' ? TYPE_OPTS : STAGE_OPTS;
+  const cur  = kind === 'type' ? window._typeFilter : window._stageFilter;
+  document.getElementById('fpop-title').textContent = kind === 'type' ? 'Filter by Type' : 'Filter by Stage';
+  document.getElementById('fpop-opts').innerHTML = opts.map(o =>
+    '<div class="fpop-opt ' + (o.v === cur ? 'sel' : '') + '" onclick="pickFpop(\'' + o.v + '\')">' +
+    '<div class="fpop-dot"></div>' + o.label + '</div>'
+  ).join('');
+  document.getElementById('fpop-backdrop').classList.add('open');
+}
+
+function pickFpop(v) {
+  const opts = _fpopType === 'type' ? TYPE_OPTS : STAGE_OPTS;
+  const label = opts.find(o => o.v === v)?.label || v;
+  if (_fpopType === 'type') {
+    window._typeFilter = v;
+    document.getElementById('type-pill-val').textContent = label;
+    document.getElementById('type-pill').classList.toggle('has-filter', v !== 'active');
+  } else {
+    window._stageFilter = v;
+    document.getElementById('stage-pill-val').textContent = label;
+    document.getElementById('stage-pill').classList.toggle('has-filter', v !== 'all');
+  }
+  document.querySelectorAll('.fpop-opt').forEach(el =>
+    el.classList.toggle('sel', el.textContent.trim() === label)
+  );
   renderProjects();
+}
+
+function closeFpop() {
+  document.getElementById('fpop-backdrop').classList.remove('open');
+  _fpopType = null;
 }
 
 function renderProjects() {
@@ -573,14 +655,20 @@ function renderProjects() {
 
   let projects = (window._projects || []).filter(p => {
     if (q && !p.client?.toLowerCase().includes(q) && !p.item?.toLowerCase().includes(q)) return false;
-    const del = isDelivered(p), days = daysLeft(p.deadline);
-    if (window._activeFilter === 'active')    return !del;
-    if (window._activeFilter === 'woodwork')  return !del && p.projectType === 'woodwork';
-    if (window._activeFilter === 'plywood')   return !del && p.projectType === 'plywood';
-    if (window._activeFilter === 'modular')   return !del && p.projectType === 'modular';
-    if (window._activeFilter === 'lathe')     return !del && p.projectType === 'lathe';
-    if (window._activeFilter === 'overdue')   return !del && days < 0;
-    if (window._activeFilter === 'delivered') return del;
+    const del  = isDelivered(p);
+    const days = daysLeft(p.deadline);
+    const tf   = window._typeFilter;
+    const sf   = window._stageFilter;
+    // Type filter
+    let typeOk = false;
+    if      (tf === 'active')    typeOk = !del;
+    else if (tf === 'all')       typeOk = true;
+    else if (tf === 'overdue')   typeOk = !del && days < 0;
+    else if (tf === 'delivered') typeOk = del;
+    else                         typeOk = p.projectType === tf;
+    if (!typeOk) return false;
+    // Stage filter
+    if (sf !== 'all' && (p.status ?? 0) !== parseInt(sf)) return false;
     return true;
   });
 
@@ -596,7 +684,7 @@ function renderProjects() {
   });
 
   const overdueN = projects.filter(p => !isDelivered(p) && daysLeft(p.deadline) < 0).length;
-  let html = overdueN > 0 && window._activeFilter !== 'delivered'
+  let html = overdueN > 0 && window._typeFilter !== 'delivered'
     ? `<div class="overdue-banner">⚠️ ${overdueN} order${overdueN > 1 ? 's' : ''} past deadline</div>` : '';
 
   projects.forEach(p => {
