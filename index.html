@@ -11,7 +11,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 <style>
-/* ── v2.3.0 — Collapsible cards, expand all, clear filters ── */
+/* ── v2.3.0 — Collapsible cards + expand all in search row ── */
 :root {
   --bg:#eef0f7; --surface:#ffffff; --surface2:#f4f5fb; --border:#e2e4f0;
   --purple:#4f46e5; --purple-dark:#312e81; --purple-mid:#6366f1;
@@ -99,9 +99,12 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .fpop-done{margin-top:14px;width:100%;padding:11px;border-radius:12px;border:none;background:var(--purple);color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;cursor:pointer;transition:opacity 0.15s}
 .fpop-done:hover{opacity:0.9}
 
-.search-wrap{padding:10px 14px}
-.search-input{width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:11px 14px 11px 40px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.9rem;outline:none;transition:all 0.2s;box-shadow:var(--shadow);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:14px center}
+.search-wrap{padding:10px 14px;display:flex;align-items:center;gap:8px}
+.search-input{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:11px 14px 11px 40px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.9rem;outline:none;transition:all 0.2s;box-shadow:var(--shadow);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:14px center}
 .search-input:focus{border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-dim)}
+.expand-btn{flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:5px;height:44px;padding:0 12px;border-radius:14px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-size:0.75rem;font-weight:700;cursor:pointer;transition:all 0.15s;white-space:nowrap;box-shadow:var(--shadow);font-family:'DM Sans',sans-serif}
+.expand-btn:hover{background:var(--surface2)}
+.expand-btn.all-open{border-color:var(--purple);background:var(--purple-soft);color:var(--purple)}
 
 .projects-list{padding:0 14px 100px;display:flex;flex-direction:column;gap:12px}
 .project-card{background:var(--surface);border-radius:var(--radius);overflow:hidden;transition:transform 0.15s,box-shadow 0.15s;box-shadow:var(--shadow)}
@@ -120,17 +123,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .card-header{padding:14px 16px;cursor:pointer;user-select:none;-webkit-user-select:none}
 .card-body{padding:0 16px 4px}
 .card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
-.card-chevron{font-size:0.72rem;color:var(--text3);transition:transform 0.25s ease;flex-shrink:0;margin-left:2px;line-height:1}
+.card-chevron{font-size:0.72rem;color:var(--text3);transition:transform 0.25s ease;flex-shrink:0;margin-left:2px}
 .project-card.expanded .card-chevron{transform:rotate(180deg)}
 .card-expandable{display:none;padding:0 16px 4px}
 .project-card.expanded .card-expandable{display:block}
-
-/* action bar — expand/collapse all + clear filters */
-.list-action-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px 0;gap:8px}
-.list-action-btn{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-size:0.75rem;font-weight:700;cursor:pointer;transition:all 0.15s;font-family:'DM Sans',sans-serif;white-space:nowrap}
-.list-action-btn:hover{background:var(--surface2)}
-.list-action-btn.active-filter{border-color:var(--red);color:var(--red);background:var(--red-soft)}
-.list-action-btn.active-filter:hover{background:rgba(239,68,68,0.15)}
 .card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;line-height:1.25;color:var(--text)}
 .card-desc{font-size:0.78rem;color:var(--text2);margin-top:3px}
 
@@ -300,11 +296,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 
   <div class="search-wrap">
     <input class="search-input" type="search" placeholder="Search project or client…" id="search-input" oninput="renderProjects()">
-  </div>
-
-  <div class="list-action-bar">
-    <button class="list-action-btn" id="expand-all-btn" onclick="toggleAllCards()">&#9660; Expand All</button>
-    <button class="list-action-btn" id="clear-filter-btn" onclick="clearFilters()" style="display:none">&#10005; Clear Filters</button>
+    <button class="expand-btn" id="expand-all-btn" onclick="toggleAllCards()">&#9660; All</button>
   </div>
 
   <div id="projects-list" class="projects-list"></div>
@@ -658,13 +650,6 @@ function pickFpop(v) {
   document.querySelectorAll('.fpop-opt').forEach(el =>
     el.classList.toggle('sel', el.textContent.trim() === label)
   );
-  // show clear button if any non-default filter active
-  const hasActive = window._typeFilter !== 'active' || window._stageFilter !== 'all';
-  const clearBtn = document.getElementById('clear-filter-btn');
-  if (clearBtn) {
-    clearBtn.style.display = hasActive ? 'flex' : 'none';
-    clearBtn.classList.toggle('active-filter', hasActive);
-  }
   renderProjects();
 }
 
@@ -794,37 +779,26 @@ function renderProjects() {
 
 function toggleCard(id) {
   document.getElementById('card-' + id)?.classList.toggle('expanded');
-  updateExpandBtn();
+  syncExpandBtn();
 }
 
 let _allExpanded = false;
 function toggleAllCards() {
   _allExpanded = !_allExpanded;
-  document.querySelectorAll('.project-card[id^="card-"]').forEach(c => {
-    if (_allExpanded) c.classList.add('expanded');
-    else c.classList.remove('expanded');
-  });
-  const btn = document.getElementById('expand-all-btn');
-  if (btn) btn.innerHTML = _allExpanded ? '&#9650; Collapse All' : '&#9660; Expand All';
+  document.querySelectorAll('.project-card[id^="card-"]').forEach(c =>
+    c.classList.toggle('expanded', _allExpanded)
+  );
+  syncExpandBtn();
 }
 
-function updateExpandBtn() {
-  const all   = document.querySelectorAll('.project-card[id^="card-"]');
-  const open  = document.querySelectorAll('.project-card.expanded');
+function syncExpandBtn() {
+  const all  = document.querySelectorAll('.project-card[id^="card-"]');
+  const open = document.querySelectorAll('.project-card.expanded');
   _allExpanded = all.length > 0 && open.length === all.length;
   const btn = document.getElementById('expand-all-btn');
-  if (btn) btn.innerHTML = _allExpanded ? '&#9650; Collapse All' : '&#9660; Expand All';
-}
-
-function clearFilters() {
-  window._typeFilter  = 'active';
-  window._stageFilter = 'all';
-  document.getElementById('type-pill-val').textContent  = 'Active';
-  document.getElementById('stage-pill-val').textContent = 'All Stages';
-  document.getElementById('type-pill').classList.remove('has-filter');
-  document.getElementById('stage-pill').classList.remove('has-filter');
-  document.getElementById('clear-filter-btn').style.display = 'none';
-  renderProjects();
+  if (!btn) return;
+  btn.innerHTML = _allExpanded ? '&#9650; All' : '&#9660; All';
+  btn.classList.toggle('all-open', _allExpanded);
 }
 
 function updateStats() {
