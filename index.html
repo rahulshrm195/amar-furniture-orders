@@ -11,7 +11,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 <style>
-/* ── v2.3.0 — Collapsible cards + expand all in search row ── */
+/* ── v2.4.0 — Grouped list: Active / Ready / On Hold ── */
 :root {
   --bg:#eef0f7; --surface:#ffffff; --surface2:#f4f5fb; --border:#e2e4f0;
   --purple:#4f46e5; --purple-dark:#312e81; --purple-mid:#6366f1;
@@ -164,6 +164,21 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .card-item-qty{font-size:0.75rem;font-weight:700;color:var(--purple);background:var(--purple-soft);padding:2px 8px;border-radius:6px}
 
 .card-notes{margin-top:10px;font-size:0.8rem;color:var(--text2);background:var(--surface2);border-radius:10px;padding:9px 12px;border-left:3px solid var(--purple-mid);line-height:1.5;white-space:pre-wrap}
+.group-header{display:flex;align-items:center;justify-content:space-between;padding:16px 14px 8px;margin-top:4px}
+.group-header-left{display:flex;align-items:center;gap:8px}
+.group-header-title{font-family:'Syne',sans-serif;font-weight:800;font-size:0.9rem;color:var(--text)}
+.group-header-count{font-size:0.72rem;font-weight:700;color:var(--text3);background:var(--surface2);border:1.5px solid var(--border);padding:2px 8px;border-radius:20px}
+.group-divider{height:1.5px;background:var(--border);margin:0 14px}
+.on-hold-toggle{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(245,158,11,0.08);border:1.5px solid rgba(245,158,11,0.25);border-radius:14px;margin-bottom:16px;cursor:pointer;transition:all 0.15s}
+.on-hold-toggle.active{background:rgba(245,158,11,0.15);border-color:rgba(245,158,11,0.5)}
+.on-hold-toggle-left{display:flex;align-items:center;gap:10px}
+.on-hold-toggle-icon{font-size:1.2rem}
+.on-hold-toggle-text strong{display:block;font-size:0.88rem;font-weight:700;color:var(--text)}
+.on-hold-toggle-text span{font-size:0.75rem;color:var(--text2)}
+.toggle-switch{width:42px;height:24px;border-radius:12px;background:var(--border);position:relative;transition:background 0.2s;flex-shrink:0}
+.toggle-switch::after{content:'';position:absolute;width:18px;height:18px;border-radius:9px;background:#fff;top:3px;left:3px;transition:transform 0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.15)}
+.on-hold-toggle.active .toggle-switch{background:var(--amber)}
+.on-hold-toggle.active .toggle-switch::after{transform:translateX(18px)}
 .card-actions{display:flex;gap:8px;padding:0 16px 14px}
 .card-actions .btn{padding:9px;font-size:0.8rem;border-radius:12px}
 
@@ -256,7 +271,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
       </div>
     </div>
     <div class="topbar-right">
-      <span class="ver-tag">v2.3.0</span>
+      <span class="ver-tag">v2.4.0</span>
       <span class="role-badge" id="role-badge">Admin</span>
       <button class="logout-btn" onclick="signOut()">Logout</button>
     </div>
@@ -343,6 +358,17 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
     </div>
 
     <div class="field"><label>Notes / Specs</label><textarea id="f-notes" placeholder="Material, measurements, design details…"></textarea></div>
+
+    <div class="on-hold-toggle" id="on-hold-toggle" onclick="toggleOnHold()">
+      <div class="on-hold-toggle-left">
+        <span class="on-hold-toggle-icon">&#9208;</span>
+        <div class="on-hold-toggle-text">
+          <strong>Put on Hold</strong>
+          <span>Pause this project temporarily</span>
+        </div>
+      </div>
+      <div class="toggle-switch"></div>
+    </div>
 
     <div class="modal-actions">
       <button class="btn btn-primary" onclick="saveProject()">Save Order</button>
@@ -483,6 +509,7 @@ window.saveProject = async function() {
     advance:   parseFloat(document.getElementById('f-advance').value) || 0,
     items, status: window._editStatus ?? 0,
     notes:     document.getElementById('f-notes').value.trim(),
+    onHold:    window._editOnHold ?? false,
     updatedAt: _serverTimestamp()
   };
   if (window._editId) {
@@ -513,7 +540,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v2.3.0';
+const APP_VERSION = 'v2.4.0';
 
 // ── PWA INSTALL PROMPT ──
 let _deferredInstall = null;
@@ -582,12 +609,16 @@ window._projects       = [];
 window._editId         = null;
 window._editStatus     = 0;
 window._editType       = 'woodwork';
+window._editOnHold     = false;
 window._typeFilter     = 'active';
 window._stageFilter    = 'all';
 window._statusUpdateId = null;
 window._updateStatusVal= null;
 
 const isDelivered = p => (p.status ?? 0) >= 4;
+const isReady     = p => (p.status ?? 0) === 3 && !p.onHold;
+const isOnHold    = p => !!p.onHold;
+const isActive    = p => !isDelivered(p) && !isReady(p) && !isOnHold(p);
 
 function daysLeft(deadline) {
   const today = new Date(); today.setHours(0,0,0,0);
@@ -602,7 +633,7 @@ function urgClass(days, del) {
 }
 
 const TYPE_OPTS = [
-  {v:'active',    label:'Active'},
+  {v:'active',    label:'Active (grouped)'},
   {v:'all',       label:'All Orders'},
   {v:'woodwork',  label:'🪵 Woodwork'},
   {v:'plywood',   label:'🏠 Plywood'},
@@ -658,124 +689,162 @@ function closeFpop() {
   _fpopType = null;
 }
 
+function toggleOnHold() {
+  window._editOnHold = !window._editOnHold;
+  document.getElementById('on-hold-toggle').classList.toggle('active', window._editOnHold);
+}
+
+function buildCard(p) {
+  const days  = daysLeft(p.deadline);
+  const del   = isDelivered(p);
+  const hold  = isOnHold(p);
+  const urg   = hold ? 'warn' : urgClass(days, del);
+  const cardCls = del ? 'delivered' : hold ? 'warning' : urg === 'danger' ? 'urgent' : urg === 'warn' ? 'warning' : 'ok-card';
+  const daysText = del ? '✓' : days < 0 ? Math.abs(days)+'d' : days === 0 ? 'Today' : days+'d';
+  const daysLbl  = del ? 'done' : days < 0 ? 'overdue' : days === 0 ? 'due' : 'left';
+
+  let stepsHtml = '';
+  for (let i = 0; i < 4; i++)
+    stepsHtml += `<div class="step ${i < (p.status||0) ? (del?'done-del':'done-ok') : ''}"></div>`;
+
+  const stageIdx = Math.min(p.status || 0, 4);
+  const stage    = PIPELINE[stageIdx];
+  const stageCls = SSTYLES[stageIdx];
+  const typeInfo  = TYPES[p.projectType] || TYPES.other;
+  const typeLabel = p.projectType === 'other' && p.otherLabel ? p.otherLabel : typeInfo.label;
+  const date      = p.deadline ? new Date(p.deadline+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'}) : '';
+  const typeChip  = `<div class="meta-chip ${typeInfo.chip}">${typeInfo.icon} ${typeLabel}</div>`;
+  let amtChip = '';
+  if (window._isAdmin && p.amount) {
+    amtChip = p.advance
+      ? `<div class="meta-chip amount">₹${fmtAmt(p.advance)} adv / ₹${fmtAmt(p.amount)}</div>`
+      : `<div class="meta-chip amount">₹${fmtAmt(p.amount)}</div>`;
+  }
+  const holdChip  = hold ? `<div class="meta-chip" style="background:rgba(245,158,11,0.12);color:#d97706">⏸ On Hold</div>` : '';
+  const descHtml  = p.item ? `<div class="card-desc">${escHtml(p.item)}</div>` : '';
+  let itemsHtml = '';
+  if (p.items?.length) {
+    itemsHtml = `<div class="card-items">
+      <div class="card-items-hdr">Items (${p.items.length})</div>
+      ${p.items.map((it, i) => {
+        const dims = [it.l, it.b, it.w].filter(Boolean).join(' × ');
+        const dimsHtml = dims ? `<span class="card-item-dims">${dims}</span><span style="color:var(--border)">|</span>` : '';
+        return `<div class="card-item-row">
+          <div class="card-item-top"><span class="card-item-sr">${i+1}</span><span class="card-item-name">${escHtml(it.name)}</span></div>
+          <div class="card-item-meta">${dimsHtml}<span class="card-item-qty">${escHtml(it.qty)} ${escHtml(it.unit||'Nos')}</span></div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+  const notesHtml = p.notes ? `<div class="card-notes">${escHtml(p.notes)}</div>` : '';
+  const adminBtn  = window._isAdmin ? `<button class="btn btn-outline" style="flex:1" onclick="openEditModal('${p.id}')">Edit</button>` : '';
+  const callBtn   = p.phone ? `<a href="tel:${p.phone}" class="btn btn-ghost" style="flex:0.6;text-decoration:none">&#128222; Call</a>` : '';
+  const hasExtra  = !!(itemsHtml || notesHtml);
+  const chevron   = hasExtra ? `<span class="card-chevron">&#9660;</span>` : '';
+  return `
+  <div class="project-card ${cardCls}" id="card-${p.id}">
+    <div class="card-urgency-bar ${urg}"></div>
+    <div class="card-header" ${hasExtra ? `onclick="toggleCard('${p.id}')"` : ''}>
+      <div class="card-top">
+        <div style="min-width:0"><div class="card-title">${escHtml(p.client)}</div>${descHtml}</div>
+        <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+          <div class="days-badge ${urg}">${daysText}<span class="days-badge-lbl">${daysLbl}</span></div>
+          ${chevron}
+        </div>
+      </div>
+      <div class="card-meta">${typeChip}<div class="meta-chip date-chip">&#128197; ${date}</div>${amtChip}${holdChip}</div>
+      <div class="status-row">
+        <div class="status-stepper">${stepsHtml}</div>
+        <div class="status-label ${stageCls}">${stage.icon} ${stage.label}</div>
+      </div>
+    </div>
+    ${hasExtra ? `<div class="card-expandable">${itemsHtml}${notesHtml}<div style="height:6px"></div></div>` : ''}
+    <div class="card-actions">
+      <button class="btn btn-ghost" style="flex:1" onclick="openStatusModal('${p.id}')">Update Status</button>
+      ${adminBtn}${callBtn}
+    </div>
+  </div>`;
+}
+
+function groupHeader(icon, title, count) {
+  return `<div class="group-header"><div class="group-header-left"><span>${icon}</span><span class="group-header-title">${title}</span><span class="group-header-count">${count}</span></div></div>`;
+}
+
+function applyFilters(p) {
+  const q  = (document.getElementById('search-input')?.value || '').toLowerCase();
+  if (q && !p.client?.toLowerCase().includes(q) && !p.item?.toLowerCase().includes(q)) return false;
+  const tf = window._typeFilter;
+  const sf = window._stageFilter;
+  const del  = isDelivered(p);
+  const days = daysLeft(p.deadline);
+  // type filter
+  if (tf === 'active') { /* handled by grouping */ }
+  else if (tf === 'all');
+  else if (tf === 'overdue')   { if (!(!del && !p.onHold && days < 0)) return false; }
+  else if (tf === 'delivered') { if (!del) return false; }
+  else { if (p.projectType !== tf) return false; }
+  // stage filter
+  if (sf !== 'all' && (p.status ?? 0) !== parseInt(sf)) return false;
+  return true;
+}
+
+function sortByDeadline(arr) {
+  return [...arr].sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+}
+
 function renderProjects() {
   const list = document.getElementById('projects-list');
-  const q    = (document.getElementById('search-input')?.value || '').toLowerCase();
+  const tf   = window._typeFilter;
+  const all  = (window._projects || []).filter(applyFilters);
 
-  let projects = (window._projects || []).filter(p => {
-    if (q && !p.client?.toLowerCase().includes(q) && !p.item?.toLowerCase().includes(q)) return false;
-    const del  = isDelivered(p);
-    const days = daysLeft(p.deadline);
-    const tf   = window._typeFilter;
-    const sf   = window._stageFilter;
-    // Type filter
-    let typeOk = false;
-    if      (tf === 'active')    typeOk = !del;
-    else if (tf === 'all')       typeOk = true;
-    else if (tf === 'overdue')   typeOk = !del && days < 0;
-    else if (tf === 'delivered') typeOk = del;
-    else                         typeOk = p.projectType === tf;
-    if (!typeOk) return false;
-    // Stage filter
-    if (sf !== 'all' && (p.status ?? 0) !== parseInt(sf)) return false;
-    return true;
-  });
+  // Grouped view (default Active mode)
+  if (tf === 'active') {
+    const activeP   = sortByDeadline(all.filter(p => isActive(p)));
+    const readyP    = sortByDeadline(all.filter(p => isReady(p)));
+    const onHoldP   = sortByDeadline(all.filter(p => isOnHold(p) && !isDelivered(p)));
 
-  if (!projects.length) {
-    list.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>No orders here.<br>${window._isAdmin ? 'Tap + to add your first order.' : 'Nothing to show.'}</p></div>`;
+    if (!activeP.length && !readyP.length && !onHoldP.length) {
+      list.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>No orders here.<br>${window._isAdmin ? 'Tap + to add your first order.' : 'Nothing to show.'}</p></div>`;
+      return;
+    }
+
+    const overdueN = activeP.filter(p => daysLeft(p.deadline) < 0).length;
+    let html = overdueN > 0 ? `<div class="overdue-banner">⚠️ ${overdueN} order${overdueN>1?'s':''} past deadline</div>` : '';
+
+    if (activeP.length) {
+      html += groupHeader('🔨', 'Active', activeP.length);
+      html += `<div class="group-divider"></div>`;
+      activeP.forEach(p => { html += buildCard(p); });
+    }
+    if (readyP.length) {
+      html += groupHeader('📦', 'Ready to Deliver', readyP.length);
+      html += `<div class="group-divider"></div>`;
+      readyP.forEach(p => { html += buildCard(p); });
+    }
+    if (onHoldP.length) {
+      html += groupHeader('⏸', 'On Hold', onHoldP.length);
+      html += `<div class="group-divider"></div>`;
+      onHoldP.forEach(p => { html += buildCard(p); });
+    }
+    list.innerHTML = html;
+    syncExpandBtn();
     return;
   }
 
-  projects.sort((a, b) => {
-    const ad = isDelivered(a), bd = isDelivered(b);
-    if (ad && !bd) return 1; if (bd && !ad) return -1;
-    return new Date(a.deadline) - new Date(b.deadline);
-  });
-
-  const overdueN = projects.filter(p => !isDelivered(p) && daysLeft(p.deadline) < 0).length;
-  let html = overdueN > 0 && window._typeFilter !== 'delivered'
-    ? `<div class="overdue-banner">⚠️ ${overdueN} order${overdueN > 1 ? 's' : ''} past deadline</div>` : '';
-
-  projects.forEach(p => {
-    const days  = daysLeft(p.deadline);
-    const del   = isDelivered(p);
-    const urg   = urgClass(days, del);
-    const cardCls = del ? 'delivered' : urg === 'danger' ? 'urgent' : urg === 'warn' ? 'warning' : 'ok-card';
-    const daysText = del ? '✓' : days < 0 ? Math.abs(days)+'d' : days === 0 ? 'Today' : days+'d';
-    const daysLbl  = del ? 'done' : days < 0 ? 'overdue' : days === 0 ? 'due' : 'left';
-
-    // 4 pipeline segments
-    let stepsHtml = '';
-    for (let i = 0; i < 4; i++)
-      stepsHtml += `<div class="step ${i < (p.status||0) ? (del?'done-del':'done-ok') : ''}"></div>`;
-
-    const stageIdx = Math.min(p.status || 0, 4);
-    const stage    = PIPELINE[stageIdx];
-    const stageCls = SSTYLES[stageIdx];
-
-    const typeInfo  = TYPES[p.projectType] || TYPES.other;
-    const typeLabel = p.projectType === 'other' && p.otherLabel ? p.otherLabel : typeInfo.label;
-    const date      = p.deadline ? new Date(p.deadline+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'}) : '';
-
-    const typeChip  = `<div class="meta-chip ${typeInfo.chip}">${typeInfo.icon} ${typeLabel}</div>`;
-    let amtChip = '';
-    if (window._isAdmin && p.amount) {
-      if (p.advance) {
-        amtChip = `<div class="meta-chip amount">₹${fmtAmt(p.advance)} adv / ₹${fmtAmt(p.amount)}</div>`;
-      } else {
-        amtChip = `<div class="meta-chip amount">₹${fmtAmt(p.amount)}</div>`;
-      }
-    }
-    const descHtml  = p.item ? `<div class="card-desc">${escHtml(p.item)}</div>` : '';
-
-    let itemsHtml = '';
-    if (p.items?.length) {
-      itemsHtml = `<div class="card-items">
-        <div class="card-items-hdr">Items (${p.items.length})</div>
-        ${p.items.map((it, i) => {
-          const dims = [it.l, it.b, it.w].filter(Boolean).join(' × ');
-          const dimsHtml = dims ? `<span class="card-item-dims">${dims}</span><span style="color:var(--border)">|</span>` : '';
-          return `<div class="card-item-row">
-            <div class="card-item-top"><span class="card-item-sr">${i+1}</span><span class="card-item-name">${escHtml(it.name)}</span></div>
-            <div class="card-item-meta">${dimsHtml}<span class="card-item-qty">${escHtml(it.qty)} ${escHtml(it.unit||'Nos')}</span></div>
-          </div>`;
-        }).join('')}
-      </div>`;
-    }
-
-    const notesHtml = p.notes ? `<div class="card-notes">${escHtml(p.notes)}</div>` : '';
-    const adminBtn  = window._isAdmin ? `<button class="btn btn-outline" style="flex:1" onclick="openEditModal('${p.id}')">Edit</button>` : '';
-    const callBtn   = p.phone ? `<a href="tel:${p.phone}" class="btn btn-ghost" style="flex:0.6;text-decoration:none">&#128222; Call</a>` : '';
-    const hasExtra  = !!(itemsHtml || notesHtml);
-    const chevron   = hasExtra ? `<span class="card-chevron">&#9660;</span>` : '';
-
-    html += `
-    <div class="project-card ${cardCls}" id="card-${p.id}">
-      <div class="card-urgency-bar ${urg}"></div>
-      <div class="card-header" ${hasExtra ? `onclick="toggleCard('${p.id}')"` : ''}>
-        <div class="card-top">
-          <div style="min-width:0"><div class="card-title">${escHtml(p.client)}</div>${descHtml}</div>
-          <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
-            <div class="days-badge ${urg}">${daysText}<span class="days-badge-lbl">${daysLbl}</span></div>
-            ${chevron}
-          </div>
-        </div>
-        <div class="card-meta">${typeChip}<div class="meta-chip date-chip">&#128197; ${date}</div>${amtChip}</div>
-        <div class="status-row">
-          <div class="status-stepper">${stepsHtml}</div>
-          <div class="status-label ${stageCls}">${stage.icon} ${stage.label}</div>
-        </div>
-      </div>
-      ${hasExtra ? `<div class="card-expandable">${itemsHtml}${notesHtml}<div style="height:6px"></div></div>` : ''}
-      <div class="card-actions">
-        <button class="btn btn-ghost" style="flex:1" onclick="openStatusModal('${p.id}')">Update Status</button>
-        ${adminBtn}${callBtn}
-      </div>
-    </div>`;
-  });
-
+  // All other filters — flat list
+  if (!all.length) {
+    list.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>No orders found.</p></div>`;
+    return;
+  }
+  const sorted = sortByDeadline(all);
+  const overdueN = sorted.filter(p => !isDelivered(p) && !p.onHold && daysLeft(p.deadline) < 0).length;
+  let html = overdueN > 0 && tf !== 'delivered'
+    ? `<div class="overdue-banner">⚠️ ${overdueN} order${overdueN>1?'s':''} past deadline</div>` : '';
+  sorted.forEach(p => { html += buildCard(p); });
   list.innerHTML = html;
+  syncExpandBtn();
 }
+
 
 function toggleCard(id) {
   document.getElementById('card-' + id)?.classList.toggle('expanded');
@@ -802,8 +871,8 @@ function syncExpandBtn() {
 }
 
 function updateStats() {
-  const active = window._projects.filter(p => !isDelivered(p));
-  document.getElementById('stat-total').textContent  = window._projects.length;
+  const active = (window._projects || []).filter(p => isActive(p));
+  document.getElementById('stat-total').textContent  = active.length;
   document.getElementById('stat-ok').textContent     = active.filter(p => daysLeft(p.deadline) > 3).length;
   document.getElementById('stat-warn').textContent   = active.filter(p => { const d=daysLeft(p.deadline); return d>=0&&d<=3; }).length;
   document.getElementById('stat-danger').textContent = active.filter(p => daysLeft(p.deadline) < 0).length;
@@ -811,7 +880,9 @@ function updateStats() {
 
 function openAddModal() {
   if (!window._isAdmin) return;
-  window._editId = null; window._editStatus = 0; window._editType = 'woodwork';
+  window._editId = null; window._editStatus = 0; window._editType = 'woodwork'; window._editOnHold = false;
+  const tog = document.getElementById('on-hold-toggle');
+  if (tog) tog.classList.remove('active');
   document.getElementById('modal-title').textContent = 'New Order';
   document.getElementById('delete-btn').style.display = 'none';
   ['f-client','f-phone','f-item','f-amount','f-advance','f-notes','other-label-inp'].forEach(id => document.getElementById(id).value = '');
@@ -838,6 +909,9 @@ function openEditModal(id) {
   document.getElementById('f-amount').value            = p.amount || '';
   document.getElementById('f-advance').value           = p.advance || '';
   document.getElementById('f-notes').value             = p.notes || '';
+  window._editOnHold = !!(p.onHold);
+  const tog = document.getElementById('on-hold-toggle');
+  if (tog) tog.classList.toggle('active', window._editOnHold);
   document.getElementById('other-label-inp').value     = p.otherLabel || '';
   document.getElementById('items-edit-list').innerHTML = '';
   (p.items || []).forEach(it => addItemRow(it.name, it.l||'', it.b||'', it.w||'', it.qty, it.unit||'Nos'));
