@@ -11,7 +11,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 <style>
-/* ── v2.4.0 — Grouped list: Active / Ready / On Hold ── */
+/* ── v2.5.0 — Manager role (read-only, no financials) ── */
 :root {
   --bg:#eef0f7; --surface:#ffffff; --surface2:#f4f5fb; --border:#e2e4f0;
   --purple:#4f46e5; --purple-dark:#312e81; --purple-mid:#6366f1;
@@ -64,6 +64,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .topbar-right{display:flex;align-items:center;gap:8px}
 .role-badge{font-size:0.68rem;padding:4px 10px;border-radius:20px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase}
 .role-admin{background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.3)}
+.role-manager{background:rgba(99,102,241,0.35);color:#e0e7ff;border:1px solid rgba(99,102,241,0.5)}
 .role-staff{background:rgba(245,158,11,0.25);color:#fde68a;border:1px solid rgba(245,158,11,0.4)}
 .logout-btn{padding:6px 14px;border-radius:10px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:0.78rem;cursor:pointer;transition:all 0.15s}
 .logout-btn:hover{background:rgba(255,255,255,0.25)}
@@ -271,7 +272,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
       </div>
     </div>
     <div class="topbar-right">
-      <span class="ver-tag">v2.4.0</span>
+      <span class="ver-tag">v2.5.0</span>
       <span class="role-badge" id="role-badge">Admin</span>
       <button class="logout-btn" onclick="signOut()">Logout</button>
     </div>
@@ -430,6 +431,9 @@ const ADMIN_EMAILS = [
   "rahul@amarfurniture.in",
   "father@amarfurniture.in"
 ];
+const MANAGER_EMAILS = [
+  "manager@amarfurniture.in"
+];
 
 const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -446,13 +450,19 @@ Object.assign(window, {
 onAuthStateChanged(auth, user => {
   document.getElementById('loading-screen').style.display = 'none';
   if (user) {
-    const isAdmin = ADMIN_EMAILS.includes(user.email?.toLowerCase());
-    window._currentUser = user; window._isAdmin = isAdmin;
+    const email    = user.email?.toLowerCase();
+    const isAdmin  = ADMIN_EMAILS.includes(email);
+    const isMgr    = MANAGER_EMAILS.includes(email);
+    window._currentUser = user;
+    window._isAdmin     = isAdmin;
+    window._isManager   = isMgr;
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
-    document.getElementById('role-badge').textContent  = isAdmin ? 'Admin' : 'Staff';
-    document.getElementById('role-badge').className    = 'role-badge ' + (isAdmin ? 'role-admin' : 'role-staff');
-    document.getElementById('fab-btn').style.display   = isAdmin ? 'flex' : 'none';
+    const roleLabel = isAdmin ? 'Admin' : isMgr ? 'Manager' : 'Staff';
+    const roleCls   = isAdmin ? 'role-admin' : isMgr ? 'role-manager' : 'role-staff';
+    document.getElementById('role-badge').textContent = roleLabel;
+    document.getElementById('role-badge').className   = 'role-badge ' + roleCls;
+    document.getElementById('fab-btn').style.display  = isAdmin ? 'flex' : 'none';
     startListening();
     requestNotificationPermission();
   } else {
@@ -540,7 +550,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v2.4.0';
+const APP_VERSION = 'v2.5.0';
 
 // ── PWA INSTALL PROMPT ──
 let _deferredInstall = null;
@@ -737,8 +747,9 @@ function buildCard(p) {
     </div>`;
   }
   const notesHtml = p.notes ? `<div class="card-notes">${escHtml(p.notes)}</div>` : '';
-  const adminBtn  = window._isAdmin ? `<button class="btn btn-outline" style="flex:1" onclick="openEditModal('${p.id}')">Edit</button>` : '';
-  const callBtn   = p.phone ? `<a href="tel:${p.phone}" class="btn btn-ghost" style="flex:0.6;text-decoration:none">&#128222; Call</a>` : '';
+  const adminBtn    = window._isAdmin ? `<button class="btn btn-outline" style="flex:1" onclick="openEditModal('${p.id}')">Edit</button>` : '';
+  const callBtn     = p.phone ? `<a href="tel:${p.phone}" class="btn btn-ghost" style="flex:0.6;text-decoration:none">&#128222; Call</a>` : '';
+  const statusBtn   = (!window._isManager) ? `<button class="btn btn-ghost" style="flex:1" onclick="openStatusModal('${p.id}')">Update Status</button>` : '';
   const hasExtra  = !!(itemsHtml || notesHtml);
   const chevron   = hasExtra ? `<span class="card-chevron">&#9660;</span>` : '';
   return `
@@ -759,10 +770,7 @@ function buildCard(p) {
       </div>
     </div>
     ${hasExtra ? `<div class="card-expandable">${itemsHtml}${notesHtml}<div style="height:6px"></div></div>` : ''}
-    <div class="card-actions">
-      <button class="btn btn-ghost" style="flex:1" onclick="openStatusModal('${p.id}')">Update Status</button>
-      ${adminBtn}${callBtn}
-    </div>
+    ${statusBtn || adminBtn || callBtn ? `<div class="card-actions">${statusBtn}${adminBtn}${callBtn}</div>` : ''}
   </div>`;
 }
 
@@ -804,7 +812,7 @@ function renderProjects() {
     const onHoldP   = sortByDeadline(all.filter(p => isOnHold(p) && !isDelivered(p)));
 
     if (!activeP.length && !readyP.length && !onHoldP.length) {
-      list.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>No orders here.<br>${window._isAdmin ? 'Tap + to add your first order.' : 'Nothing to show.'}</p></div>`;
+      list.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>No orders here.<br>${window._isAdmin ? 'Tap + to add your first order.' : 'Nothing to show right now.'}</p></div>`;
       return;
     }
 
