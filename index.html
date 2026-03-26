@@ -11,7 +11,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 <style>
-/* ── v2.6.0 — Responsive desktop layout ── */
+/* ── v2.7.0 — Balance chip + Activity log ── */
 :root {
   --bg:#eef0f7; --surface:#ffffff; --surface2:#f4f5fb; --border:#e2e4f0;
   --purple:#4f46e5; --purple-dark:#312e81; --purple-mid:#6366f1;
@@ -143,6 +143,24 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .chip-wood{background:rgba(139,92,246,0.10);color:#7c3aed} .chip-plywood{background:rgba(59,130,246,0.10);color:#2563eb}
 .chip-modular{background:rgba(249,115,22,0.10);color:#ea580c} .chip-lathe{background:rgba(16,185,129,0.10);color:#059669}
 .chip-other{background:rgba(107,114,128,0.10);color:#4b5563}
+.meta-chip.balance{background:rgba(239,68,68,0.10);color:var(--red);font-weight:700}
+.meta-chip.balance-paid{background:var(--green-soft);color:var(--green);font-weight:700}
+
+/* ── ACTIVITY LOG ── */
+.activity-log{margin-top:10px;background:var(--surface2);border-radius:12px;overflow:hidden}
+.activity-log-hdr{padding:7px 12px;font-size:0.67rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;font-weight:700;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.activity-log-hdr button{background:none;border:none;color:var(--purple);font-size:0.7rem;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;padding:0}
+.activity-entry{padding:9px 12px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:flex-start}
+.activity-entry:last-child{border-bottom:none}
+.activity-dot{width:7px;height:7px;border-radius:50%;background:var(--purple-mid);margin-top:4px;flex-shrink:0}
+.activity-text{font-size:0.8rem;color:var(--text);flex:1;line-height:1.45}
+.activity-time{font-size:0.68rem;color:var(--text3);white-space:nowrap;margin-top:1px}
+.activity-empty{padding:10px 12px;font-size:0.78rem;color:var(--text3);font-style:italic}
+.activity-add-row{display:flex;gap:6px;padding:8px 12px;border-top:1px solid var(--border);background:var(--surface)}
+.activity-add-inp{flex:1;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:7px 11px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;outline:none;transition:border-color 0.2s}
+.activity-add-inp:focus{border-color:var(--purple)}
+.activity-add-btn{flex-shrink:0;padding:7px 14px;border-radius:9px;border:none;background:var(--purple);color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:0.78rem;cursor:pointer;transition:opacity 0.15s}
+.activity-add-btn:hover{opacity:0.85}
 
 .status-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .status-stepper{display:flex;gap:3px;flex:1}
@@ -438,7 +456,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
       </div>
     </div>
     <div class="topbar-right">
-      <span class="ver-tag">v2.6.0</span>
+      <span class="ver-tag">v2.7.0</span>
       <span class="role-badge" id="role-badge">Admin</span>
       <button class="logout-btn" onclick="signOut()">Logout</button>
     </div>
@@ -896,6 +914,12 @@ function buildCard(p) {
       ? `<div class="meta-chip amount">₹${fmtAmt(p.advance)} adv / ₹${fmtAmt(p.amount)}</div>`
       : `<div class="meta-chip amount">₹${fmtAmt(p.amount)}</div>`;
   }
+  let balChip = '';
+  if (window._isAdmin && p.amount && !isDelivered(p)) {
+    const bal = (Number(p.amount) || 0) - (Number(p.advance) || 0);
+    if (bal > 0) balChip = `<div class="meta-chip balance">₹${fmtAmt(bal)} due</div>`;
+    else if (bal <= 0 && p.amount) balChip = `<div class="meta-chip balance-paid">Paid ✓</div>`;
+  }
   const holdChip  = hold ? `<div class="meta-chip" style="background:rgba(245,158,11,0.12);color:#d97706">⏸ On Hold</div>` : '';
   const descHtml  = p.item ? `<div class="card-desc">${escHtml(p.item)}</div>` : '';
   let itemsHtml = '';
@@ -913,15 +937,34 @@ function buildCard(p) {
     </div>`;
   }
   const notesHtml = p.notes ? `<div class="card-notes">${escHtml(p.notes)}</div>` : '';
+
+  // ── Activity Log ──
+  const logEntries = (p.activityLog || []);
+  const logHtml = logEntries.length
+    ? logEntries.map(e => {
+        const d = new Date(e.time);
+        const label = d.toLocaleDateString('en-IN',{day:'numeric',month:'short'}) + ' ' + d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+        return `<div class="activity-entry"><div class="activity-dot"></div><div class="activity-text">${escHtml(e.text)}</div><div class="activity-time">${label}</div></div>`;
+      }).join('')
+    : `<div class="activity-empty">No activity yet — add a call note or update</div>`;
+  const activityHtml = `<div class="activity-log">
+    <div class="activity-log-hdr"><span>📝 Activity / Call Notes</span></div>
+    ${logHtml}
+    <div class="activity-add-row">
+      <input class="activity-add-inp" type="text" id="act-inp-${p.id}" placeholder="Add note or call update…" onkeydown="if(event.key==='Enter')addActivityLog('${p.id}')">
+      <button class="activity-add-btn" onclick="addActivityLog('${p.id}')">Add</button>
+    </div>
+  </div>`;
+
   const adminBtn    = window._isAdmin ? `<button class="btn btn-outline" style="flex:1" onclick="openEditModal('${p.id}')">Edit</button>` : '';
   const callBtn     = p.phone ? `<a href="tel:${p.phone}" class="btn btn-ghost" style="flex:0.6;text-decoration:none">&#128222; Call</a>` : '';
   const statusBtn   = (!window._isManager) ? `<button class="btn btn-ghost" style="flex:1" onclick="openStatusModal('${p.id}')">Update Status</button>` : '';
-  const hasExtra  = !!(itemsHtml || notesHtml);
-  const chevron   = hasExtra ? `<span class="card-chevron">&#9660;</span>` : '';
+  const hasExtra  = !!(itemsHtml || notesHtml || true); // always show activity log
+  const chevron   = `<span class="card-chevron">&#9660;</span>`;
   return `
   <div class="project-card ${cardCls}" id="card-${p.id}">
     <div class="card-urgency-bar ${urg}"></div>
-    <div class="card-header" ${hasExtra ? `onclick="toggleCard('${p.id}')"` : ''}>
+    <div class="card-header" onclick="toggleCard('${p.id}')">
       <div class="card-top">
         <div style="min-width:0"><div class="card-title">${escHtml(p.client)}</div>${descHtml}</div>
         <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
@@ -929,13 +972,13 @@ function buildCard(p) {
           ${chevron}
         </div>
       </div>
-      <div class="card-meta">${typeChip}<div class="meta-chip date-chip">&#128197; ${date}</div>${amtChip}${holdChip}</div>
+      <div class="card-meta">${typeChip}<div class="meta-chip date-chip">&#128197; ${date}</div>${amtChip}${balChip}${holdChip}</div>
       <div class="status-row">
         <div class="status-stepper">${stepsHtml}</div>
         <div class="status-label ${stageCls}">${stage.icon} ${stage.label}</div>
       </div>
     </div>
-    ${hasExtra ? `<div class="card-expandable">${itemsHtml}${notesHtml}<div style="height:6px"></div></div>` : ''}
+    <div class="card-expandable">${itemsHtml}${notesHtml}${activityHtml}<div style="height:6px"></div></div>
     ${statusBtn || adminBtn || callBtn ? `<div class="card-actions">${statusBtn}${adminBtn}${callBtn}</div>` : ''}
   </div>`;
 }
@@ -1183,6 +1226,20 @@ function fmtAmt(n) {
   if (num >= 1000)   return (num/1000).toFixed(num%1000===0?0:1)+'k';
   return num.toLocaleString('en-IN');
 }
+function addActivityLog(id) {
+  const inp  = document.getElementById('act-inp-' + id);
+  const text = (inp?.value || '').trim();
+  if (!text) return;
+  const p   = window._projects.find(x => x.id === id);
+  if (!p) return;
+  const log = [{ text, time: new Date().toISOString() }, ...(p.activityLog || [])];
+  inp.value = '';
+  inp.disabled = true;
+  _updateDoc(_doc(_db, 'projects', id), { activityLog: log, updatedAt: _serverTimestamp() })
+    .then(() => showToast('Note added ✓'))
+    .catch(() => { showToast('Error saving note'); inp.disabled = false; });
+}
+
 function escHtml(s) {
   if (!s) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
