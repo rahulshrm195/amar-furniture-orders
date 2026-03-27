@@ -11,7 +11,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 <style>
-/* ── v2.7.0 — Balance chip + Activity log ── */
+/* ── v2.8.0 — Hindi for Manager role ── */
 :root {
   --bg:#eef0f7; --surface:#ffffff; --surface2:#f4f5fb; --border:#e2e4f0;
   --purple:#4f46e5; --purple-dark:#312e81; --purple-mid:#6366f1;
@@ -435,7 +435,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 <!-- AUTH -->
 <div id="auth-screen" style="display:none">
   <div class="auth-logo">&#129681; Amar Furniture</div>
-  <div class="auth-sub">Order Tracker · v1.4.0</div>
+  <div class="auth-sub">Order Tracker · v2.8.0</div>
   <div class="auth-card">
     <h2>Sign In</h2>
     <div class="field"><label>Email</label><input type="email" id="auth-email" placeholder="you@email.com" autocomplete="email"></div>
@@ -456,30 +456,30 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
       </div>
     </div>
     <div class="topbar-right">
-      <span class="ver-tag">v2.7.0</span>
+      <span class="ver-tag">v2.8.0</span>
       <span class="role-badge" id="role-badge">Admin</span>
       <button class="logout-btn" onclick="signOut()">Logout</button>
     </div>
   </div>
 
   <div class="stats-row">
-    <div class="stat-card stat-total"><div class="stat-icon">&#128203;</div><div class="stat-num" id="stat-total">0</div><div class="stat-lbl">Total</div></div>
-    <div class="stat-card stat-ok"><div class="stat-icon">&#9989;</div><div class="stat-num" id="stat-ok">0</div><div class="stat-lbl">On Track</div></div>
-    <div class="stat-card stat-warn"><div class="stat-icon">&#9200;</div><div class="stat-num" id="stat-warn">0</div><div class="stat-lbl">Due Soon</div></div>
-    <div class="stat-card stat-danger"><div class="stat-icon">&#128308;</div><div class="stat-num" id="stat-danger">0</div><div class="stat-lbl">Overdue</div></div>
+    <div class="stat-card stat-total"><div class="stat-icon">&#128203;</div><div class="stat-num" id="stat-total">0</div><div class="stat-lbl" id="lbl-total">Total</div></div>
+    <div class="stat-card stat-ok"><div class="stat-icon">&#9989;</div><div class="stat-num" id="stat-ok">0</div><div class="stat-lbl" id="lbl-ok">On Track</div></div>
+    <div class="stat-card stat-warn"><div class="stat-icon">&#9200;</div><div class="stat-num" id="stat-warn">0</div><div class="stat-lbl" id="lbl-warn">Due Soon</div></div>
+    <div class="stat-card stat-danger"><div class="stat-icon">&#128308;</div><div class="stat-num" id="stat-danger">0</div><div class="stat-lbl" id="lbl-overdue">Overdue</div></div>
   </div>
 
   <div class="filter-row">
     <div class="filter-pill" id="type-pill" onclick="openFpop('type')">
       <div class="filter-pill-left">
-        <span class="filter-pill-label">&#128194; Type</span>
+        <span class="filter-pill-label" id="lbl-type-pill">&#128194; Type</span>
         <span class="filter-pill-value" id="type-pill-val">Active</span>
       </div>
       <span class="filter-pill-arrow">&#9660;</span>
     </div>
     <div class="filter-pill" id="stage-pill" onclick="openFpop('stage')">
       <div class="filter-pill-left">
-        <span class="filter-pill-label">&#128260; Stage</span>
+        <span class="filter-pill-label" id="lbl-stage-pill">&#128260; Stage</span>
         <span class="filter-pill-value" id="stage-pill-val">All Stages</span>
       </div>
       <span class="filter-pill-arrow">&#9660;</span>
@@ -490,7 +490,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
     <div class="fpop" onclick="event.stopPropagation()">
       <div class="fpop-title" id="fpop-title">Filter</div>
       <div id="fpop-opts"></div>
-      <button class="fpop-done" onclick="closeFpop()">Done</button>
+      <button class="fpop-done" id="fpop-done-btn" onclick="closeFpop()">Done</button>
     </div>
   </div>
 
@@ -567,11 +567,11 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 <div class="modal-backdrop" id="status-modal">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title">Update Status</div>
+    <div class="modal-title" id="status-modal-title">Update Status</div>
     <div id="status-modal-info" style="margin-bottom:16px;font-size:0.9rem;color:var(--text2)"></div>
-    <div class="field"><label>New Status</label><div class="status-selector" id="status-update-opts"></div></div>
+    <div class="field"><label id="lbl-new-status">New Status</label><div class="status-selector" id="status-update-opts"></div></div>
     <div class="modal-actions">
-      <button class="btn btn-primary" onclick="saveStatusUpdate()">Update Status</button>
+      <button class="btn btn-primary" id="btn-update-status" onclick="saveStatusUpdate()">Update Status</button>
       <button class="btn btn-ghost"   onclick="closeStatusModal()">Cancel</button>
     </div>
   </div>
@@ -647,6 +647,7 @@ onAuthStateChanged(auth, user => {
     document.getElementById('role-badge').textContent = roleLabel;
     document.getElementById('role-badge').className   = 'role-badge ' + roleCls;
     document.getElementById('fab-btn').style.display  = isAdmin ? 'flex' : 'none';
+    applyLanguage();
     startListening();
     requestNotificationPermission();
   } else {
@@ -734,8 +735,67 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v2.6.0';
+const APP_VERSION = 'v2.8.0';
 
+// -- LANGUAGE --
+const LANG = {
+  en: {
+    total:'Total', onTrack:'On Track', dueSoon:'Due Soon', overdue:'Overdue',
+    typeLabel:'Type', stageLabel:'Stage',
+    searchPlaceholder:'Search project or client…',
+    expandAll:'▼ All', collapseAll:'▲ All',
+    filterByType:'Filter by Type', filterByStage:'Filter by Stage', done:'Done',
+    active:'Active (grouped)', allOrders:'All Orders',
+    woodwork:'Woodwork', plywood:'Plywood', modular:'Modular',
+    lathe:'Lathe', other:'Other',
+    overdueFilter:'Overdue', delivered:'Delivered',
+    allStages:'All Stages', orderTaken:'Order Taken',
+    inProgress:'In Progress', finishing:'Finishing',
+    ready:'Ready', deliveredStage:'Delivered',
+    groupActive:'Active', groupReady:'Ready to Deliver', groupOnHold:'On Hold',
+    overdueMsg:'orders past deadline',
+    noOrders:'No orders here.', tapToAdd:'Tap + to add your first order.', nothingToShow:'Nothing to show right now.',
+    noOrdersFound:'No orders found.',
+    updateStatus:'Update Status', edit:'Edit', call:'Call',
+    newStatus:'New Status', cancel:'Cancel',
+    itemsHdr:'Items', activityHdr:'📝 Activity / Call Notes',
+    noActivity:'No activity yet — add a call note or update',
+    addNote:'Add note or call update…', add:'Add',
+    daysLeft:'left', daysOverdue:'overdue', daysDue:'due', daysDone:'done',
+    balanceDue:'due', balancePaid:'Paid ✓',
+    onHold:'On Hold',
+  },
+  hi: {
+    total:'कुल', onTrack:'सही है', dueSoon:'जल्द है', overdue:'देरी हुई',
+    typeLabel:'प्रकार', stageLabel:'स्टेज',
+    searchPlaceholder:'प्रोजेक्ट या ग्राहक खोजें…',
+    expandAll:'▼ सब खोलें', collapseAll:'▲ सब बंद करें',
+    filterByType:'प्रकार से फ़िल्टर', filterByStage:'स्टेज से फ़िल्टर', done:'ठीक है',
+    active:'चालू काम', allOrders:'सभी ऑर्डर',
+    woodwork:'लकड़ी का काम', plywood:'प्लाईवुड', modular:'मॉडुलर',
+    lathe:'लेथ वर्क', other:'अन्य',
+    overdueFilter:'देरी हुई', delivered:'डिलीवर',
+    allStages:'सभी स्टेज', orderTaken:'ऑर्डर लिया',
+    inProgress:'काम चल रहा है', finishing:'फिनिशिंग',
+    ready:'तैयार है', deliveredStage:'डिलीवर हो गया',
+    groupActive:'चालू काम', groupReady:'डिलीवरी के लिए तैयार', groupOnHold:'रोका हुआ',
+    overdueMsg:'ऑर्डर देरी से चल रहे हैं',
+    noOrders:'कोई ऑर्डर नहीं है।', tapToAdd:'', nothingToShow:'अभी कुछ नहीं है।',
+    noOrdersFound:'कोई ऑर्डर नहीं मिला।',
+    updateStatus:'स्टेटस बदलें', edit:'बदलें', call:'फ़ोन',
+    newStatus:'नया स्टेटस', cancel:'रद्द करें',
+    itemsHdr:'सामान', activityHdr:'गतिविधि / कॉल नोट्स',
+    noActivity:'अभी कोई गतिविधि नहीं — नोट डालें',
+    addNote:'नोट डालें…', add:'डालें',
+    daysLeft:'बाकी', daysOverdue:'देरी', daysDue:'आज', daysDone:'हो गया',
+    balanceDue:'बाकी', balancePaid:'भुगतान ✓',
+    onHold:'रोका हुआ',
+  }
+};
+function T(key) {
+  const lang = window._isManager ? 'hi' : 'en';
+  return LANG[lang]?.[key] ?? LANG['en']?.[key] ?? key;
+}
 // ── PWA INSTALL PROMPT ──
 let _deferredInstall = null;
 
@@ -790,13 +850,13 @@ const TYPES = {
 };
 
 // Fixed 5-stage pipeline for all project types
-const PIPELINE = [
-  { v:0, icon:'📋', label:'Order Taken' },
-  { v:1, icon:'🔨', label:'In Progress' },
-  { v:2, icon:'✨', label:'Finishing'   },
-  { v:3, icon:'📦', label:'Ready'       },
-  { v:4, icon:'✅', label:'Delivered'   },
-];
+function getPipeline() { return [
+  { v:0, icon:'📋', label:T('orderTaken') },
+  { v:1, icon:'🔨', label:T('inProgress') },
+  { v:2, icon:'✨',       label:T('finishing')   },
+  { v:3, icon:'📦', label:T('ready')       },
+  { v:4, icon:'✅',       label:T('deliveredStage') },
+];}
 const SSTYLES = ['s0','s1','s2','s3','s4'];
 
 window._projects       = [];
@@ -826,33 +886,33 @@ function urgClass(days, del) {
   return 'ok';
 }
 
-const TYPE_OPTS = [
-  {v:'active',    label:'Active (grouped)'},
-  {v:'all',       label:'All Orders'},
-  {v:'woodwork',  label:'🪵 Woodwork'},
-  {v:'plywood',   label:'🏠 Plywood'},
-  {v:'modular',   label:'🍳 Modular'},
-  {v:'lathe',     label:'⚙️ Lathe'},
-  {v:'other',     label:'📝 Other'},
-  {v:'overdue',   label:'⚠️ Overdue'},
-  {v:'delivered', label:'✅ Delivered'},
-];
-const STAGE_OPTS = [
-  {v:'all', label:'All Stages'},
-  {v:'0',   label:'📋 Order Taken'},
-  {v:'1',   label:'🔨 In Progress'},
-  {v:'2',   label:'✨ Finishing'},
-  {v:'3',   label:'📦 Ready'},
-  {v:'4',   label:'✅ Delivered'},
-];
+function getTypeOpts() { return [
+  {v:'active',    label:T('active')},
+  {v:'all',       label:T('allOrders')},
+  {v:'woodwork',  label:'🪵 '+T('woodwork')},
+  {v:'plywood',   label:'🏠 '+T('plywood')},
+  {v:'modular',   label:'🍳 '+T('modular')},
+  {v:'lathe',     label:'⚙️ '+T('lathe')},
+  {v:'other',     label:'📝 '+T('other')},
+  {v:'overdue',   label:'⚠️ '+T('overdueFilter')},
+  {v:'delivered', label:'✅ '+T('delivered')},
+];}
+function getStageOpts() { return [
+  {v:'all', label:T('allStages')},
+  {v:'0',   label:'📋 '+T('orderTaken')},
+  {v:'1',   label:'🔨 '+T('inProgress')},
+  {v:'2',   label:'✨ '+T('finishing')},
+  {v:'3',   label:'📦 '+T('ready')},
+  {v:'4',   label:'✅ '+T('deliveredStage')},
+];}
 
 let _fpopType = null;
 
 function openFpop(kind) {
   _fpopType = kind;
-  const opts = kind === 'type' ? TYPE_OPTS : STAGE_OPTS;
+  const opts = kind === 'type' ? getTypeOpts() : getStageOpts();
   const cur  = kind === 'type' ? window._typeFilter : window._stageFilter;
-  document.getElementById('fpop-title').textContent = kind === 'type' ? 'Filter by Type' : 'Filter by Stage';
+  document.getElementById('fpop-title').textContent = kind === 'type' ? T('filterByType') : T('filterByStage');
   document.getElementById('fpop-opts').innerHTML = opts.map(o =>
     '<div class="fpop-opt ' + (o.v === cur ? 'sel' : '') + '" onclick="pickFpop(\'' + o.v + '\')">' +
     '<div class="fpop-dot"></div>' + o.label + '</div>'
@@ -861,7 +921,7 @@ function openFpop(kind) {
 }
 
 function pickFpop(v) {
-  const opts = _fpopType === 'type' ? TYPE_OPTS : STAGE_OPTS;
+  const opts = _fpopType === 'type' ? getTypeOpts() : getStageOpts();
   const label = opts.find(o => o.v === v)?.label || v;
   if (_fpopType === 'type') {
     window._typeFilter = v;
@@ -895,14 +955,14 @@ function buildCard(p) {
   const urg   = hold ? 'warn' : urgClass(days, del);
   const cardCls = del ? 'delivered' : hold ? 'warning' : urg === 'danger' ? 'urgent' : urg === 'warn' ? 'warning' : 'ok-card';
   const daysText = del ? '✓' : days < 0 ? Math.abs(days)+'d' : days === 0 ? 'Today' : days+'d';
-  const daysLbl  = del ? 'done' : days < 0 ? 'overdue' : days === 0 ? 'due' : 'left';
+  const daysLbl  = del ? T('daysDone') : days < 0 ? T('daysOverdue') : days === 0 ? T('daysDue') : T('daysLeft');
 
   let stepsHtml = '';
   for (let i = 0; i < 4; i++)
     stepsHtml += `<div class="step ${i < (p.status||0) ? (del?'done-del':'done-ok') : ''}"></div>`;
 
   const stageIdx = Math.min(p.status || 0, 4);
-  const stage    = PIPELINE[stageIdx];
+  const stage    = getPipeline()[stageIdx];
   const stageCls = SSTYLES[stageIdx];
   const typeInfo  = TYPES[p.projectType] || TYPES.other;
   const typeLabel = p.projectType === 'other' && p.otherLabel ? p.otherLabel : typeInfo.label;
@@ -917,15 +977,15 @@ function buildCard(p) {
   let balChip = '';
   if (window._isAdmin && p.amount && !isDelivered(p)) {
     const bal = (Number(p.amount) || 0) - (Number(p.advance) || 0);
-    if (bal > 0) balChip = `<div class="meta-chip balance">₹${fmtAmt(bal)} due</div>`;
-    else if (bal <= 0 && p.amount) balChip = `<div class="meta-chip balance-paid">Paid ✓</div>`;
+    if (bal > 0) balChip = `<div class="meta-chip balance">₹${fmtAmt(bal)} ${T('balanceDue')}</div>`;
+    else if (bal <= 0 && p.amount) balChip = `<div class="meta-chip balance-paid">${T('balancePaid')}</div>`;
   }
-  const holdChip  = hold ? `<div class="meta-chip" style="background:rgba(245,158,11,0.12);color:#d97706">⏸ On Hold</div>` : '';
+  const holdChip  = hold ? `<div class="meta-chip" style="background:rgba(245,158,11,0.12);color:#d97706">⏸ ${T('onHold')}</div>` : '';
   const descHtml  = p.item ? `<div class="card-desc">${escHtml(p.item)}</div>` : '';
   let itemsHtml = '';
   if (p.items?.length) {
     itemsHtml = `<div class="card-items">
-      <div class="card-items-hdr">Items (${p.items.length})</div>
+      <div class="card-items-hdr">${T('itemsHdr')} (${p.items.length})</div>
       ${p.items.map((it, i) => {
         const dims = [it.l, it.b, it.w].filter(Boolean).join(' × ');
         const dimsHtml = dims ? `<span class="card-item-dims">${dims}</span><span style="color:var(--border)">|</span>` : '';
@@ -946,19 +1006,19 @@ function buildCard(p) {
         const label = d.toLocaleDateString('en-IN',{day:'numeric',month:'short'}) + ' ' + d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
         return `<div class="activity-entry"><div class="activity-dot"></div><div class="activity-text">${escHtml(e.text)}</div><div class="activity-time">${label}</div></div>`;
       }).join('')
-    : `<div class="activity-empty">No activity yet — add a call note or update</div>`;
+    : `<div class="activity-empty">${T('noActivity')}</div>`;
   const activityHtml = `<div class="activity-log">
-    <div class="activity-log-hdr"><span>📝 Activity / Call Notes</span></div>
+    <div class="activity-log-hdr"><span>${T('activityHdr')}</span></div>
     ${logHtml}
     <div class="activity-add-row">
-      <input class="activity-add-inp" type="text" id="act-inp-${p.id}" placeholder="Add note or call update…" onkeydown="if(event.key==='Enter')addActivityLog('${p.id}')">
-      <button class="activity-add-btn" onclick="addActivityLog('${p.id}')">Add</button>
+      <input class="activity-add-inp" type="text" id="act-inp-${p.id}" placeholder="${T('addNote')}" onkeydown="if(event.key==='Enter')addActivityLog('${p.id}')">
+      <button class="activity-add-btn" onclick="addActivityLog('${p.id}')">${T('add')}</button>
     </div>
   </div>`;
 
   const adminBtn    = window._isAdmin ? `<button class="btn btn-outline" style="flex:1" onclick="openEditModal('${p.id}')">Edit</button>` : '';
   const callBtn     = p.phone ? `<a href="tel:${p.phone}" class="btn btn-ghost" style="flex:0.6;text-decoration:none">&#128222; Call</a>` : '';
-  const statusBtn   = (!window._isManager) ? `<button class="btn btn-ghost" style="flex:1" onclick="openStatusModal('${p.id}')">Update Status</button>` : '';
+  const statusBtn   = (!window._isManager) ? `<button class="btn btn-ghost" style="flex:1" onclick="openStatusModal('${p.id}')">${T('updateStatus')}</button>` : '';
   const hasExtra  = !!(itemsHtml || notesHtml || true); // always show activity log
   const chevron   = `<span class="card-chevron">&#9660;</span>`;
   return `
@@ -1021,25 +1081,25 @@ function renderProjects() {
     const onHoldP   = sortByDeadline(all.filter(p => isOnHold(p) && !isDelivered(p)));
 
     if (!activeP.length && !readyP.length && !onHoldP.length) {
-      list.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>No orders here.<br>${window._isAdmin ? 'Tap + to add your first order.' : 'Nothing to show right now.'}</p></div>`;
+      list.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>${T('noOrders')}<br>${window._isAdmin ? T('tapToAdd') : T('nothingToShow')}</p></div>`;
       return;
     }
 
     const overdueN = activeP.filter(p => daysLeft(p.deadline) < 0).length;
-    let html = overdueN > 0 ? `<div class="overdue-banner">⚠️ ${overdueN} order${overdueN>1?'s':''} past deadline</div>` : '';
+    let html = overdueN > 0 ? `<div class="overdue-banner">⚠️ ${overdueN} ${T('overdueMsg')}</div>` : '';
 
     if (activeP.length) {
-      html += groupHeader('🔨', 'Active', activeP.length);
+      html += groupHeader('🔨', T('groupActive'), activeP.length);
       html += `<div class="group-divider"></div>`;
       activeP.forEach(p => { html += buildCard(p); });
     }
     if (readyP.length) {
-      html += groupHeader('📦', 'Ready to Deliver', readyP.length);
+      html += groupHeader('📦', T('groupReady'), readyP.length);
       html += `<div class="group-divider"></div>`;
       readyP.forEach(p => { html += buildCard(p); });
     }
     if (onHoldP.length) {
-      html += groupHeader('⏸', 'On Hold', onHoldP.length);
+      html += groupHeader('⏸', T('groupOnHold'), onHoldP.length);
       html += `<div class="group-divider"></div>`;
       onHoldP.forEach(p => { html += buildCard(p); });
     }
@@ -1050,16 +1110,37 @@ function renderProjects() {
 
   // All other filters — flat list
   if (!all.length) {
-    list.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>No orders found.</p></div>`;
+    list.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>${T('noOrdersFound')}</p></div>`;
     return;
   }
   const sorted = sortByDeadline(all);
   const overdueN = sorted.filter(p => !isDelivered(p) && !p.onHold && daysLeft(p.deadline) < 0).length;
   let html = overdueN > 0 && tf !== 'delivered'
-    ? `<div class="overdue-banner">⚠️ ${overdueN} order${overdueN>1?'s':''} past deadline</div>` : '';
+    ? `<div class="overdue-banner">⚠️ ${overdueN} ${T('overdueMsg')}</div>` : '';
   sorted.forEach(p => { html += buildCard(p); });
   list.innerHTML = html;
   syncExpandBtn();
+}
+
+
+function applyLanguage() {
+  const set = (id, val) => { const el = document.getElementById(id); if (el && val !== undefined) el.textContent = val; };
+  const si  = document.getElementById('search-input');
+  if (si) si.placeholder = T('searchPlaceholder');
+  set('lbl-total',          T('total'));
+  set('lbl-ok',             T('onTrack'));
+  set('lbl-warn',           T('dueSoon'));
+  set('lbl-overdue',        T('overdue'));
+  set('lbl-type-pill',      '&#128194; ' + T('typeLabel'));
+  set('lbl-stage-pill',     '&#128260; ' + T('stageLabel'));
+  set('fpop-done-btn',      T('done'));
+  set('type-pill-val',      T('active'));
+  set('stage-pill-val',     T('allStages'));
+  set('status-modal-title', T('updateStatus'));
+  set('lbl-new-status',     T('newStatus'));
+  set('btn-update-status',  T('updateStatus'));
+  const eb = document.getElementById('expand-all-btn');
+  if (eb) eb.innerHTML = T('expandAll');
 }
 
 
@@ -1083,7 +1164,7 @@ function syncExpandBtn() {
   _allExpanded = all.length > 0 && open.length === all.length;
   const btn = document.getElementById('expand-all-btn');
   if (!btn) return;
-  btn.innerHTML = _allExpanded ? '&#9650; All' : '&#9660; All';
+  btn.innerHTML = _allExpanded ? T('collapseAll') : T('expandAll');
   btn.classList.toggle('all-open', _allExpanded);
 }
 
@@ -1151,7 +1232,7 @@ function openStatusModal(id) {
 }
 
 function renderStatusSel(containerId, current, isUpdate) {
-  document.getElementById(containerId).innerHTML = PIPELINE.map(s => {
+  document.getElementById(containerId).innerHTML = getPipeline().map(s => {
     const fn = isUpdate ? `selectUpdateSt(${s.v})` : `selectFormSt(${s.v})`;
     return `<div class="status-opt ${s.v === current ? 'selected' : ''}" data-v="${s.v}" onclick="${fn}">${s.icon} ${s.label}</div>`;
   }).join('');
