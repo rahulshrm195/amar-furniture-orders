@@ -487,7 +487,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 <!-- AUTH -->
 <div id="auth-screen" style="display:none">
   <div class="auth-logo">&#129681; Amar Furniture</div>
-  <div class="auth-sub">Order Tracker · v3.1.1</div>
+  <div class="auth-sub">Order Tracker · v3.1.2</div>
   <div class="auth-card">
     <h2>Sign In</h2>
     <div class="field"><label>Email</label><input type="email" id="auth-email" placeholder="you@email.com" autocomplete="email"></div>
@@ -508,7 +508,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
       </div>
     </div>
     <div class="topbar-right">
-      <span class="ver-tag">v3.1.1</span>
+      <span class="ver-tag">v3.1.2</span>
       <span class="role-badge" id="role-badge">Admin</span>
       <button class="logout-btn" onclick="signOut()">Logout</button>
     </div>
@@ -751,19 +751,12 @@ onAuthStateChanged(auth, user => {
   }
 });
 
-window._skipNextRender = 0; // counter — addActivityLog increments, each snapshot decrements
+window._skipNextRender = 0;
 
 function startListening() {
   const q = _query(_collection(_db, 'projects'), _orderBy('createdAt', 'desc'));
   _onSnapshot(q, snap => {
-    const next = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    window._projects = next;
-
-    // If addActivityLog just fired, DOM is already updated — skip re-render
-    if (window._skipNextRender > 0) {
-      window._skipNextRender--;
-      return;
-    }
+    window._projects = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderProjects(); updateStats();
   });
 }
@@ -838,7 +831,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.1.1';
+const APP_VERSION = 'v3.1.2';
 
 // -- LANGUAGE --
 const LANG = {
@@ -1209,6 +1202,10 @@ function renderProjects() {
       onHoldP.forEach(p => { html += buildCard(p); });
     }
     list.innerHTML = html;
+    // restore expanded state
+    window._expandedCards.forEach(id => {
+      document.getElementById('card-' + id)?.classList.add('expanded');
+    });
     syncExpandBtn();
     return;
   }
@@ -1658,10 +1655,9 @@ function addActivityLog(id) {
   // 4. Clear input and save to Firestore
   inp.value = '';
   inp.disabled = true;
-  window._skipNextRender = 2; // Firestore fires snapshot twice: local + server confirmation
   _updateDoc(_doc(_db, 'projects', id), { activityLog: log, updatedAt: _serverTimestamp() })
     .then(() => { showToast('Note added \u2713'); inp.disabled = false; })
-    .catch(() => { showToast('Error saving note'); inp.disabled = false; window._skipNextRender = 0; });
+    .catch(() => { showToast('Error saving note'); inp.disabled = false; });
 }
 
 function escHtml(s) {
