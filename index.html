@@ -51,6 +51,12 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .btn-outline{background:transparent;color:var(--purple);border:1.5px solid var(--purple-mid)}
 .btn-outline:hover{background:var(--purple-soft)}
 .btn-danger{background:var(--red);color:#fff}
+.btn-archive{background:rgba(107,114,128,0.12);color:#4b5563;border:1.5px solid #d1d5db}
+.btn-archive:hover{background:rgba(107,114,128,0.2)}
+.btn-restore{background:rgba(16,185,129,0.12);color:#059669;border:1.5px solid rgba(16,185,129,0.3)}
+.btn-restore:hover{background:rgba(16,185,129,0.2)}
+.archived-card{opacity:0.65;filter:grayscale(0.3)}
+.archived-badge{font-size:0.68rem;font-weight:700;padding:3px 10px;border-radius:8px;background:rgba(107,114,128,0.12);color:#6b7280;border:1px solid #d1d5db}
 .btn-ghost{background:var(--surface2);color:var(--text2);border:1.5px solid var(--border)}
 .btn-ghost:hover{background:var(--border)}
 #auth-error{color:var(--red);font-size:0.82rem;margin-top:12px;text-align:center;min-height:18px}
@@ -487,7 +493,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 <!-- AUTH -->
 <div id="auth-screen" style="display:none">
   <div class="auth-logo">&#129681; Amar Furniture</div>
-  <div class="auth-sub">Order Tracker · v3.1.3</div>
+  <div class="auth-sub">Order Tracker · v3.2.0</div>
   <div class="auth-card">
     <h2>Sign In</h2>
     <div class="field"><label>Email</label><input type="email" id="auth-email" placeholder="you@email.com" autocomplete="email"></div>
@@ -508,7 +514,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
       </div>
     </div>
     <div class="topbar-right">
-      <span class="ver-tag">v3.1.3</span>
+      <span class="ver-tag">v3.2.0</span>
       <span class="role-badge" id="role-badge">Admin</span>
       <button class="logout-btn" onclick="signOut()">Logout</button>
     </div>
@@ -652,7 +658,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
     <div class="modal-actions">
       <button class="btn btn-primary" onclick="saveProject()">Save Order</button>
       <button class="btn btn-ghost"   onclick="closeModal()">Cancel</button>
-      <button class="btn btn-danger"  id="delete-btn" style="display:none" onclick="deleteProject()">Delete Order</button>
+      <button class="btn btn-archive" id="archive-btn" style="display:none" onclick="archiveProject()">&#128451; Archive Order</button>
+      <button class="btn btn-danger"  id="delete-btn"  style="display:none" onclick="deleteProject()">&#128465; Delete Forever</button>
     </div>
   </div>
 </div>
@@ -815,9 +822,25 @@ window.saveProject = async function() {
 };
 
 window.deleteProject = async function() {
-  if (!confirm('Delete this order?')) return;
+  if (!confirm('Permanently delete this order? This cannot be undone.')) return;
   await _deleteDoc(_doc(_db, 'projects', window._editId));
-  showToast('Deleted'); closeModal();
+  showToast('Deleted forever'); closeModal();
+};
+
+window.archiveProject = async function() {
+  if (!confirm('Archive this order? You can restore it anytime from the Archived filter.')) return;
+  await _updateDoc(_doc(_db, 'projects', window._editId), {
+    archived: true, archivedAt: _serverTimestamp(), updatedAt: _serverTimestamp()
+  });
+  showToast('\ud83d\uddc4 Order archived'); closeModal();
+};
+
+window.restoreProject = async function(id) {
+  if (!confirm('Restore this order? It will come back as a fresh Order Taken.')) return;
+  await _updateDoc(_doc(_db, 'projects', id), {
+    archived: false, archivedAt: null, status: 0, onHold: false, updatedAt: _serverTimestamp()
+  });
+  showToast('\u2705 Order restored \u2014 back to Order Taken');
 };
 
 window.saveStatusUpdate = async function() {
@@ -831,7 +854,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.1.3';
+const APP_VERSION = 'v3.2.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -966,9 +989,10 @@ window._statusUpdateId = null;
 window._updateStatusVal= null;
 
 const isDelivered = p => (p.status ?? 0) >= 4;
-const isReady     = p => (p.status ?? 0) === 3 && !p.onHold;
-const isOnHold    = p => !!p.onHold;
-const isActive    = p => !isDelivered(p) && !isReady(p) && !isOnHold(p);
+const isArchived  = p => !!p.archived;
+const isReady     = p => (p.status ?? 0) === 3 && !p.onHold && !p.archived;
+const isOnHold    = p => !!p.onHold && !p.archived;
+const isActive    = p => !isDelivered(p) && !isReady(p) && !isOnHold(p) && !isArchived(p);
 
 function daysLeft(deadline) {
   const today = new Date(); today.setHours(0,0,0,0);
@@ -992,6 +1016,7 @@ function getTypeOpts() { return [
   {v:'other',     label:'📝 '+T('other')},
   {v:'overdue',   label:'⚠️ '+T('overdueFilter')},
   {v:'delivered', label:'✅ '+T('delivered')},
+  {v:'archived',  label:'🗄 Archived'},
 ];}
 function getStageOpts() { return [
   {v:'all', label:T('allStages')},
@@ -1049,7 +1074,7 @@ function buildCard(p) {
   const del   = isDelivered(p);
   const hold  = isOnHold(p);
   const urg   = hold ? 'warn' : urgClass(days, del);
-  const cardCls = del ? 'delivered' : hold ? 'warning' : urg === 'danger' ? 'urgent' : urg === 'warn' ? 'warning' : 'ok-card';
+  const cardCls = p.archived ? 'delivered archived-card' : del ? 'delivered' : hold ? 'warning' : urg === 'danger' ? 'urgent' : urg === 'warn' ? 'warning' : 'ok-card';
   const daysText = del ? '✓' : days < 0 ? Math.abs(days)+'d' : days === 0 ? 'Today' : days+'d';
   const daysLbl  = del ? T('daysDone') : days < 0 ? T('daysOverdue') : days === 0 ? T('daysDue') : T('daysLeft');
 
@@ -1077,6 +1102,7 @@ function buildCard(p) {
     else if (bal <= 0 && p.amount) balChip = `<div class="meta-chip balance-paid">${T('balancePaid')}</div>`;
   }
   const holdChip  = hold ? `<div class="meta-chip" style="background:rgba(245,158,11,0.12);color:#d97706">⏸ ${T('onHold')}</div>` : '';
+  const archBadge = p.archived ? `<span class="archived-badge">&#128451; Archived</span>` : '';
   const descHtml  = p.item ? `<div class="card-desc">${escHtml(p.item)}</div>` : '';
   let itemsHtml = '';
   if (p.items?.length) {
@@ -1114,7 +1140,8 @@ function buildCard(p) {
 
   const adminBtn    = window._isAdmin ? `<button class="btn btn-outline" style="flex:1" onclick="openEditModal('${p.id}')">Edit</button>` : '';
   const callBtn     = p.phone ? `<a href="tel:${p.phone}" class="btn btn-ghost" style="flex:0.6;text-decoration:none">&#128222; Call</a>` : '';
-  const statusBtn   = (!window._isManager) ? `<button class="btn btn-ghost" style="flex:1" onclick="openStatusModal('${p.id}')">${T('updateStatus')}</button>` : '';
+  const statusBtn   = (!window._isManager && !p.archived) ? `<button class="btn btn-ghost" style="flex:1" onclick="openStatusModal('${p.id}')">${T('updateStatus')}</button>` : '';
+  const restoreBtn  = (window._isAdmin && p.archived) ? `<button class="btn btn-restore" style="flex:1" onclick="restoreProject('${p.id}')">&#8617; Restore Order</button>` : '';
   const latestNote = p.activityLog?.length ? escHtml(p.activityLog[0].text) : '';
   const hasExtra  = !!(itemsHtml || notesHtml || true); // always show activity log
   const chevron   = `<span class="card-chevron">&#9660;</span>`;
@@ -1129,7 +1156,7 @@ function buildCard(p) {
           ${chevron}
         </div>
       </div>
-      <div class="card-meta">${typeChip}<div class="meta-chip date-chip">&#128197; ${date}</div>${amtChip}${balChip}${holdChip}</div>
+      <div class="card-meta">${typeChip}<div class="meta-chip date-chip">&#128197; ${date}</div>${amtChip}${balChip}${holdChip}${archBadge}</div>
       <div class="status-row">
         <div class="status-stepper">${stepsHtml}</div>
         <div class="status-label ${stageCls}">${stage.icon} ${stage.label}</div>
@@ -1137,7 +1164,7 @@ function buildCard(p) {
       ${latestNote ? `<div class="card-last-note"><div class="card-last-note-dot"></div><div class="card-last-note-text">${latestNote}</div></div>` : ''}
     </div>
     <div class="card-expandable">${itemsHtml}${notesHtml}${activityHtml}<div style="height:6px"></div></div>
-    ${statusBtn || adminBtn || callBtn ? `<div class="card-actions">${statusBtn}${adminBtn}${callBtn}</div>` : ''}
+    ${statusBtn || restoreBtn || adminBtn || callBtn ? `<div class="card-actions">${statusBtn}${restoreBtn}${adminBtn}${callBtn}</div>` : ''}
   </div>`;
 }
 
@@ -1154,10 +1181,11 @@ function applyFilters(p) {
   const days = daysLeft(p.deadline);
   // type filter
   if (tf === 'active') { /* handled by grouping */ }
-  else if (tf === 'all');
-  else if (tf === 'overdue')   { if (!(!del && !p.onHold && days < 0)) return false; }
-  else if (tf === 'delivered') { if (!del) return false; }
-  else { if (p.projectType !== tf) return false; }
+  else if (tf === 'all')      { if (isArchived(p)) return false; }
+  else if (tf === 'overdue')  { if (!(!del && !p.onHold && !isArchived(p) && days < 0)) return false; }
+  else if (tf === 'delivered'){ if (!del || isArchived(p)) return false; }
+  else if (tf === 'archived') { if (!isArchived(p)) return false; }
+  else { if (p.projectType !== tf || isArchived(p)) return false; }
   // stage filter
   if (sf !== 'all' && (p.status ?? 0) !== parseInt(sf)) return false;
   return true;
@@ -1483,7 +1511,8 @@ function openAddModal() {
   const tog = document.getElementById('on-hold-toggle');
   if (tog) tog.classList.remove('active');
   document.getElementById('modal-title').textContent = 'New Order';
-  document.getElementById('delete-btn').style.display = 'none';
+  document.getElementById('delete-btn').style.display  = 'none';
+  document.getElementById('archive-btn').style.display = 'none';
   ['f-client','f-phone','f-item','f-amount','f-advance','f-notes','other-label-inp'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
   document.getElementById('f-deadline').value = '';
@@ -1500,6 +1529,7 @@ function openEditModal(id) {
   window._editId = id; window._editStatus = p.status ?? 0; window._editType = p.projectType || 'woodwork';
   document.getElementById('modal-title').textContent   = 'Edit Order';
   document.getElementById('delete-btn').style.display  = 'block';
+  document.getElementById('archive-btn').style.display = p.archived ? 'none' : 'block';
   document.getElementById('f-client').value            = p.client || '';
   document.getElementById('f-phone').value             = p.phone || '';
   document.getElementById('f-item').value              = p.item || '';
