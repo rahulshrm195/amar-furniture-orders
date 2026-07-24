@@ -505,7 +505,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 <!-- AUTH -->
 <div id="auth-screen" style="display:none">
   <div class="auth-logo">&#129681; Amar Furniture</div>
-  <div class="auth-sub">Order Tracker · v3.6.0</div>
+  <div class="auth-sub">Order Tracker · v3.7.0</div>
   <div class="auth-card">
     <h2>Sign In</h2>
     <div class="field"><label>Email</label><input type="email" id="auth-email" placeholder="you@email.com" autocomplete="email"></div>
@@ -526,7 +526,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
       </div>
     </div>
     <div class="topbar-right">
-      <span class="ver-tag">v3.6.0</span>
+      <span class="ver-tag">v3.7.0</span>
       <button class="overdue-badge" id="overdue-badge" onclick="openStats()" title="Overdue orders"></button>
       <button class="stats-btn" onclick="openStats()" title="Stats">&#128202;</button>
       <span class="role-badge" id="role-badge">Admin</span>
@@ -572,7 +572,9 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
       <span class="filter-dot" id="filter-dot"></span>
     </button>
     <button class="toolbar-btn" id="expand-all-btn" onclick="toggleAllCards()" title="Expand all">&#9660;</button>
-    <button class="toolbar-btn tab-active" id="tab-orders" onclick="switchView('orders')" title="Orders">&#128203;</button>
+    <button class="toolbar-btn tab-active" id="tab-orders" onclick="switchView('orders')" title="Orders" style="width:auto;padding:0 10px;min-width:38px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.78rem">
+      <span id="tab-orders-label">📋</span>
+    </button>
     <button class="toolbar-btn" id="tab-items" onclick="switchView('items')" title="Items List">&#128290;</button>
   </div>
 
@@ -868,7 +870,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.6.0';
+const APP_VERSION = 'v3.7.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -1261,11 +1263,18 @@ function renderProjects() {
       return;
     }
 
-    const overdueN = activeP.filter(p => daysLeft(p.deadline) < 0).length;
-    let html = overdueN > 0 ? `<div class="overdue-banner">⚠️ ${overdueN} ${T('overdueMsg')}</div>` : '';
+    let html = '';
+
+    // Update Orders tab label
+    const tabLbl = document.getElementById('tab-orders-label');
+    if (tabLbl) {
+      const parts = ['📋 ' + activeP.length];
+      if (readyP.length)  parts.push('📦 ' + readyP.length);
+      if (onHoldP.length) parts.push('⏸ ' + onHoldP.length);
+      tabLbl.textContent = parts.join('  ');
+    }
 
     if (activeP.length) {
-      html += groupHeader('🔨', T('groupActive'), activeP.length);
       html += `<div class="group-divider"></div>`;
       activeP.forEach(p => { html += buildCard(p); });
     }
@@ -1350,6 +1359,10 @@ function switchView(view) {
   document.getElementById('tab-items').classList.toggle('tab-active',  view === 'items');
   document.getElementById('expand-all-btn').style.display = view === 'orders' ? 'flex' : 'none';
   document.getElementById('projects-list').style.display  = view === 'orders' ? '' : 'none';
+  if (view === 'items') {
+    const tabLbl = document.getElementById('tab-orders-label');
+    if (tabLbl) tabLbl.textContent = '📋';
+  }
   const iv = document.getElementById('items-view');
   iv.classList.toggle('visible', view === 'items');
   if (view === 'items') renderItemsView();
