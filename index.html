@@ -103,14 +103,23 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .stage-num.zero{color:var(--text3)}
 .stage-lbl{font-size:0.52rem;color:var(--text3);margin-top:2px;text-transform:uppercase;letter-spacing:0.03em;line-height:1.2}
 
-.filter-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 14px 0}
-.filter-pill{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:10px 14px;border-radius:14px;border:1.5px solid var(--border);background:var(--surface);cursor:pointer;transition:all 0.15s;box-shadow:var(--shadow)}
-.filter-pill.has-filter{border-color:var(--purple);background:var(--purple-soft)}
-.filter-pill-left{display:flex;flex-direction:column;min-width:0;overflow:hidden}
-.filter-pill-label{font-size:0.6rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;font-weight:700;line-height:1;margin-bottom:3px}
-.filter-pill-value{font-size:0.82rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.filter-pill.has-filter .filter-pill-value{color:var(--purple)}
-.filter-pill-arrow{font-size:0.7rem;color:var(--text3);flex-shrink:0}
+/* ── COMPACT TOOLBAR ── */
+.toolbar{display:flex;align-items:center;gap:6px;padding:10px 14px;background:var(--bg)}
+.toolbar-search{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:9px 12px 9px 36px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.88rem;outline:none;transition:all 0.2s;box-shadow:var(--shadow);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:12px center;min-width:0}
+.toolbar-search:focus{border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-dim)}
+.toolbar-btn{flex-shrink:0;width:38px;height:38px;border-radius:11px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;box-shadow:var(--shadow);position:relative}
+.toolbar-btn:hover{background:var(--surface2)}
+.toolbar-btn.active-filter{border-color:var(--purple);background:var(--purple-soft);color:var(--purple)}
+.toolbar-btn.tab-active{border-color:var(--purple);background:var(--purple-soft);color:var(--purple)}
+.toolbar-btn.all-open{border-color:var(--purple);background:var(--purple-soft);color:var(--purple)}
+.filter-dot{position:absolute;top:4px;right:4px;width:7px;height:7px;border-radius:50%;background:var(--red);border:1.5px solid var(--surface);display:none}
+.toolbar-btn.active-filter .filter-dot{display:block}
+/* hidden — kept for JS compat */
+.filter-pill-value{display:none}
+#type-pill-val{display:none}
+#stage-pill-val{display:none}
+#lbl-type-pill{display:none}
+#lbl-stage-pill{display:none}
 .fpop-backdrop{position:fixed;inset:0;z-index:600;background:rgba(30,27,75,0.45);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s}
 .fpop-backdrop.open{opacity:1;pointer-events:all}
 .fpop{background:var(--surface);border-radius:22px;padding:20px;width:calc(100vw - 48px);max-width:310px;box-shadow:var(--shadow-lg);transform:scale(0.94);transition:transform 0.22s cubic-bezier(0.34,1.4,0.64,1),opacity 0.2s;opacity:0}
@@ -125,19 +134,12 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .fpop-done{margin-top:14px;width:100%;padding:11px;border-radius:12px;border:none;background:var(--purple);color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;cursor:pointer;transition:opacity 0.15s}
 .fpop-done:hover{opacity:0.9}
 
-.search-wrap{padding:10px 14px;display:flex;align-items:center;gap:8px}
-.search-input{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:11px 14px 11px 40px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.9rem;outline:none;transition:all 0.2s;box-shadow:var(--shadow);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:14px center}
-.search-input:focus{border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-dim)}
-.expand-btn{flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:5px;height:44px;padding:0 12px;border-radius:14px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-size:0.75rem;font-weight:700;cursor:pointer;transition:all 0.15s;white-space:nowrap;box-shadow:var(--shadow);font-family:'DM Sans',sans-serif}
-.expand-btn:hover{background:var(--surface2)}
-.expand-btn.all-open{border-color:var(--purple);background:var(--purple-soft);color:var(--purple)}
+/* search + expand merged into toolbar above */
 
 .projects-list{padding:0 14px 100px;display:flex;flex-direction:column;gap:12px}
 
 /* ── VIEW TABS ── */
-.view-tabs{display:flex;gap:0;padding:12px 14px 0;position:relative}
-.view-tab{flex:1;padding:9px 0;text-align:center;font-family:'Syne',sans-serif;font-weight:700;font-size:0.82rem;cursor:pointer;border-bottom:2.5px solid var(--border);color:var(--text3);transition:all 0.15s;background:none;border-top:none;border-left:none;border-right:none}
-.view-tab.active{color:var(--purple);border-bottom-color:var(--purple)}
+/* view tabs merged into toolbar */
 
 /* ── ITEMS TABLE ── */
 .items-view{padding:0 14px 100px;display:none}
@@ -358,15 +360,12 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
   .stage-lbl { font-size: 0.58rem; }
 
   /* Filter pills — more breathing room */
-  .filter-row { padding: 20px 28px 0; gap: 14px; }
-  .filter-pill { padding: 12px 18px; border-radius: 16px; }
-  .filter-pill-label { font-size: 0.65rem; margin-bottom: 4px; }
-  .filter-pill-value { font-size: 0.9rem; }
+  .toolbar { padding: 12px 28px; gap: 10px; }
+  .toolbar-search { font-size: 0.92rem; padding: 10px 16px 10px 40px; border-radius: 14px; }
+  .toolbar-btn { width: 42px; height: 42px; border-radius: 13px; font-size: 1.05rem; }
 
   /* Search + expand btn */
-  .search-wrap { padding: 14px 28px; gap: 10px; }
-  .search-input { font-size: 0.95rem; padding: 13px 16px 13px 44px; border-radius: 16px; }
-  .expand-btn { height: 48px; padding: 0 16px; font-size: 0.8rem; border-radius: 16px; }
+
 
   /* Group headers */
   .group-header { padding: 20px 28px 10px; }
@@ -385,8 +384,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
     gap: 16px;
     align-items: start;
   }
-  .view-tabs { padding: 16px 28px 0; }
-  .view-tab { font-size: 0.88rem; padding: 10px 0; }
+
   .items-view { padding: 0 28px 80px; }
   .items-table th { padding: 12px 16px; font-size: 0.7rem; }
   .items-table td { padding: 11px 16px; font-size: 0.85rem; }
@@ -505,7 +503,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 <!-- AUTH -->
 <div id="auth-screen" style="display:none">
   <div class="auth-logo">&#129681; Amar Furniture</div>
-  <div class="auth-sub">Order Tracker · v3.4.0</div>
+  <div class="auth-sub">Order Tracker · v3.5.0</div>
   <div class="auth-card">
     <h2>Sign In</h2>
     <div class="field"><label>Email</label><input type="email" id="auth-email" placeholder="you@email.com" autocomplete="email"></div>
@@ -526,7 +524,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
       </div>
     </div>
     <div class="topbar-right">
-      <span class="ver-tag">v3.4.0</span>
+      <span class="ver-tag">v3.5.0</span>
       <button class="stats-btn" onclick="openStats()" title="Stats">&#128202;</button>
       <span class="role-badge" id="role-badge">Admin</span>
       <button class="logout-btn" onclick="signOut()">Logout</button>
@@ -555,40 +553,33 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
     </div>
   </div>
 
-  <div class="filter-row">
-    <div class="filter-pill" id="type-pill" onclick="openFpop('type')">
-      <div class="filter-pill-left">
-        <span class="filter-pill-label" id="lbl-type-pill">📂 Type</span>
-        <span class="filter-pill-value" id="type-pill-val">Active</span>
-      </div>
-      <span class="filter-pill-arrow">&#9660;</span>
-    </div>
-    <div class="filter-pill" id="stage-pill" onclick="openFpop('stage')">
-      <div class="filter-pill-left">
-        <span class="filter-pill-label" id="lbl-stage-pill">🔄 Stage</span>
-        <span class="filter-pill-value" id="stage-pill-val">All Stages</span>
-      </div>
-      <span class="filter-pill-arrow">&#9660;</span>
-    </div>
+  <!-- hidden pill compat elements -->
+  <span id="type-pill-val" style="display:none">Active</span>
+  <span id="stage-pill-val" style="display:none">All Stages</span>
+  <span id="lbl-type-pill" style="display:none">Type</span>
+  <span id="lbl-stage-pill" style="display:none">Stage</span>
+  <div id="type-pill" style="display:none"></div>
+  <div id="stage-pill" style="display:none"></div>
+
+  <!-- COMPACT TOOLBAR -->
+  <div class="toolbar">
+    <input class="toolbar-search" type="search" placeholder="Search…" id="search-input" oninput="onSearchInput()">
+    <button class="toolbar-btn" id="filter-btn" onclick="openFilterSheet()" title="Filter">
+      <span>&#9881;</span>
+      <span class="filter-dot" id="filter-dot"></span>
+    </button>
+    <button class="toolbar-btn" id="expand-all-btn" onclick="toggleAllCards()" title="Expand all">&#9660;</button>
+    <button class="toolbar-btn tab-active" id="tab-orders" onclick="switchView('orders')" title="Orders">&#128203;</button>
+    <button class="toolbar-btn" id="tab-items" onclick="switchView('items')" title="Items List">&#128290;</button>
   </div>
 
+  <!-- FILTER SHEET -->
   <div class="fpop-backdrop" id="fpop-backdrop" onclick="closeFpop()">
     <div class="fpop" onclick="event.stopPropagation()">
       <div class="fpop-title" id="fpop-title">Filter</div>
       <div id="fpop-opts"></div>
       <button class="fpop-done" id="fpop-done-btn" onclick="closeFpop()">Done</button>
     </div>
-  </div>
-
-  <div class="search-wrap">
-    <input class="search-input" type="search" placeholder="Search project or client…" id="search-input" oninput="onSearchInput()">
-    <button class="expand-btn" id="expand-all-btn" onclick="toggleAllCards()">&#9660; All</button>
-  </div>
-
-  <!-- VIEW TABS -->
-  <div class="view-tabs">
-    <button class="view-tab active" id="tab-orders" onclick="switchView('orders')">&#128203; Orders</button>
-    <button class="view-tab" id="tab-items" onclick="switchView('items')">&#128290; Items List</button>
   </div>
 
   <!-- ORDERS VIEW -->
@@ -874,7 +865,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.4.0';
+const APP_VERSION = 'v3.5.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -1061,21 +1052,57 @@ function openFpop(kind) {
   document.getElementById('fpop-backdrop').classList.add('open');
 }
 
+function openFilterSheet() {
+  const tCur = window._typeFilter;
+  const sCur = window._stageFilter;
+  _fpopType  = null; // combined mode
+  document.getElementById('fpop-title').textContent = 'Filter Orders';
+  const typeOpts  = getTypeOpts();
+  const stageOpts = getStageOpts();
+  document.getElementById('fpop-opts').innerHTML =
+    '<div style="font-size:0.7rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Type</div>' +
+    typeOpts.map(o => '<div class="fpop-opt ' + (o.v === tCur ? 'sel' : '') + '" data-kind="type" data-v="' + o.v + '" onclick="pickTypeFilter(\'' + o.v + '\')">' +
+      '<div class="fpop-dot"></div>' + o.label + '</div>').join('') +
+    '<div style="font-size:0.7rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin:14px 0 8px">Stage</div>' +
+    stageOpts.map(o => '<div class="fpop-opt ' + (o.v === sCur ? 'sel' : '') + '" data-kind="stage" data-v="' + o.v + '" onclick="pickStageFilter(\'' + o.v + '\')">' +
+      '<div class="fpop-dot"></div>' + o.label + '</div>').join('');
+  document.getElementById('fpop-backdrop').classList.add('open');
+}
+
+function pickTypeFilter(v) {
+  window._typeFilter = v;
+  document.querySelectorAll('#fpop-opts .fpop-opt[data-kind="type"]').forEach(el =>
+    el.classList.toggle('sel', el.dataset.v === v)
+  );
+  updateFilterDot(); renderProjects();
+}
+
+function pickStageFilter(v) {
+  window._stageFilter = v;
+  document.querySelectorAll('#fpop-opts .fpop-opt[data-kind="stage"]').forEach(el =>
+    el.classList.toggle('sel', el.dataset.v === v)
+  );
+  updateFilterDot(); renderProjects();
+}
+
+function updateFilterDot() {
+  const hasFilter = window._typeFilter !== 'active' || window._stageFilter !== 'all';
+  const btn = document.getElementById('filter-btn');
+  if (btn) btn.classList.toggle('active-filter', hasFilter);
+}
+
 function pickFpop(v) {
   const opts = _fpopType === 'type' ? getTypeOpts() : getStageOpts();
   const label = opts.find(o => o.v === v)?.label || v;
   if (_fpopType === 'type') {
     window._typeFilter = v;
-    document.getElementById('type-pill-val').textContent = label;
-    document.getElementById('type-pill').classList.toggle('has-filter', v !== 'active');
   } else {
     window._stageFilter = v;
-    document.getElementById('stage-pill-val').textContent = label;
-    document.getElementById('stage-pill').classList.toggle('has-filter', v !== 'all');
   }
   document.querySelectorAll('.fpop-opt').forEach(el =>
     el.classList.toggle('sel', el.textContent.trim() === label)
   );
+  updateFilterDot();
   renderProjects();
 }
 
@@ -1316,10 +1343,10 @@ window._expandedCards = new Set(); // persist expanded state across re-renders
 
 function switchView(view) {
   window._currentView = view;
-  document.getElementById('tab-orders').classList.toggle('active', view === 'orders');
-  document.getElementById('tab-items').classList.toggle('active',  view === 'items');
-  document.getElementById('projects-list').style.display = view === 'orders' ? '' : 'none';
-  document.getElementById('expand-all-btn').style.display = view === 'orders' ? '' : 'none';
+  document.getElementById('tab-orders').classList.toggle('tab-active', view === 'orders');
+  document.getElementById('tab-items').classList.toggle('tab-active',  view === 'items');
+  document.getElementById('expand-all-btn').style.display = view === 'orders' ? 'flex' : 'none';
+  document.getElementById('projects-list').style.display  = view === 'orders' ? '' : 'none';
   const iv = document.getElementById('items-view');
   iv.classList.toggle('visible', view === 'items');
   if (view === 'items') renderItemsView();
@@ -1475,7 +1502,7 @@ function syncExpandBtn() {
   _allExpanded = all.length > 0 && open.length === all.length;
   const btn = document.getElementById('expand-all-btn');
   if (!btn) return;
-  btn.innerHTML = _allExpanded ? T('collapseAll') : T('expandAll');
+  btn.innerHTML = _allExpanded ? '&#9650;' : '&#9660;';
   btn.classList.toggle('all-open', _allExpanded);
 }
 
