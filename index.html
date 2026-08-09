@@ -75,6 +75,18 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .logout-btn{padding:6px 14px;border-radius:10px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:0.78rem;cursor:pointer;transition:all 0.15s}
 .logout-btn:hover{background:rgba(255,255,255,0.25)}
 .ver-tag{font-size:0.6rem;color:rgba(255,255,255,0.4);font-family:'Syne',sans-serif}
+/* mobile: compress topbar */
+@media (max-width:767px){
+  .ver-tag{display:none}
+  .logout-text{display:none}
+  .logout-icon{display:inline}
+  .logout-btn{padding:6px 9px;font-size:1rem}
+  .topbar-right{gap:5px}
+}
+/* desktop: show text, hide icon */
+@media (min-width:768px){
+  .logout-icon{display:none}
+}
 
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:16px 14px 0}
 /* ── STATS BOTTOM SHEET ── */
@@ -142,29 +154,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 /* view tabs merged into toolbar */
 
 /* ── ITEMS TABLE ── */
-.items-view{padding:0 14px 100px;display:none}
-.items-view.visible{display:block}
-.items-toolbar{display:flex;align-items:center;gap:8px;padding:10px 0 12px;flex-wrap:wrap}
-.items-sort-btn{display:flex;align-items:center;gap:4px;padding:6px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-size:0.75rem;font-weight:700;cursor:pointer;transition:all 0.15s;font-family:'DM Sans',sans-serif;white-space:nowrap}
-.items-sort-btn.active{border-color:var(--purple);background:var(--purple-soft);color:var(--purple)}
-.items-sort-btn:hover{background:var(--surface2)}
-.items-count{font-size:0.78rem;color:var(--text3);margin-left:auto;font-weight:600}
-.items-table-wrap{overflow-x:auto;border-radius:16px;box-shadow:var(--shadow);background:var(--surface)}
-.items-table{width:100%;border-collapse:collapse;font-family:'DM Sans',sans-serif;font-size:0.82rem}
-.items-table th{background:var(--surface2);color:var(--text3);font-size:0.65rem;text-transform:uppercase;letter-spacing:0.06em;font-weight:700;padding:10px 12px;text-align:left;border-bottom:1.5px solid var(--border);white-space:nowrap}
-.items-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
-.items-table tr:last-child td{border-bottom:none}
-.items-table tr:hover td{background:var(--surface2)}
-.it-client{font-weight:700;font-size:0.82rem;color:var(--text)}
-.it-item{font-weight:600;color:var(--text)}
-.it-dims{color:var(--text2);font-size:0.78rem;white-space:nowrap}
-.it-qty{font-weight:700;color:var(--purple);background:var(--purple-soft);padding:2px 8px;border-radius:6px;white-space:nowrap;display:inline-block}
-.it-stage{font-size:0.72rem;font-weight:700;padding:3px 8px;border-radius:7px;white-space:nowrap}
-.it-deadline{font-size:0.78rem;color:var(--text2);white-space:nowrap}
-.it-deadline.urgent{color:var(--red);font-weight:700}
-.it-deadline.warn{color:var(--amber);font-weight:700}
-.it-group-row td{background:var(--surface2);font-family:'Syne',sans-serif;font-weight:800;font-size:0.8rem;color:var(--text);padding:8px 12px;border-bottom:1.5px solid var(--border)}
-.items-empty{text-align:center;padding:40px;color:var(--text3);font-size:0.9rem}
 .project-card{background:var(--surface);border-radius:var(--radius);overflow:hidden;transition:transform 0.15s,box-shadow 0.15s;box-shadow:var(--shadow)}
 .project-card:active{transform:scale(0.99)}
 .project-card.urgent{box-shadow:0 2px 16px rgba(239,68,68,0.15);border-left:3px solid var(--red)}
@@ -388,9 +377,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
     align-items: start;
   }
 
-  .items-view { padding: 0 28px 80px; }
-  .items-table th { padding: 12px 16px; font-size: 0.7rem; }
-  .items-table td { padding: 11px 16px; font-size: 0.85rem; }
 
   /* Overdue, group headers span full width in grid */
   .group-header,
@@ -505,7 +491,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 <!-- AUTH -->
 <div id="auth-screen" style="display:none">
   <div class="auth-logo">&#129681; Amar Furniture</div>
-  <div class="auth-sub">Order Tracker · v3.7.0</div>
+  <div class="auth-sub">Order Tracker · v3.8.0</div>
   <div class="auth-card">
     <h2>Sign In</h2>
     <div class="field"><label>Email</label><input type="email" id="auth-email" placeholder="you@email.com" autocomplete="email"></div>
@@ -526,11 +512,11 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
       </div>
     </div>
     <div class="topbar-right">
-      <span class="ver-tag">v3.7.0</span>
+      <span class="ver-tag">v3.8.0</span>
       <button class="overdue-badge" id="overdue-badge" onclick="openStats()" title="Overdue orders"></button>
       <button class="stats-btn" onclick="openStats()" title="Stats">&#128202;</button>
       <span class="role-badge" id="role-badge">Admin</span>
-      <button class="logout-btn" onclick="signOut()">Logout</button>
+      <button class="logout-btn" onclick="signOut()"><span class="logout-text">Logout</span><span class="logout-icon">&#128682;</span></button>
     </div>
   </div>
 
@@ -575,7 +561,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
     <button class="toolbar-btn tab-active" id="tab-orders" onclick="switchView('orders')" title="Orders" style="width:auto;padding:0 10px;min-width:38px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.78rem">
       <span id="tab-orders-label">📋</span>
     </button>
-    <button class="toolbar-btn" id="tab-items" onclick="switchView('items')" title="Items List">&#128290;</button>
   </div>
 
   <!-- FILTER SHEET -->
@@ -589,32 +574,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 
   <!-- ORDERS VIEW -->
   <div id="projects-list" class="projects-list"></div>
-
-  <!-- ITEMS VIEW -->
-  <div id="items-view" class="items-view">
-    <div class="items-toolbar">
-      <button class="items-sort-btn active" id="sort-deadline" onclick="setItemSort('deadline')">&#128197; Deadline</button>
-      <button class="items-sort-btn" id="sort-stage" onclick="setItemSort('stage')">&#128260; Stage</button>
-      <button class="items-sort-btn" id="sort-client" onclick="setItemSort('client')">&#128100; Client</button>
-      <span class="items-count" id="items-count"></span>
-    </div>
-    <div class="items-table-wrap">
-      <table class="items-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Client</th>
-            <th>Item</th>
-            <th>Size</th>
-            <th>Qty</th>
-            <th>Stage</th>
-            <th>Deadline</th>
-          </tr>
-        </thead>
-        <tbody id="items-tbody"></tbody>
-      </table>
-    </div>
-  </div>
 
   <button class="fab" id="fab-btn" onclick="openAddModal()">+</button>
 </div>
@@ -870,7 +829,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.7.0';
+const APP_VERSION = 'v3.8.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -1314,7 +1273,6 @@ function renderProjects() {
   });
   syncExpandBtn();
   // keep items view in sync if visible
-  if (window._currentView === 'items') renderItemsView();
 }
 
 
@@ -1350,155 +1308,18 @@ function toggleCard(id) {
 
 // ── VIEW SWITCHING ──
 window._currentView  = 'orders';
-window._itemSort     = 'deadline';
 window._expandedCards = new Set(); // persist expanded state across re-renders
 
 function switchView(view) {
   window._currentView = view;
-  document.getElementById('tab-orders').classList.toggle('tab-active', view === 'orders');
-  document.getElementById('tab-items').classList.toggle('tab-active',  view === 'items');
-  document.getElementById('expand-all-btn').style.display = view === 'orders' ? 'flex' : 'none';
-  document.getElementById('projects-list').style.display  = view === 'orders' ? '' : 'none';
-  if (view === 'items') {
-    const tabLbl = document.getElementById('tab-orders-label');
-    if (tabLbl) tabLbl.textContent = '📋';
-  }
-  const iv = document.getElementById('items-view');
-  iv.classList.toggle('visible', view === 'items');
-  if (view === 'items') renderItemsView();
-  else renderProjects();
+  document.getElementById('expand-all-btn').style.display = 'flex';
+  document.getElementById('projects-list').style.display  = '';
+  renderProjects();
 }
 
-function onSearchInput() {
-  if (window._currentView === 'items') renderItemsView();
-  else renderProjects();
-}
+function onSearchInput() { renderProjects(); }
 
-function setItemSort(sort) {
-  window._itemSort = sort;
-  ['deadline','stage','client'].forEach(s => {
-    document.getElementById('sort-' + s)?.classList.toggle('active', s === sort);
-  });
-  renderItemsView();
-}
 
-function renderItemsView() {
-  const q       = (document.getElementById('search-input')?.value || '').toLowerCase();
-  const tf      = window._typeFilter;
-  const sf      = window._stageFilter;
-  const allProj = (window._projects || []);
-
-  // Filter projects — same logic as applyFilters but include on-hold too
-  const projects = allProj.filter(p => {
-    if (isDelivered(p)) return false; // exclude delivered
-    const del  = isDelivered(p);
-    const days = daysLeft(p.deadline);
-    // type filter
-    if (tf === 'active') { /* all non-delivered */ }
-    else if (tf === 'all') { /* all */ }
-    else if (tf === 'overdue')   { if (!(!del && days < 0)) return false; }
-    else if (tf === 'delivered') { return false; }
-    else { if (p.projectType !== tf) return false; }
-    // stage filter
-    if (sf !== 'all' && (p.status ?? 0) !== parseInt(sf)) return false;
-    return true;
-  });
-
-  // Build flat item rows
-  let rows = [];
-  let rowNum = 0;
-
-  projects.forEach(p => {
-    const typeInfo  = TYPES[p.projectType] || TYPES.other;
-    const typeLabel = p.projectType === 'other' && p.otherLabel ? p.otherLabel : typeInfo.label;
-    const stage     = getPipeline()[Math.min(p.status||0, 4)];
-    const stageCls  = SSTYLES[Math.min(p.status||0, 4)];
-    const days      = daysLeft(p.deadline);
-    const date      = p.deadline ? new Date(p.deadline+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'}) : '—';
-    const deadlineCls = days < 0 ? 'urgent' : days <= 3 ? 'warn' : '';
-
-    if (p.items && p.items.length > 0) {
-      p.items.forEach((it, idx) => {
-        const name = (it.name || '').toLowerCase();
-        const clientName = (p.client || '').toLowerCase();
-        if (q && !clientName.includes(q) && !name.includes(q)) return;
-        rowNum++;
-        const dims = [it.l, it.b, it.w].filter(Boolean).join(' × ');
-        rows.push({
-          num: rowNum, client: p.client, clientShort: p.client?.split(' ').slice(0,2).join(' '),
-          item: it.name, dims, qty: it.qty, unit: it.unit||'Nos',
-          stage, stageCls, date, deadlineCls, days,
-          status: p.status||0, typeIcon: typeInfo.icon, onHold: p.onHold,
-          pid: p.id
-        });
-      });
-    } else {
-      // Project with no items — show as single row with description
-      const clientName = (p.client || '').toLowerCase();
-      const desc = (p.item || '').toLowerCase();
-      if (q && !clientName.includes(q) && !desc.includes(q)) return;
-      rowNum++;
-      rows.push({
-        num: rowNum, client: p.client, clientShort: p.client?.split(' ').slice(0,2).join(' '),
-        item: p.item || '— no items listed —', dims: '', qty: '', unit: '',
-        stage, stageCls, date, deadlineCls, days,
-        status: p.status||0, typeIcon: typeInfo.icon, onHold: p.onHold,
-        pid: p.id, noItems: true
-      });
-    }
-  });
-
-  // Sort
-  const sort = window._itemSort;
-  if (sort === 'deadline') rows.sort((a,b) => a.days - b.days);
-  else if (sort === 'stage') rows.sort((a,b) => a.status - b.status);
-  else if (sort === 'client') rows.sort((a,b) => (a.client||'').localeCompare(b.client||''));
-
-  // Render
-  const tbody = document.getElementById('items-tbody');
-  const countEl = document.getElementById('items-count');
-  if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="7" class="items-empty">No items found</td></tr>';
-    if (countEl) countEl.textContent = '';
-    return;
-  }
-
-  if (countEl) countEl.textContent = rows.length + ' item' + (rows.length !== 1 ? 's' : '');
-
-  // Group headers when sorting by stage or client
-  let lastGroup = null;
-  let html = '';
-  let displayNum = 0;
-
-  rows.forEach(r => {
-    // Group header
-    let groupKey = null;
-    if (sort === 'stage')  groupKey = r.stage.icon + ' ' + r.stage.label + (r.onHold ? ' ⏸ On Hold' : '');
-    if (sort === 'client') groupKey = r.client;
-    if (groupKey && groupKey !== lastGroup) {
-      html += '<tr class="it-group-row"><td colspan="7">' + escHtml(groupKey) + '</td></tr>';
-      lastGroup = groupKey;
-      displayNum = 0;
-    }
-
-    displayNum++;
-    const holdBadge = r.onHold ? ' <span style="color:var(--amber);font-size:0.7rem">⏸</span>' : '';
-    const itemStyle = r.noItems ? 'color:var(--text3);font-style:italic' : '';
-
-    html += '<tr>'
-      + '<td style="color:var(--text3);font-size:0.75rem">' + (sort !== 'deadline' ? displayNum : r.num) + '</td>'
-      + '<td><div class="it-client">' + escHtml(r.clientShort) + holdBadge + '</div>'
-      +     '<div style="font-size:0.7rem;color:var(--text3)">' + r.typeIcon + '</div></td>'
-      + '<td><span class="it-item" style="' + itemStyle + '">' + escHtml(r.item) + '</span></td>'
-      + '<td><span class="it-dims">' + (r.dims || '—') + '</span></td>'
-      + '<td>' + (r.qty ? '<span class="it-qty">' + escHtml(r.qty) + ' ' + escHtml(r.unit) + '</span>' : '—') + '</td>'
-      + '<td><span class="it-stage ' + r.stageCls + '">' + r.stage.icon + ' ' + escHtml(r.stage.label) + '</span></td>'
-      + '<td><span class="it-deadline ' + r.deadlineCls + '">' + r.date + '</span></td>'
-      + '</tr>';
-  });
-
-  tbody.innerHTML = html;
-}
 
 let _allExpanded = false;
 function toggleAllCards() {
