@@ -494,7 +494,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 <!-- AUTH -->
 <div id="auth-screen" style="display:none">
   <div class="auth-logo">&#129681; Amar Furniture</div>
-  <div class="auth-sub">Order Tracker · v3.11.0</div>
+  <div class="auth-sub">Order Tracker · v3.12.0</div>
   <div class="auth-card">
     <h2>Sign In</h2>
     <div class="field"><label>Email</label><input type="email" id="auth-email" placeholder="you@email.com" autocomplete="email"></div>
@@ -515,9 +515,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
       </div>
     </div>
     <div class="topbar-right">
-      <span class="ver-tag">v3.11.0</span>
+      <span class="ver-tag">v3.12.0</span>
       <button class="overdue-badge" id="overdue-badge" onclick="openStats()" title="Overdue orders"></button>
       <button class="stats-btn" onclick="openStats()" title="Stats">&#128202;</button>
+      <button class="stats-btn" id="settings-gear-btn" onclick="openSettingsModal()" title="Settings" style="display:none">&#9881;&#65039;</button>
       <span class="role-badge" id="role-badge">Admin</span>
       <button class="logout-btn" onclick="signOut()"><span class="logout-text">Logout</span><span class="logout-icon">&#128682;</span></button>
     </div>
@@ -656,6 +657,27 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
   </div>
 </div>
 
+<!-- SETTINGS -->
+<div class="modal-backdrop" id="settings-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Settings</div>
+    <div class="on-hold-toggle" id="drive-automation-toggle" onclick="toggleDriveAutomation()">
+      <div class="on-hold-toggle-left">
+        <span class="on-hold-toggle-icon">&#128193;</span>
+        <div class="on-hold-toggle-text">
+          <strong>Auto-create Drive folders</strong>
+          <span>Copy the project template folder for every new order</span>
+        </div>
+      </div>
+      <div class="toggle-switch"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeSettingsModal()">Close</button>
+    </div>
+  </div>
+</div>
+
 <div class="install-banner" id="install-banner">
   <div class="install-banner-icon">📲</div>
   <div class="install-banner-text">
@@ -674,7 +696,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut as fbSignOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc,
+import { getFirestore, collection, addDoc, updateDoc, setDoc, deleteDoc, doc,
   onSnapshot, query, orderBy, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -705,7 +727,7 @@ const db   = getFirestore(app);
 Object.assign(window, {
   _auth:auth, _db:db, _ADMIN_EMAILS:ADMIN_EMAILS,
   _fbSignOut:fbSignOut, _signInWithEmailAndPassword:signInWithEmailAndPassword,
-  _collection:collection, _addDoc:addDoc, _updateDoc:updateDoc,
+  _collection:collection, _addDoc:addDoc, _updateDoc:updateDoc, _setDoc:setDoc,
   _deleteDoc:deleteDoc, _doc:doc, _onSnapshot:onSnapshot,
   _query:query, _orderBy:orderBy, _serverTimestamp:serverTimestamp
 });
@@ -726,6 +748,7 @@ onAuthStateChanged(auth, user => {
     document.getElementById('role-badge').textContent = roleLabel;
     document.getElementById('role-badge').className   = 'role-badge ' + roleCls;
     document.getElementById('fab-btn').style.display  = isAdmin ? 'flex' : 'none';
+    document.getElementById('settings-gear-btn').style.display = isAdmin ? 'flex' : 'none';
     applyLanguage();
     startListening();
     requestNotificationPermission();
@@ -743,6 +766,11 @@ function startListening() {
   _onSnapshot(q, snap => {
     window._projects = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderProjects(); updateStats();
+  });
+  _onSnapshot(_doc(_db, 'settings', 'app'), snap => {
+    window._settings = snap.exists() ? snap.data() : {};
+    renderProjects();
+    if (typeof updateSettingsModalUI === 'function') updateSettingsModalUI();
   });
 }
 
@@ -793,19 +821,25 @@ window.saveProject = async function() {
     showToast('Order updated');
   } else {
     data.createdAt = _serverTimestamp();
-    // Marked pending up front (in the same doc the "Create" button's guard
-    // checks) so a stray click on the card before this resolves is a no-op
-    // instead of firing a second, duplicate folder-creation request.
-    data.driveFolderStatus = 'pending';
+    if (isDriveAutomationOn()) {
+      // Marked pending up front (in the same doc the "Create" button's guard
+      // checks) so a stray click on the card before this resolves is a no-op
+      // instead of firing a second, duplicate folder-creation request.
+      data.driveFolderStatus = 'pending';
+    }
     const docRef = await _addDoc(_collection(_db, 'projects'), data);
-    window._creatingFolders.add(docRef.id);
-    showToast('Order added — creating Drive folder…');
-    createDriveFolder(data).then(result => {
-      const update = result?.url
-        ? { driveFolderUrl: result.url, driveFolderName: result.name, driveFolderStatus: 'done' }
-        : { driveFolderStatus: 'failed' };
-      _updateDoc(_doc(_db, 'projects', docRef.id), update);
-    }).finally(() => window._creatingFolders.delete(docRef.id));
+    if (isDriveAutomationOn()) {
+      window._creatingFolders.add(docRef.id);
+      showToast('Order added — creating Drive folder…');
+      createDriveFolder(data).then(result => {
+        const update = result?.url
+          ? { driveFolderUrl: result.url, driveFolderName: result.name, driveFolderStatus: 'done' }
+          : { driveFolderStatus: 'failed' };
+        _updateDoc(_doc(_db, 'projects', docRef.id), update);
+      }).finally(() => window._creatingFolders.delete(docRef.id));
+    } else {
+      showToast('Order added');
+    }
   }
   closeModal();
 };
@@ -843,7 +877,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.11.0';
+const APP_VERSION = 'v3.12.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -954,7 +988,16 @@ if ('serviceWorker' in navigator) {
 // Leave the placeholder in place to keep this feature silently off.
 const DRIVE_FOLDER_WEBHOOK = 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
 
+// Master on/off switch, toggled from the ⚙️ Settings sheet (Admin only) and
+// stored in Firestore so it applies everywhere immediately, without editing
+// or redeploying the app. Defaults to on when the settings doc doesn't exist
+// yet or hasn't loaded.
+function isDriveAutomationOn() {
+  return window._settings?.driveFolderAutomation !== false;
+}
+
 async function createDriveFolder(project) {
+  if (!isDriveAutomationOn()) return null;
   if (!DRIVE_FOLDER_WEBHOOK || DRIVE_FOLDER_WEBHOOK.includes('PASTE_')) return null;
   try {
     const res = await fetch(DRIVE_FOLDER_WEBHOOK, {
@@ -979,6 +1022,7 @@ async function createDriveFolder(project) {
 window._creatingFolders = window._creatingFolders || new Set();
 
 window.createFolderForProject = async function(id) {
+  if (!isDriveAutomationOn()) { showToast('Drive folder automation is turned off'); return; }
   const p = (window._projects || []).find(x => x.id === id);
   if (!p) return;
   if (p.driveFolderUrl || p.driveFolderStatus === 'pending' || window._creatingFolders.has(id)) return;
@@ -1020,6 +1064,7 @@ function getPipeline() { return [
 const SSTYLES = ['s0','s1','s2','s3','s4'];
 
 window._projects       = [];
+window._settings       = {};
 window._editId         = null;
 window._editStatus     = 0;
 window._editType       = 'woodwork';
@@ -1221,7 +1266,7 @@ function buildCard(p) {
     ? `<a href="${p.driveFolderUrl}" target="_blank" rel="noopener" class="btn btn-ghost" style="flex:0.6;text-decoration:none">&#128193; Folder</a>`
     : p.driveFolderStatus === 'pending'
       ? `<button class="btn btn-ghost" style="flex:0.6;opacity:0.6" disabled>&#128193; Creating…</button>`
-      : (window._isAdmin && !p.archived ? `<button class="btn btn-ghost" style="flex:0.6" onclick="createFolderForProject('${p.id}')">&#128193; ${p.driveFolderStatus === 'failed' ? 'Retry' : 'Create'}</button>` : '');
+      : (window._isAdmin && !p.archived && isDriveAutomationOn() ? `<button class="btn btn-ghost" style="flex:0.6" onclick="createFolderForProject('${p.id}')">&#128193; ${p.driveFolderStatus === 'failed' ? 'Retry' : 'Create'}</button>` : '');
   const statusBtn   = (!window._isManager && !p.archived) ? `<button class="btn btn-ghost" style="flex:1" onclick="openStatusModal('${p.id}')">${T('updateStatus')}</button>` : '';
   const restoreBtn  = (window._isAdmin && p.archived) ? `<button class="btn btn-restore" style="flex:1" onclick="restoreProject('${p.id}')">&#8617; Restore Order</button>` : '';
   const latestNote = p.activityLog?.length ? escHtml(p.activityLog[0].text) : '';
@@ -1601,6 +1646,22 @@ function openModal(id) {
 }
 function closeModal()       { document.getElementById('project-modal').classList.remove('open'); }
 function closeStatusModal() { document.getElementById('status-modal').classList.remove('open'); }
+
+window.openSettingsModal = function() {
+  updateSettingsModalUI();
+  document.getElementById('settings-modal').classList.add('open');
+};
+window.closeSettingsModal = function() { document.getElementById('settings-modal').classList.remove('open'); };
+
+function updateSettingsModalUI() {
+  document.getElementById('drive-automation-toggle')?.classList.toggle('active', isDriveAutomationOn());
+}
+
+window.toggleDriveAutomation = async function() {
+  const next = !isDriveAutomationOn();
+  await _setDoc(_doc(_db, 'settings', 'app'), { driveFolderAutomation: next }, { merge: true });
+  showToast(next ? 'Drive folder automation turned on' : 'Drive folder automation turned off');
+};
 
 function showToast(msg) {
   const t = document.getElementById('toast');
