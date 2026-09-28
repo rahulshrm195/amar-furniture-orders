@@ -494,7 +494,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 <!-- AUTH -->
 <div id="auth-screen" style="display:none">
   <div class="auth-logo">&#129681; Amar Furniture</div>
-  <div class="auth-sub">Order Tracker · v3.10.0</div>
+  <div class="auth-sub">Order Tracker · v3.11.0</div>
   <div class="auth-card">
     <h2>Sign In</h2>
     <div class="field"><label>Email</label><input type="email" id="auth-email" placeholder="you@email.com" autocomplete="email"></div>
@@ -515,7 +515,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
       </div>
     </div>
     <div class="topbar-right">
-      <span class="ver-tag">v3.10.0</span>
+      <span class="ver-tag">v3.11.0</span>
       <button class="overdue-badge" id="overdue-badge" onclick="openStats()" title="Overdue orders"></button>
       <button class="stats-btn" onclick="openStats()" title="Stats">&#128202;</button>
       <span class="role-badge" id="role-badge">Admin</span>
@@ -793,13 +793,19 @@ window.saveProject = async function() {
     showToast('Order updated');
   } else {
     data.createdAt = _serverTimestamp();
+    // Marked pending up front (in the same doc the "Create" button's guard
+    // checks) so a stray click on the card before this resolves is a no-op
+    // instead of firing a second, duplicate folder-creation request.
+    data.driveFolderStatus = 'pending';
     const docRef = await _addDoc(_collection(_db, 'projects'), data);
+    window._creatingFolders.add(docRef.id);
     showToast('Order added — creating Drive folder…');
     createDriveFolder(data).then(result => {
-      if (result?.url) {
-        _updateDoc(_doc(_db, 'projects', docRef.id), { driveFolderUrl: result.url, driveFolderName: result.name });
-      }
-    });
+      const update = result?.url
+        ? { driveFolderUrl: result.url, driveFolderName: result.name, driveFolderStatus: 'done' }
+        : { driveFolderStatus: 'failed' };
+      _updateDoc(_doc(_db, 'projects', docRef.id), update);
+    }).finally(() => window._creatingFolders.delete(docRef.id));
   }
   closeModal();
 };
@@ -837,7 +843,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.10.0';
+const APP_VERSION = 'v3.11.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -967,16 +973,31 @@ async function createDriveFolder(project) {
   }
 }
 
+// In-flight guard: prevents a double-click (or the auto-create-on-save call
+// racing a manual "Create" click) from firing the webhook twice for the
+// same project before Firestore has a chance to reflect driveFolderStatus.
+window._creatingFolders = window._creatingFolders || new Set();
+
 window.createFolderForProject = async function(id) {
   const p = (window._projects || []).find(x => x.id === id);
   if (!p) return;
-  showToast('Creating Drive folder…');
-  const result = await createDriveFolder(p);
-  if (result?.url) {
-    await _updateDoc(_doc(_db, 'projects', id), { driveFolderUrl: result.url, driveFolderName: result.name });
-    showToast('📁 Folder created');
-  } else {
-    showToast('Could not create folder — check webhook setup');
+  if (p.driveFolderUrl || p.driveFolderStatus === 'pending' || window._creatingFolders.has(id)) return;
+  window._creatingFolders.add(id);
+  try {
+    await _updateDoc(_doc(_db, 'projects', id), { driveFolderStatus: 'pending' });
+    showToast('Creating Drive folder…');
+    const result = await createDriveFolder(p);
+    if (result?.url) {
+      await _updateDoc(_doc(_db, 'projects', id), {
+        driveFolderUrl: result.url, driveFolderName: result.name, driveFolderStatus: 'done',
+      });
+      showToast('📁 Folder created');
+    } else {
+      await _updateDoc(_doc(_db, 'projects', id), { driveFolderStatus: 'failed' });
+      showToast('Could not create folder — check webhook setup');
+    }
+  } finally {
+    window._creatingFolders.delete(id);
   }
 };
 
@@ -1198,7 +1219,9 @@ function buildCard(p) {
   const callBtn     = p.phone ? `<a href="tel:${p.phone}" class="btn btn-ghost" style="flex:0.6;text-decoration:none">&#128222; Call</a>` : '';
   const driveBtn    = p.driveFolderUrl
     ? `<a href="${p.driveFolderUrl}" target="_blank" rel="noopener" class="btn btn-ghost" style="flex:0.6;text-decoration:none">&#128193; Folder</a>`
-    : (window._isAdmin && !p.archived ? `<button class="btn btn-ghost" style="flex:0.6" onclick="createFolderForProject('${p.id}')">&#128193; Create</button>` : '');
+    : p.driveFolderStatus === 'pending'
+      ? `<button class="btn btn-ghost" style="flex:0.6;opacity:0.6" disabled>&#128193; Creating…</button>`
+      : (window._isAdmin && !p.archived ? `<button class="btn btn-ghost" style="flex:0.6" onclick="createFolderForProject('${p.id}')">&#128193; ${p.driveFolderStatus === 'failed' ? 'Retry' : 'Create'}</button>` : '');
   const statusBtn   = (!window._isManager && !p.archived) ? `<button class="btn btn-ghost" style="flex:1" onclick="openStatusModal('${p.id}')">${T('updateStatus')}</button>` : '';
   const restoreBtn  = (window._isAdmin && p.archived) ? `<button class="btn btn-restore" style="flex:1" onclick="restoreProject('${p.id}')">&#8617; Restore Order</button>` : '';
   const latestNote = p.activityLog?.length ? escHtml(p.activityLog[0].text) : '';
