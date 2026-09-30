@@ -11,7 +11,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.27.1 — Reports section (Payments reports); UI is Concept A ── */
+/* ── v3.28.0 — Reports section (Payments reports); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -365,7 +365,7 @@ button.chip{border:none;font-family:inherit}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.27.1</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.28.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -394,6 +394,9 @@ button.chip{border:none;font-family:inherit}
     <div class="tb-right">
       <button class="tb-btn" aria-label="Overview" title="Overview" onclick="openStats()">
         <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#D8D2C2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="1.7" fill="#D8D2C2" stroke="none"/><circle cx="16" cy="12" r="1.7" fill="#D8D2C2" stroke="none"/><circle cx="11" cy="18" r="1.7" fill="#D8D2C2" stroke="none"/></svg>
+      </button>
+      <button class="tb-btn" id="money-btn" aria-label="Show amounts" title="Show amounts" onclick="toggleMoney()" style="display:none">
+        <svg id="money-ico" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#D8D2C2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></svg>
       </button>
       <button class="tb-btn" id="reports-btn" aria-label="Reports" title="Reports" onclick="openReports()" style="display:none">
         <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#D8D2C2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11M12 20V5M19 20v-6"/></svg>
@@ -659,6 +662,7 @@ onAuthStateChanged(auth, user => {
     document.getElementById('fab-btn').style.display  = isAdmin ? 'flex' : 'none';
     document.getElementById('settings-gear-btn').style.display = isAdmin ? 'flex' : 'none';
     document.getElementById('reports-btn').style.display = isAdmin ? 'flex' : 'none';
+    document.getElementById('money-btn').style.display = isAdmin ? 'flex' : 'none';
     applyLanguage();
     startListening();
     requestNotificationPermission();
@@ -799,7 +803,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.27.1';
+const APP_VERSION = 'v3.28.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -1140,7 +1144,7 @@ function buildCard(p) {
 
   // Chips row: due date + money
   let money = '';
-  if (window._isAdmin && p.amount) {
+  if (window._isAdmin && window._showMoney && p.amount) {
     money += p.advance
       ? `<div class="chip money">₹${fmtAmt(p.advance)} adv / ₹${fmtAmt(p.amount)}</div>`
       : `<div class="chip money">₹${fmtAmt(p.amount)}</div>`;
@@ -1242,6 +1246,21 @@ const SECTIONS = [
   { id:'sec-lathe',   label:'Lathe Work',       ico:'lathe', bg:'#E3EDE6', color:'#5C8A6B', match:p => p.projectType === 'lathe',    empty:'No lathe orders right now' },
   { id:'sec-modular', label:'Modular & Others', ico:'grid',  bg:'#EFECE4', color:'#9C9483', match:p => p.projectType === 'modular' || p.projectType === 'other', empty:'No modular kitchen or other-type orders right now' },
 ];
+
+// Amounts on the order cards are hidden by default on every load (screen-share / customer-safe);
+// the eye button in the header reveals them for this session.
+window._showMoney = false;
+function setMoneyBtn() {
+  const btn = document.getElementById('money-btn'), ico = document.getElementById('money-ico');
+  if (!btn || !ico) return;
+  ico.innerHTML = window._showMoney
+    ? '<path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>'
+    : '<path d="M3 3l18 18"/><path d="M10.6 5.6A10 10 0 0 1 12 5.5c6.4 0 10 6.5 10 6.5a17 17 0 0 1-3.2 3.9M6.6 6.6A16.6 16.6 0 0 0 2 12s3.6 6.5 10 6.5c1.6 0 3-.4 4.3-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>';
+  const label = window._showMoney ? 'Hide amounts' : 'Show amounts';
+  btn.title = label; btn.setAttribute('aria-label', label);
+}
+function toggleMoney() { window._showMoney = !window._showMoney; setMoneyBtn(); renderProjects(); showToast(window._showMoney ? 'Amounts shown' : 'Amounts hidden'); }
+setMoneyBtn();
 
 function renderProjects() {
   updateKpiStrip();
