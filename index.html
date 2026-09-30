@@ -11,7 +11,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-/* ── v3.21.0 — Topbar/header matched to Concept A prototype ── */
+/* ── v3.22.0 — Finance summary strip (pipeline value/received/pending) ── */
 :root {
   --bg:#FAF9F5; --surface:#FFFFFF; --surface2:#F5F1E7; --border:#E7E1D3;
   --purple:#C1602F; --purple-dark:#17160F; --purple-mid:#8A4423;
@@ -102,6 +102,13 @@ body{background:var(--bg);color:var(--text);font-family:'Public Sans',sans-serif
 .kpi-num{font-family:'Public Sans',sans-serif;font-weight:700;font-size:1.35rem;line-height:1;color:var(--text)}
 .kpi-overdue .kpi-num{color:var(--red)}
 .kpi-lbl{font-size:0.62rem;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;color:var(--text2);margin-top:3px;white-space:nowrap}
+
+.finance-strip{display:flex;gap:8px;padding:4px 14px 12px;flex-wrap:wrap}
+.finance-card{flex:1 1 0;min-width:104px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 12px;box-shadow:var(--shadow)}
+.finance-lbl{font-size:0.62rem;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;color:var(--text2)}
+.finance-num{font-family:'Public Sans',sans-serif;font-weight:700;font-size:1.2rem;line-height:1.3;color:var(--text)}
+.finance-received .finance-num{color:var(--green)}
+.finance-pending .finance-num{color:var(--amber)}
 .role-badge{font-size:0.68rem;padding:4px 10px;border-radius:20px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase}
 .role-admin{background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.3)}
 .role-manager{background:rgba(99,102,241,0.35);color:#e0e7ff;border:1px solid rgba(99,102,241,0.5)}
@@ -366,6 +373,11 @@ body{background:var(--bg);color:var(--text);font-family:'Public Sans',sans-serif
   .kpi-strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; padding: 16px 28px 6px; overflow-x: visible; }
   .kpi-card { min-width: 0; padding: 12px 12px; }
   .kpi-num { font-size: 1.5rem; }
+
+  /* Finance strip — bigger cards, more breathing room */
+  .finance-strip { padding: 6px 28px 16px; gap: 14px; }
+  .finance-card { padding: 14px 18px; }
+  .finance-num { font-size: 1.5rem; }
   .role-badge { font-size: 0.75rem; padding: 5px 14px; }
   .logout-btn { font-size: 0.85rem; padding: 8px 18px; }
 
@@ -535,7 +547,7 @@ body{background:var(--bg);color:var(--text);font-family:'Public Sans',sans-serif
 <!-- AUTH -->
 <div id="auth-screen" style="display:none">
   <div class="auth-logo">&#129681; Amar Furniture</div>
-  <div class="auth-sub">Order Tracker · v3.21.0</div>
+  <div class="auth-sub">Order Tracker · v3.22.0</div>
   <div class="auth-card">
     <h2>Sign In</h2>
     <div class="field"><label>Email</label><input type="email" id="auth-email" placeholder="you@email.com" autocomplete="email"></div>
@@ -584,6 +596,13 @@ body{background:var(--bg);color:var(--text);font-family:'Public Sans',sans-serif
     <div class="kpi-card kpi-ready"><div class="kpi-icon">&#128188;</div><div class="kpi-num" id="kpi-ready">0</div><div class="kpi-lbl">Ready</div></div>
     <div class="kpi-card kpi-hold"><div class="kpi-icon">&#9208;&#65039;</div><div class="kpi-num" id="kpi-hold">0</div><div class="kpi-lbl">On Hold</div></div>
     <div class="kpi-card kpi-overdue"><div class="kpi-icon">&#9888;&#65039;</div><div class="kpi-num" id="kpi-overdue">0</div><div class="kpi-lbl">Overdue</div></div>
+  </div>
+
+  <!-- FINANCE STRIP (admin-only — pipeline value / received / pending) -->
+  <div class="finance-strip" id="finance-strip" style="display:none">
+    <div class="finance-card finance-value"><div class="finance-lbl">Pipeline Value</div><div class="finance-num" id="fin-value">₹0</div></div>
+    <div class="finance-card finance-received"><div class="finance-lbl">Received</div><div class="finance-num" id="fin-received">₹0</div></div>
+    <div class="finance-card finance-pending"><div class="finance-lbl">Pending</div><div class="finance-num" id="fin-pending">₹0</div></div>
   </div>
 
   <!-- STATS BOTTOM SHEET -->
@@ -818,6 +837,7 @@ onAuthStateChanged(auth, user => {
     document.getElementById('role-badge').className   = 'role-badge ' + roleCls;
     document.getElementById('fab-btn').style.display  = isAdmin ? 'flex' : 'none';
     document.getElementById('settings-gear-btn').style.display = isAdmin ? 'flex' : 'none';
+    document.getElementById('finance-strip').style.display = isAdmin ? 'flex' : 'none';
     applyLanguage();
     startListening();
     requestNotificationPermission();
@@ -950,7 +970,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.21.0';
+const APP_VERSION = 'v3.22.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -1622,6 +1642,24 @@ function updateKpiStrip() {
   set('kpi-ready',   readyCount);
   set('kpi-hold',    holdCount);
   set('kpi-overdue', overdueCount);
+  updateFinanceStrip(all);
+}
+
+function updateFinanceStrip(all) {
+  if (!window._isAdmin) return;
+  const pipeline = (all || (window._projects || []).filter(p => !isArchived(p))).filter(p => !isDelivered(p));
+  let value = 0, received = 0, pending = 0;
+  pipeline.forEach(p => {
+    const amt = Number(p.amount) || 0;
+    const adv = Number(p.advance) || 0;
+    value    += amt;
+    received += adv;
+    pending  += Math.max(0, amt - adv);
+  });
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = '₹' + fmtAmt(v); };
+  set('fin-value',    value);
+  set('fin-received', received);
+  set('fin-pending',  pending);
 }
 
 function updateStats() {
