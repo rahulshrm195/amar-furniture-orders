@@ -9,545 +9,298 @@
 <meta name="apple-mobile-web-app-title" content="AF Orders">
 <link rel="manifest" href="manifest.json">
 <title>Amar Furniture — Order Tracker</title>
-<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.22.0 — Finance summary strip (pipeline value/received/pending) ── */
-:root {
-  --bg:#FAF9F5; --surface:#FFFFFF; --surface2:#F5F1E7; --border:#E7E1D3;
-  --purple:#C1602F; --purple-dark:#17160F; --purple-mid:#8A4423;
-  --purple-soft:rgba(193,96,47,0.10); --purple-dim:rgba(193,96,47,0.18);
-  --amber:#A65E00; --amber-soft:rgba(166,94,0,0.12);
-  --green:#1F7A44; --green-soft:rgba(31,122,68,0.12);
-  --red:#BF3324; --red-soft:rgba(191,51,36,0.10);
-  --orange:#8B6B2E; --orange-soft:rgba(139,107,46,0.10);
-  --text:#1A1812; --text2:#726A58; --text3:#9C9483;
-  --radius:14px; --shadow:0 2px 16px rgba(26,24,18,0.07); --shadow-lg:0 8px 32px rgba(26,24,18,0.12);
+/* ── v3.23.0 — Full Concept A UI (rebuilt from scratch; old UI removed) ── */
+:root{
+  --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
+  --clay:#C1602F; --clay-soft:#F5E3D5;
+  --green:#1F7A44; --green-soft:#E2F1E5;
+  --amber:#A65E00; --amber-soft:#F8E9D2;
+  --red:#BF3324; --red-soft:#FBE5E0;
+  --slate:#17160F;
+  --serif:'Fraunces',Georgia,serif; --sans:'Public Sans',system-ui,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{background:var(--bg);color:var(--text);font-family:'Public Sans',sans-serif;min-height:100dvh;overflow-x:hidden}
+body{background:var(--ivory);color:var(--ink);font-family:var(--sans);min-height:100dvh;overflow-x:hidden}
+a{color:var(--clay);text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit}
+::-webkit-scrollbar{width:8px;height:8px} ::-webkit-scrollbar-thumb{background:#DAD3C2;border-radius:8px}
 
-.loading-screen{position:fixed;inset:0;background:linear-gradient(135deg,var(--purple-dark),var(--purple));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:999}
-.loading-logo{font-family:'Public Sans',sans-serif;font-weight:800;font-size:1.8rem;color:#fff}
-.loading-sub{font-size:0.85rem;color:rgba(255,255,255,0.6)}
-.spinner{width:28px;height:28px;border:3px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite}
+/* ── Loading + sign-in ── */
+.loading-screen{position:fixed;inset:0;background:var(--slate);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:999}
+.brand-tile{width:38px;height:38px;border-radius:10px;background:var(--clay);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.brand-row{display:flex;align-items:center;gap:12px}
+.brand-name{font-family:var(--serif);font-weight:700;font-size:20px;color:#FAF9F5;line-height:1.15}
+.brand-sub{font-size:10.5px;color:#A79F8C;letter-spacing:.09em;text-transform:uppercase}
+.spinner{width:26px;height:26px;border:3px solid #34322A;border-top-color:var(--clay);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+#auth-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100dvh;padding:24px;background:var(--slate)}
+#auth-screen .brand-row{margin-bottom:28px}
+.auth-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:26px;width:100%;max-width:380px}
+.auth-card h2{font-family:var(--serif);font-size:1.25rem;font-weight:700;margin-bottom:18px}
+#auth-error{color:var(--red);font-size:12.5px;margin-top:12px;text-align:center;min-height:18px}
 
-#auth-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100dvh;padding:24px;background:linear-gradient(160deg,var(--purple-dark) 0%,var(--purple-mid) 50%,#C9A26B 100%)}
-.auth-logo{font-family:'Public Sans',sans-serif;font-weight:800;font-size:2rem;color:#fff;margin-bottom:4px}
-.auth-sub{color:rgba(255,255,255,0.65);font-size:0.85rem;margin-bottom:36px}
-.auth-card{background:#fff;border-radius:24px;padding:28px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
-.auth-card h2{font-family:'Public Sans',sans-serif;font-size:1.15rem;font-weight:700;margin-bottom:20px;color:var(--text)}
-
+/* ── Forms + buttons ── */
 .field{margin-bottom:16px}
+.field label{display:block;font-size:10.5px;color:var(--ink2);margin-bottom:6px;letter-spacing:.04em;text-transform:uppercase;font-weight:800}
+.field input,.field select,.field textarea{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 13px;color:var(--ink);font-size:14px;outline:none;transition:border-color .15s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--clay)}
+.field textarea{resize:none;min-height:76px}
 .field-grid{display:block}
-.field-grid .field{margin-bottom:16px}
 .modal-body{display:block}
 .modal-col{min-width:0}
-.field label{display:block;font-size:0.75rem;color:var(--text2);margin-bottom:6px;letter-spacing:0.05em;text-transform:uppercase;font-weight:600}
-.field input,.field select,.field textarea{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;color:var(--text);font-family:'Public Sans',sans-serif;font-size:0.95rem;outline:none;transition:border-color 0.2s}
-.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--purple);background:#fff}
-.field textarea{resize:none;min-height:72px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;border-radius:10px;border:1px solid transparent;font-weight:700;font-size:14px;transition:background .15s}
+.btn-primary{background:var(--clay);color:#FAF9F5}
+.btn-primary:hover{background:#A9521F}
+.btn-ghost{background:var(--surface);color:var(--ink2);border-color:var(--border)}
+.btn-ghost:hover{background:#F1EDE1}
+.btn-archive{background:var(--surface);color:var(--ink2);border-color:var(--border)}
+.btn-danger{background:var(--red-soft);color:var(--red);border-color:#EBC3BA}
 
-.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border-radius:12px;border:none;font-family:'Public Sans',sans-serif;font-weight:700;font-size:0.95rem;cursor:pointer;transition:all 0.18s}
-.btn-primary{background:linear-gradient(135deg,var(--purple),var(--purple-mid));color:#fff;box-shadow:0 4px 16px rgba(193,96,47,0.35)}
-.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(193,96,47,0.45)}
-.btn-primary:active{transform:translateY(0)}
-.btn-outline{background:transparent;color:var(--purple);border:1.5px solid var(--purple-mid)}
-.btn-outline:hover{background:var(--purple-soft)}
-.btn-danger{background:var(--red);color:#fff}
-.btn-archive{background:rgba(107,114,128,0.12);color:#4b5563;border:1.5px solid #d1d5db}
-.btn-archive:hover{background:rgba(107,114,128,0.2)}
-.btn-restore{background:rgba(16,185,129,0.12);color:#059669;border:1.5px solid rgba(16,185,129,0.3)}
-.btn-restore:hover{background:rgba(16,185,129,0.2)}
-.archived-card{opacity:0.65;filter:grayscale(0.3)}
-.archived-badge{font-size:0.68rem;font-weight:700;padding:3px 10px;border-radius:8px;background:rgba(107,114,128,0.12);color:#6b7280;border:1px solid #d1d5db}
-.btn-ghost{background:var(--surface2);color:var(--text2);border:1.5px solid var(--border)}
-.btn-ghost:hover{background:var(--border)}
-#auth-error{color:var(--red);font-size:0.82rem;margin-top:12px;text-align:center;min-height:18px}
-
+/* ── Topbar ── */
 #app{display:none}
-.topbar{position:sticky;top:0;z-index:100;background:linear-gradient(135deg,var(--purple-dark),var(--purple-mid));padding:10px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;box-shadow:0 4px 20px rgba(23,22,15,0.35)}
-.topbar-left{display:flex;align-items:center;gap:10px;flex:0 0 auto}
-.topbar-icon{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
-.topbar-title{font-family:'Public Sans',sans-serif;font-weight:800;font-size:1.05rem;color:#fff;line-height:1}
-.topbar-subtitle{font-size:0.68rem;color:rgba(255,255,255,0.6);line-height:1;margin-top:1px}
-.topbar-right{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.topbar{position:sticky;top:0;z-index:100;background:var(--slate);display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;padding:12px 16px}
+.tb-left{display:flex;align-items:center;gap:12px;flex:0 0 auto}
+.tb-search{position:relative;order:3;flex:1 1 100%}
+.tb-search-ico{position:absolute;left:14px;top:50%;transform:translateY(-50%);display:flex;pointer-events:none}
+.tb-search input{width:100%;padding:10px 14px 10px 40px;border-radius:10px;border:1px solid #34322A;background:#211F18;color:#EDE9DD;font-size:13.5px;outline:none;transition:border-color .15s}
+.tb-search input::placeholder{color:#B8B2A0}
+.tb-search input:focus{border-color:var(--clay)}
+.tb-right{display:flex;align-items:center;gap:10px;margin-left:auto}
+.tb-btn{width:38px;height:38px;border-radius:10px;border:1px solid #34322A;background:#211F18;color:#D8D2C2;display:flex;align-items:center;justify-content:center;flex:0 0 auto;transition:background .15s}
+.tb-btn:hover{background:#2B2920}
+.role-badge{font-size:11.5px;font-weight:800;letter-spacing:.05em;color:var(--slate);background:#EFE7D6;padding:7px 12px;border-radius:20px;text-transform:uppercase}
+.role-manager{background:var(--amber-soft);color:var(--amber)}
+.role-staff{background:#E1EAF3;color:#33608F}
+.logout-btn{font-size:13px;font-weight:600;color:#D8D2C2;background:transparent;border:1px solid #34322A;padding:8px 14px;border-radius:10px;transition:background .15s}
+.logout-btn:hover{background:#211F18}
 
-/* Header search bar — concept style */
-.topbar-search-wrap{position:relative;order:3;flex:1 1 100%}
-.topbar-search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);display:flex;color:#8A8371;pointer-events:none}
-.topbar-search{width:100%;box-sizing:border-box;padding:10px 14px 10px 40px;border-radius:10px;border:1px solid #34322A;background:#211F18;color:#EDE9DD;font-family:'Public Sans',sans-serif;font-size:13.5px;outline:none;transition:border-color 0.15s}
-.topbar-search::placeholder{color:#8A8371}
-.topbar-search:focus{border-color:var(--purple)}
+/* ── KPI strip ── */
+.kpi-strip{display:flex;gap:12px;padding:16px 16px 12px;overflow-x:auto}
+.kpi{flex:0 0 140px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:13px 14px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--kc)}
+.kpi-head{display:flex;align-items:center;gap:6px;margin-bottom:8px;color:var(--kc)}
+.kpi-lbl{font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink2);white-space:nowrap}
+.kpi-num{font-family:var(--serif);font-weight:700;font-size:27px;line-height:1}
+.kpi.dim{opacity:.55}
+.kpi.overdue{background:var(--red-soft);border-color:#EBC3BA}
+.kpi.overdue .kpi-lbl{color:#8C3A2C}
+.kpi.overdue .kpi-num{color:var(--red)}
 
-/* Header icon buttons (stats / settings) — concept style */
-.topbar-icon-btn{width:38px;height:38px;border-radius:10px;border:1px solid #34322A;background:#211F18;color:#D8D2C2;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background 0.15s;flex-shrink:0}
-.topbar-icon-btn:hover{background:#2b2920}
+/* ── Money ledger (admin only) ── */
+.ledger{margin:0 16px 12px;background:var(--surface);border:1px solid var(--border);border-radius:14px;grid-template-columns:repeat(3,minmax(0,1fr));overflow:hidden}
+.ledger-cell{padding:13px 14px}
+.ledger-cell+.ledger-cell{border-left:1px solid var(--border)}
+.ledger-lbl{font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink2);margin-bottom:8px}
+.ledger-num{font-family:var(--serif);font-weight:700;font-size:22px;line-height:1}
+.ledger-cell.recv .ledger-num{color:var(--green)}
+.ledger-cell.pend .ledger-num{color:var(--amber)}
 
-@media (min-width:768px){
-  .topbar-search-wrap{order:0;flex:1 1 auto;max-width:440px;margin:0 28px}
-  .topbar{flex-wrap:nowrap;height:68px;padding:0 32px}
-}
+/* ── Order list ── */
+.list-wrap{padding:4px 16px 96px}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(360px,100%),1fr));gap:14px;align-items:start}
+.section-header,.section-divider,.section-empty,.section-banner{grid-column:1/-1}
+.section-header{display:flex;align-items:center;gap:10px;margin:12px 0 10px}
+.card-grid>.section-header:first-child{margin-top:10px}
+.sec-ico{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.sec-title{font-family:var(--serif);font-weight:700;font-size:17px;flex:1}
+.sec-title.dim{color:var(--ink2)}
+.sec-count{font-size:11.5px;font-weight:700;color:var(--ink2);background:var(--surface);border:1px solid var(--border);padding:3px 10px;border-radius:20px}
+.section-divider{height:1px;background:var(--border);margin-bottom:2px}
+.section-empty{border:1.5px dashed var(--border);border-radius:12px;padding:16px;text-align:center;color:var(--ink3);font-size:12.5px}
+.section-banner{display:flex;align-items:center;gap:12px;background:var(--amber-soft);border:1px solid #E8CFA0;border-radius:12px;padding:14px 16px;color:#7A4A00}
+.section-banner .sb-text{font-weight:700;font-size:13.5px;flex:1}
+.section-banner button{background:none;border:none;color:inherit;font-size:12px;font-weight:700;white-space:nowrap}
+.section-banner.neutral{background:var(--surface);border-color:var(--border);color:var(--ink2)}
 
-/* ── KPI strip (type counts, always visible) ── */
-.kpi-strip{display:flex;gap:8px;overflow-x:auto;padding:12px 14px 4px;-webkit-overflow-scrolling:touch}
-.kpi-strip::-webkit-scrollbar{display:none}
-.kpi-card{flex:0 0 auto;min-width:104px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 12px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
-.kpi-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px}
-.kpi-wood::before{background:var(--purple)} .kpi-ply::before{background:#4E7DB5} .kpi-lathe::before{background:#5C8A6B}
-.kpi-modular::before{background:var(--text3)} .kpi-ready::before{background:var(--orange)}
-.kpi-hold::before{background:#9C7A1E} .kpi-overdue::before{background:var(--red)}
-.kpi-overdue{background:var(--red-soft);border-color:rgba(191,51,36,0.25)}
-.kpi-icon{font-size:0.95rem;margin-bottom:4px}
-.kpi-num{font-family:'Public Sans',sans-serif;font-weight:700;font-size:1.35rem;line-height:1;color:var(--text)}
-.kpi-overdue .kpi-num{color:var(--red)}
-.kpi-lbl{font-size:0.62rem;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;color:var(--text2);margin-top:3px;white-space:nowrap}
+/* ── Order card ── */
+.order-card{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--tone);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:9px}
+.order-card.archived{opacity:.65}
+.oc-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.oc-top>div:first-child{min-width:0}
+.oc-name{font-weight:700;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.oc-desc{font-size:12px;color:var(--ink2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.oc-desc.none{color:var(--ink3)}
+.oc-days{text-align:right;flex:0 0 auto}
+.oc-days-n{font-size:15px;font-weight:800;color:var(--tone);line-height:1.1}
+.oc-days-l{font-size:9px;color:var(--ink2);text-transform:uppercase;letter-spacing:.04em;margin-top:1px}
+.oc-stage{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.steps{display:flex;gap:4px}
+.step{width:16px;height:4px;border-radius:2px;background:var(--border)}
+.step.on{background:var(--clay)}
+.step.on.fin{background:var(--ink3)}
+.oc-type{font-size:11px;font-weight:700;color:var(--ink2)}
+.oc-chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:11px;font-weight:700;padding:4px 9px;border-radius:20px;white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
+.chip.plain{background:var(--ivory);color:var(--ink2);border:1px solid var(--border)}
+.chip.money{background:var(--ivory);color:var(--ink);border:1px solid var(--border)}
+.chip.due{background:var(--red-soft);color:var(--red)}
+.chip.paid{background:var(--green-soft);color:var(--green)}
+.chip.warn{background:var(--amber-soft);color:var(--amber)}
+.chip.s0{background:#EAE6DC;color:#6B6555} .chip.s1{background:#E1EAF3;color:#33608F}
+.chip.s2{background:#EDE3F2;color:#6E3F94} .chip.s3{background:#F2E7CE;color:#8B6B2E}
+.chip.s4{background:var(--green-soft);color:var(--green)}
+button.chip{border:none;font-family:inherit}
 
-.finance-strip{display:flex;gap:8px;padding:4px 14px 12px;flex-wrap:wrap}
-.finance-card{flex:1 1 0;min-width:104px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 12px;box-shadow:var(--shadow)}
-.finance-lbl{font-size:0.62rem;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;color:var(--text2)}
-.finance-num{font-family:'Public Sans',sans-serif;font-weight:700;font-size:1.2rem;line-height:1.3;color:var(--text)}
-.finance-received .finance-num{color:var(--green)}
-.finance-pending .finance-num{color:var(--amber)}
-.role-badge{font-size:0.68rem;padding:4px 10px;border-radius:20px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase}
-.role-admin{background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.3)}
-.role-manager{background:rgba(99,102,241,0.35);color:#e0e7ff;border:1px solid rgba(99,102,241,0.5)}
-.role-staff{background:rgba(245,158,11,0.25);color:#fde68a;border:1px solid rgba(245,158,11,0.4)}
-.logout-btn{padding:6px 14px;border-radius:10px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);color:#fff;font-family:'Public Sans',sans-serif;font-weight:700;font-size:0.78rem;cursor:pointer;transition:all 0.15s}
-.logout-btn:hover{background:rgba(255,255,255,0.25)}
-/* mobile: compress topbar */
-@media (max-width:767px){
-  .logout-text{display:none}
-  .logout-icon{display:inline}
-  .logout-btn{padding:6px 9px;font-size:1rem}
-  .topbar-right{gap:5px}
-}
-/* desktop: show text, hide icon */
-@media (min-width:768px){
-  .logout-icon{display:none}
-}
+.note-block{margin-top:1px;padding-top:9px;border-top:1px dashed var(--border);display:flex;flex-direction:column;gap:7px}
+.note-row{display:flex;align-items:center;gap:7px}
+.note-row svg{flex:0 0 auto;color:var(--ink3)}
+.note-text{font-size:11.5px;color:var(--ink3);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.note-text.has{color:var(--ink2);font-style:italic}
+.note-add-row{display:flex;align-items:center;gap:6px}
+.note-input{flex:1;min-width:0;font-size:11.5px;padding:7px 10px;border-radius:8px;border:1px solid var(--border);background:var(--ivory);color:var(--ink);outline:none;transition:border-color .15s}
+.note-input::placeholder{color:var(--ink3)}
+.note-input:focus{border-color:var(--clay)}
+.note-send{width:30px;height:30px;border-radius:8px;background:var(--clay);border:none;display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:#FAF9F5}
+.note-send:hover{background:#A9521F}
 
-.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:16px 14px 0}
-/* ── STATS BOTTOM SHEET ── */
-.stats-sheet-backdrop{position:fixed;inset:0;z-index:600;background:rgba(30,27,75,0.45);backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity 0.2s}
-.stats-sheet-backdrop.open{opacity:1;pointer-events:all}
-.stats-sheet{position:fixed;bottom:0;left:0;right:0;z-index:601;background:var(--surface);border-radius:24px 24px 0 0;padding:0 16px 40px;max-height:85dvh;overflow-y:auto;transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.34,1.2,0.64,1);box-shadow:0 -8px 40px rgba(23,22,15,0.15)}
-.stats-sheet-backdrop.open .stats-sheet{transform:translateY(0)}
-.stats-sheet-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:14px auto 16px}
-.stats-sheet-title{font-family:'Public Sans',sans-serif;font-weight:800;font-size:1.1rem;color:var(--text);margin-bottom:4px}
-.stats-sheet-sub{font-size:0.78rem;color:var(--text3);margin-bottom:16px}
-.stat-card{background:var(--surface);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:var(--shadow)}
-.stat-icon{font-size:1.2rem;margin-bottom:3px}
-.stat-num{font-family:'Public Sans',sans-serif;font-size:1.4rem;font-weight:800;line-height:1}
-.stat-lbl{font-size:0.58rem;color:var(--text3);margin-top:2px;text-transform:uppercase;letter-spacing:0.04em}
-.stat-total .stat-num{color:var(--purple)} .stat-ok .stat-num{color:var(--green)}
-.stat-warn .stat-num{color:var(--amber)} .stat-danger .stat-num{color:var(--red)}
+.oc-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.icon-btn{width:30px;height:30px;border-radius:9px;border:1px solid var(--border);background:var(--ivory);display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:var(--ink2);transition:background .15s}
+.icon-btn:hover{background:#F1EDE1}
+.icon-btn.on{border-color:var(--clay);color:var(--clay);background:var(--clay-soft)}
+.pill-btn{font-size:11.5px;font-weight:700;color:var(--clay);background:var(--clay-soft);border:none;padding:6px 12px;border-radius:20px}
 
-.stage-row{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:8px 14px 0}
-.stage-card{background:var(--surface);border-radius:12px;padding:10px 4px;text-align:center;box-shadow:var(--shadow);cursor:pointer;transition:all 0.15s;border:1.5px solid transparent}
-.stage-card:hover{border-color:var(--purple-dim);background:var(--purple-soft)}
-.stage-card.active-stage{border-color:var(--purple);background:var(--purple-soft)}
-.stage-icon{font-size:1rem;margin-bottom:2px;line-height:1}
-.stage-num{font-family:'Public Sans',sans-serif;font-size:1.1rem;font-weight:800;line-height:1;color:var(--purple)}
-.stage-num.zero{color:var(--text3)}
-.stage-lbl{font-size:0.52rem;color:var(--text3);margin-top:2px;text-transform:uppercase;letter-spacing:0.03em;line-height:1.2}
+.oc-details{display:none;border-top:1px dashed var(--border);padding-top:10px;flex-direction:column;gap:12px}
+.order-card.expanded .oc-details{display:flex}
+.dt-lbl{font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px}
+.dt-item{display:flex;align-items:center;gap:8px;font-size:12px;padding:6px 0;border-bottom:1px solid var(--border)}
+.dt-item:last-child{border-bottom:none}
+.dt-item-n{font-weight:600;flex:1;min-width:0}
+.dt-item-d{color:var(--ink2);font-size:11.5px;white-space:nowrap}
+.dt-item-q{font-weight:700;font-size:11px;background:var(--clay-soft);color:var(--clay);padding:2px 8px;border-radius:20px;white-space:nowrap}
+.dt-specs{font-size:12px;color:var(--ink2);line-height:1.5;white-space:pre-wrap;background:var(--ivory);border:1px solid var(--border);border-radius:8px;padding:8px 10px}
+.tl{display:flex;flex-direction:column;gap:8px}
+.tl-row{display:flex;gap:8px;align-items:flex-start}
+.tl-dot{width:6px;height:6px;border-radius:50%;background:var(--clay);margin-top:5px;flex:0 0 auto}
+.tl-text{font-size:12px;flex:1;line-height:1.4;min-width:0}
+.tl-time{font-size:10.5px;color:var(--ink3);white-space:nowrap;margin-top:1px}
+.tl-empty{font-size:12px;color:var(--ink3)}
 
-/* hidden — kept for JS compat */
-.filter-pill-value{display:none}
-#type-pill-val{display:none}
-#stage-pill-val{display:none}
-#lbl-type-pill{display:none}
-#lbl-stage-pill{display:none}
-.fpop-backdrop{position:fixed;inset:0;z-index:600;background:rgba(30,27,75,0.45);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s}
-.fpop-backdrop.open{opacity:1;pointer-events:all}
-.fpop{background:var(--surface);border-radius:22px;padding:20px;width:calc(100vw - 48px);max-width:310px;box-shadow:var(--shadow-lg);transform:scale(0.94);transition:transform 0.22s cubic-bezier(0.34,1.4,0.64,1),opacity 0.2s;opacity:0}
-.fpop-backdrop.open .fpop{transform:scale(1);opacity:1}
-.fpop-title{font-family:'Public Sans',sans-serif;font-weight:800;font-size:1rem;color:var(--text);margin-bottom:12px}
-.fpop-opt{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;cursor:pointer;font-size:0.88rem;font-weight:600;color:var(--text2);border:1.5px solid transparent;transition:all 0.12s;user-select:none}
-.fpop-opt:hover{background:var(--surface2)}
-.fpop-opt.sel{background:var(--purple-soft);color:var(--purple);border-color:var(--purple-dim)}
-.fpop-dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all 0.12s}
-.fpop-opt.sel .fpop-dot{border-color:var(--purple);background:var(--purple)}
-.fpop-opt.sel .fpop-dot::after{content:'';width:6px;height:6px;border-radius:50%;background:#fff;display:block}
-.fpop-done{margin-top:14px;width:100%;padding:11px;border-radius:12px;border:none;background:var(--purple);color:#fff;font-family:'Public Sans',sans-serif;font-weight:700;font-size:0.9rem;cursor:pointer;transition:opacity 0.15s}
-.fpop-done:hover{opacity:0.9}
-
-/* search + expand merged into toolbar above */
-
-.projects-list{padding:0 14px 100px;display:flex;flex-direction:column;gap:12px}
-
-/* ── VIEW TABS ── */
-/* view tabs merged into toolbar */
-
-/* ── ITEMS TABLE ── */
-.project-card{background:var(--surface);border-radius:var(--radius);overflow:hidden;transition:transform 0.15s,box-shadow 0.15s;box-shadow:var(--shadow)}
-.project-card:active{transform:scale(0.99)}
-.project-card.urgent{box-shadow:0 2px 16px rgba(239,68,68,0.15);border-left:3px solid var(--red)}
-.project-card.warning{box-shadow:0 2px 16px rgba(245,158,11,0.12);border-left:3px solid var(--amber)}
-.project-card.ok-card{border-left:3px solid var(--green)}
-.project-card.delivered{opacity:0.6}
-
-.card-urgency-bar{height:4px;width:100%}
-.card-urgency-bar.ok{background:linear-gradient(90deg,var(--green),#34d399)}
-.card-urgency-bar.warn{background:linear-gradient(90deg,var(--amber),#fbbf24)}
-.card-urgency-bar.danger{background:linear-gradient(90deg,var(--red),#f87171)}
-.card-urgency-bar.done{background:linear-gradient(90deg,#d1d5db,#e5e7eb)}
-
-.card-header{padding:14px 16px;cursor:pointer;user-select:none;-webkit-user-select:none}
-.card-body{padding:0 16px 4px}
-.card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
-.card-chevron{font-size:0.72rem;color:var(--text3);transition:transform 0.25s ease;flex-shrink:0;margin-left:2px}
-.project-card.expanded .card-chevron{transform:rotate(180deg)}
-.card-expandable{display:none;padding:0 16px 4px}
-.project-card.expanded .card-expandable{display:block}
-.card-title{font-family:'Public Sans',sans-serif;font-weight:700;font-size:1rem;line-height:1.25;color:var(--text)}
-.card-desc{font-size:0.78rem;color:var(--text2);margin-top:3px}
-
-.days-badge{flex-shrink:0;font-family:'Public Sans',sans-serif;font-weight:800;font-size:1rem;padding:7px 10px;border-radius:12px;text-align:center;min-width:54px}
-.days-badge.ok{background:var(--green-soft);color:var(--green)} .days-badge.warn{background:var(--amber-soft);color:var(--amber)}
-.days-badge.danger{background:var(--red-soft);color:var(--red)} .days-badge.done{background:var(--surface2);color:var(--text3)}
-.days-badge-lbl{font-size:0.52rem;display:block;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;line-height:1;margin-top:2px}
-
-.card-meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
-.meta-chip{font-size:0.72rem;padding:4px 10px;border-radius:8px;font-weight:600}
-.meta-chip.date-chip{background:var(--surface2);color:var(--text2)}
-.meta-chip.amount{background:var(--purple-soft);color:var(--purple);font-weight:700}
-.chip-wood{background:rgba(193,96,47,0.12);color:#C1602F} .chip-plywood{background:rgba(78,125,181,0.12);color:#4E7DB5}
-.chip-modular{background:rgba(114,106,88,0.14);color:#726A58} .chip-lathe{background:rgba(92,138,107,0.12);color:#5C8A6B}
-.chip-other{background:rgba(114,106,88,0.14);color:#726A58}
-.meta-chip.balance{background:rgba(239,68,68,0.10);color:var(--red);font-weight:700}
-.meta-chip.balance-paid{background:var(--green-soft);color:var(--green);font-weight:700}
-
-/* ── ACTIVITY LOG ── */
-.activity-log{margin-top:10px;background:var(--surface2);border-radius:12px;overflow:hidden}
-.activity-log-hdr{padding:7px 12px;font-size:0.67rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;font-weight:700;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.activity-log-hdr button{background:none;border:none;color:var(--purple);font-size:0.7rem;font-weight:700;cursor:pointer;font-family:'Public Sans',sans-serif;padding:0}
-.activity-entry{padding:9px 12px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:flex-start}
-.activity-entry:last-child{border-bottom:none}
-.activity-dot{width:7px;height:7px;border-radius:50%;background:var(--purple-mid);margin-top:4px;flex-shrink:0}
-.activity-text{font-size:0.8rem;color:var(--text);flex:1;line-height:1.45}
-.activity-time{font-size:0.68rem;color:var(--text3);white-space:nowrap;margin-top:1px}
-.activity-empty{padding:10px 12px;font-size:0.78rem;color:var(--text3);font-style:italic}
-.activity-add-row{display:flex;gap:6px;padding:8px 12px;border-top:1px solid var(--border);background:var(--surface)}
-.activity-add-inp{flex:1;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:7px 11px;color:var(--text);font-family:'Public Sans',sans-serif;font-size:0.82rem;outline:none;transition:border-color 0.2s}
-.activity-add-inp:focus{border-color:var(--purple)}
-.activity-add-btn{flex-shrink:0;padding:7px 14px;border-radius:9px;border:none;background:var(--purple);color:#fff;font-family:'Public Sans',sans-serif;font-weight:700;font-size:0.78rem;cursor:pointer;transition:opacity 0.15s}
-.activity-add-btn:hover{opacity:0.85}
-
-.status-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.status-stepper{display:flex;gap:3px;flex:1}
-.step{flex:1;height:5px;border-radius:3px;background:var(--border);transition:background 0.3s}
-.step.done-ok{background:linear-gradient(90deg,var(--purple),var(--purple-mid))} .step.done-del{background:var(--border)}
-.status-label{font-size:0.7rem;font-weight:700;padding:4px 10px;border-radius:8px;white-space:nowrap}
-.s0{background:#EAE6DC;color:#6B6555} .s1{background:rgba(78,125,181,0.14);color:#33608F}
-.s2{background:rgba(110,63,148,0.12);color:#6E3F94} .s3{background:var(--amber-soft);color:var(--amber)}
-.s4{background:var(--green-soft);color:var(--green)}
-
-.card-items{margin-top:10px;background:var(--surface2);border-radius:12px;overflow:hidden}
-.card-items-hdr{padding:7px 12px;font-size:0.67rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;font-weight:700;border-bottom:1px solid var(--border)}
-.card-item-row{padding:9px 12px;border-bottom:1px solid var(--border)}
-.card-item-row:last-child{border-bottom:none}
-.card-item-top{display:flex;align-items:center;gap:6px;margin-bottom:4px}
-.card-item-sr{font-size:0.68rem;font-weight:700;color:var(--purple);background:var(--purple-soft);padding:1px 6px;border-radius:5px;flex-shrink:0;font-family:'Public Sans',sans-serif}
-.card-item-name{font-size:0.85rem;font-weight:600;color:var(--text)}
-.card-item-meta{display:flex;align-items:center;gap:8px;padding-left:2px}
-.card-item-dims{font-size:0.76rem;color:var(--text2);font-family:'Public Sans',sans-serif;letter-spacing:0.01em}
-.card-item-qty{font-size:0.75rem;font-weight:700;color:var(--purple);background:var(--purple-soft);padding:2px 8px;border-radius:6px}
-
-.card-notes{margin-top:10px;font-size:0.8rem;color:var(--text2);background:var(--surface2);border-radius:10px;padding:9px 12px;border-left:3px solid var(--purple-mid);line-height:1.5;white-space:pre-wrap}
-
-/* ── Always-visible note preview + quick add-note (Concept A) ── */
-.card-note-bar{padding:10px 16px 12px;border-top:1px dashed var(--border);display:flex;flex-direction:column;gap:7px;cursor:default}
-.card-last-note{display:flex;align-items:flex-start;gap:6px}
-.card-last-note-dot{width:6px;height:6px;border-radius:50%;background:var(--purple-mid);flex-shrink:0;margin-top:5px}
-.card-last-note.empty .card-last-note-dot{background:var(--border)}
-.card-last-note-text{font-size:0.78rem;font-style:italic;color:var(--text2);line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical}
-.card-last-note.empty .card-last-note-text{font-style:normal;color:var(--text3)}
-.card-note-add-row{display:flex;align-items:center;gap:8px}
-.card-note-add-inp{flex:1;min-width:0;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:7px 11px;color:var(--text);font-family:'Public Sans',sans-serif;font-size:0.82rem;outline:none;transition:border-color 0.2s}
-.card-note-add-inp:focus{border-color:var(--purple)}
-.card-note-add-btn{flex-shrink:0;width:30px;height:30px;border-radius:8px;border:none;background:var(--purple);color:#fff;font-size:0.82rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity 0.15s}
-.card-note-add-btn:hover{opacity:0.85}
-.group-header{display:flex;align-items:center;justify-content:space-between;padding:16px 14px 8px;margin-top:4px}
-.group-header-left{display:flex;align-items:center;gap:8px}
-.group-header-title{font-family:'Public Sans',sans-serif;font-weight:800;font-size:0.9rem;color:var(--text)}
-.group-header-count{font-size:0.72rem;font-weight:700;color:var(--text3);background:var(--surface2);border:1.5px solid var(--border);padding:2px 8px;border-radius:20px}
-.group-divider{height:1.5px;background:var(--border);margin:0 14px}
-.type-section-header{display:flex;align-items:center;gap:10px;padding:20px 14px 10px;margin-top:8px;border-top:2px solid var(--border)}
-.type-section-header:first-child{margin-top:0;border-top:none;padding-top:8px}
-.type-section-header span:first-child{font-size:1.15rem}
-.type-section-title{font-family:'Public Sans',sans-serif;font-weight:800;font-size:1.02rem;color:var(--text);flex:1}
-.type-section-count{font-size:0.78rem;font-weight:800;color:var(--accent, #6366f1);background:var(--surface2);border:1.5px solid var(--border);padding:3px 10px;border-radius:20px}
-.on-hold-toggle{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(245,158,11,0.08);border:1.5px solid rgba(245,158,11,0.25);border-radius:14px;margin-bottom:16px;cursor:pointer;transition:all 0.15s}
-.on-hold-toggle.active{background:rgba(245,158,11,0.15);border-color:rgba(245,158,11,0.5)}
-.on-hold-toggle-left{display:flex;align-items:center;gap:10px}
-.on-hold-toggle-icon{font-size:1.2rem}
-.on-hold-toggle-text strong{display:block;font-size:0.88rem;font-weight:700;color:var(--text)}
-.on-hold-toggle-text span{font-size:0.75rem;color:var(--text2)}
-.toggle-switch{width:42px;height:24px;border-radius:12px;background:var(--border);position:relative;transition:background 0.2s;flex-shrink:0}
-.toggle-switch::after{content:'';position:absolute;width:18px;height:18px;border-radius:9px;background:#fff;top:3px;left:3px;transition:transform 0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.15)}
-.on-hold-toggle.active .toggle-switch{background:var(--amber)}
-.on-hold-toggle.active .toggle-switch::after{transform:translateX(18px)}
-.card-actions{display:flex;gap:8px;padding:0 16px 14px}
-.card-actions .btn{padding:9px;font-size:0.8rem;border-radius:12px}
-
-.fab{position:fixed;bottom:24px;right:18px;z-index:200;width:58px;height:58px;border-radius:18px;background:linear-gradient(135deg,var(--purple),var(--purple-mid));color:#fff;border:none;font-size:1.6rem;cursor:pointer;box-shadow:0 8px 24px rgba(193,96,47,0.45);display:flex;align-items:center;justify-content:center;transition:all 0.2s}
-.fab:hover{transform:scale(1.08)} .fab:active{transform:scale(0.96)}
-
-.modal-backdrop{position:fixed;inset:0;z-index:500;background:rgba(30,27,75,0.5);backdrop-filter:blur(6px);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s}
+/* ── Sheets + modals ── */
+.modal-backdrop{position:fixed;inset:0;z-index:500;background:rgba(23,22,15,.5);backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
 .modal-backdrop.open{opacity:1;pointer-events:all}
-.modal{background:var(--surface);border-radius:24px 24px 0 0;width:100%;max-width:520px;max-height:92dvh;overflow-y:auto;padding:0 20px 40px;transform:translateY(40px);transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1);box-shadow:0 -8px 40px rgba(23,22,15,0.15)}
-.modal-backdrop.open .modal{transform:translateY(0)}
-.modal-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:14px auto 20px}
-.modal-title{font-family:'Public Sans',sans-serif;font-weight:800;font-size:1.2rem;margin-bottom:20px;color:var(--text)}
-.modal-actions{display:flex;flex-direction:column;gap:10px;margin-top:20px}
+.modal{background:var(--ivory);border:1px solid var(--border);border-radius:18px 18px 0 0;width:100%;max-width:520px;max-height:92dvh;overflow-y:auto;padding:0 20px 32px;transform:translateY(30px);transition:transform .25s ease}
+.modal-backdrop.open .modal{transform:none}
+.modal-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:14px auto 18px}
+.modal-title{font-family:var(--serif);font-weight:700;font-size:1.3rem;margin-bottom:6px}
+.modal-sub{font-size:12px;color:var(--ink2);margin-bottom:16px}
+.modal-title.spaced{margin-bottom:18px}
+.modal-actions{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+.tile-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.stage-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.stage-btn{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px 12px;text-align:left;color:var(--ink)}
+.stage-btn:hover{border-color:var(--clay)}
+.stage-btn .sb-l{font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink2)}
+.stage-btn .sb-n{font-family:var(--serif);font-weight:700;font-size:20px;line-height:1.2;margin-top:4px}
+.sheet-h{font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink3);margin:18px 0 0}
 
 .type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
-.type-opt{padding:12px 8px;border-radius:14px;border:1.5px solid var(--border);background:var(--surface2);text-align:center;cursor:pointer;transition:all 0.15s}
-.type-opt .t-icon{font-size:1.4rem;display:block;margin-bottom:4px} .type-opt .t-lbl{font-size:0.72rem;font-weight:600;color:var(--text2);line-height:1.2}
-.type-opt.sel{border-color:var(--purple);background:var(--purple-soft)} .type-opt.sel .t-lbl{color:var(--purple)}
-#other-label-inp{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:10px 14px;color:var(--text);font-family:'Public Sans',sans-serif;font-size:0.9rem;outline:none;transition:border-color 0.2s;margin-top:8px}
-#other-label-inp:focus{border-color:var(--purple)}
+.type-opt{padding:12px 8px;border-radius:12px;border:1px solid var(--border);background:var(--surface);text-align:center;cursor:pointer;color:var(--ink2);transition:all .15s}
+.type-opt .t-icon{display:flex;justify-content:center;margin-bottom:6px}
+.type-opt .t-lbl{font-size:11.5px;font-weight:700;line-height:1.2;display:block}
+.type-opt.sel{border-color:var(--clay);background:var(--clay-soft);color:var(--clay)}
+#other-label-inp{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 13px;color:var(--ink);font-size:14px;outline:none;margin-top:8px}
+#other-label-inp:focus{border-color:var(--clay)}
+#other-label-wrap{margin-top:0}
 
 .items-list-edit{display:flex;flex-direction:column;gap:10px;margin-bottom:8px}
-.item-edit-row{background:var(--surface2);border:1.5px solid var(--border);border-radius:14px;padding:10px 12px;position:relative}
+.item-edit-row{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 12px}
 .item-edit-row-top{display:flex;gap:6px;align-items:center;margin-bottom:8px}
-.item-sr-badge{font-size:0.72rem;font-weight:700;color:var(--purple);background:var(--purple-soft);padding:3px 8px;border-radius:6px;flex-shrink:0;font-family:'Public Sans',sans-serif;min-width:28px;text-align:center}
-.item-name-inp{flex:1;background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:9px 12px;color:var(--text);font-family:'Public Sans',sans-serif;font-size:0.88rem;outline:none;transition:border-color 0.2s}
-.item-name-inp:focus{border-color:var(--purple)}
-.item-del-btn{width:32px;height:32px;border-radius:8px;border:1.5px solid var(--border);background:#fff;color:var(--red);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.85rem;flex-shrink:0;transition:all 0.15s}
+.item-sr-badge{font-size:11px;font-weight:800;color:var(--clay);background:var(--clay-soft);padding:3px 8px;border-radius:20px;flex-shrink:0;min-width:26px;text-align:center}
+.item-name-inp{flex:1;min-width:0;background:var(--ivory);border:1px solid var(--border);border-radius:8px;padding:8px 11px;color:var(--ink);font-size:13px;outline:none}
+.item-name-inp:focus,.item-dim-inp:focus,.item-unit-sel:focus{border-color:var(--clay)}
+.item-del-btn{width:30px;height:30px;border-radius:9px;border:1px solid var(--border);background:var(--ivory);color:var(--red);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .item-del-btn:hover{background:var(--red-soft)}
 .item-edit-row-dims{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1.4fr;gap:6px}
 .item-dim-wrap{display:flex;flex-direction:column;gap:3px}
-.item-dim-label{font-size:0.62rem;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;text-align:center}
-.item-dim-inp{width:100%;background:#fff;border:1.5px solid var(--border);border-radius:9px;padding:7px 6px;color:var(--text);font-family:'Public Sans',sans-serif;font-size:0.82rem;outline:none;transition:border-color 0.2s;text-align:center}
-.item-dim-inp:focus{border-color:var(--purple)}
-.item-unit-sel{width:100%;background:#fff;border:1.5px solid var(--border);border-radius:9px;padding:7px 4px;color:var(--text);font-family:'Public Sans',sans-serif;font-size:0.78rem;outline:none;transition:border-color 0.2s;text-align:center;cursor:pointer}
-.item-unit-sel:focus{border-color:var(--purple)}
-.add-item-btn{display:flex;align-items:center;gap:6px;padding:10px 14px;border-radius:12px;border:1.5px dashed #EAD9C4;background:var(--purple-soft);color:var(--purple);font-family:'Public Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;width:100%;justify-content:center;transition:all 0.15s}
-.add-item-btn:hover{background:var(--purple-dim)}
+.item-dim-label{font-size:10px;color:var(--ink3);font-weight:800;text-transform:uppercase;letter-spacing:.04em;text-align:center}
+.item-dim-inp,.item-unit-sel{width:100%;background:var(--ivory);border:1px solid var(--border);border-radius:8px;padding:7px 4px;color:var(--ink);font-size:12.5px;outline:none;text-align:center}
+.add-item-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 14px;border-radius:10px;border:1.5px dashed var(--border);background:transparent;color:var(--clay);font-size:13px;font-weight:700;width:100%}
+.add-item-btn:hover{background:var(--clay-soft)}
 
 .status-selector{display:flex;flex-direction:column;gap:6px;margin-top:6px}
-.status-opt{padding:11px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface2);cursor:pointer;font-size:0.85rem;font-weight:600;color:var(--text2);transition:all 0.15s;display:flex;align-items:center;gap:8px}
-.status-opt.selected{border-color:var(--purple);background:var(--purple-soft);color:var(--purple)}
+.status-opt{padding:10px 13px;border-radius:10px;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:13px;font-weight:600;color:var(--ink2);display:flex;align-items:center;gap:9px;transition:all .15s}
+.status-opt .dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+.status-opt.selected{border-color:var(--clay);background:var(--clay-soft);color:var(--clay)}
+.dot.s0{background:#B8B2A0}.dot.s1{background:#4E7DB5}.dot.s2{background:#6E3F94}.dot.s3{background:#8B6B2E}.dot.s4{background:var(--green)}
 
-.empty-state{text-align:center;padding:60px 20px;color:var(--text3)}
-.empty-state .icon{font-size:3.5rem;margin-bottom:16px;opacity:0.5} .empty-state p{font-size:0.9rem;line-height:1.6;color:var(--text2)}
-.overdue-banner{display:none} /* moved to topbar badge */
+.on-hold-toggle{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--amber-soft);border:1px solid #E8CFA0;border-radius:12px;margin-bottom:14px;cursor:pointer}
+.on-hold-toggle-left{display:flex;align-items:center;gap:11px;color:#7A4A00}
+.on-hold-toggle-text strong{display:block;font-size:13px;font-weight:700;color:var(--ink)}
+.on-hold-toggle-text span{font-size:11.5px;color:var(--ink2)}
+.toggle-switch{width:40px;height:23px;border-radius:12px;background:#D9D2C0;position:relative;transition:background .2s;flex-shrink:0}
+.toggle-switch::after{content:'';position:absolute;width:17px;height:17px;border-radius:50%;background:#fff;top:3px;left:3px;transition:transform .2s}
+.on-hold-toggle.active .toggle-switch{background:var(--clay)}
+.on-hold-toggle.active .toggle-switch::after{transform:translateX(17px)}
 
-.install-banner{position:fixed;bottom:90px;left:14px;right:14px;z-index:300;background:var(--surface);border:1.5px solid #EAD9C4;border-radius:18px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow-lg);transform:translateY(20px);opacity:0;transition:all 0.3s;pointer-events:none}
+/* ── FAB, banner, toast ── */
+.fab{position:fixed;bottom:22px;right:18px;z-index:200;width:54px;height:54px;border-radius:14px;background:var(--clay);color:#FAF9F5;border:none;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(193,96,47,.38);transition:background .15s}
+.fab:hover{background:#A9521F}
+.install-banner{position:fixed;bottom:90px;left:14px;right:14px;z-index:300;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 28px rgba(26,24,18,.14);transform:translateY(20px);opacity:0;transition:all .3s;pointer-events:none}
 .install-banner.show{transform:translateY(0);opacity:1;pointer-events:all}
-.install-banner-icon{font-size:1.8rem;flex-shrink:0} .install-banner-text{flex:1}
-.install-banner-text strong{display:block;font-family:'Public Sans',sans-serif;font-size:0.9rem;color:var(--text);margin-bottom:2px}
-.install-banner-text span{font-size:0.76rem;color:var(--text2)} .install-banner-btns{display:flex;gap:6px;flex-shrink:0}
-.ibtn{padding:7px 14px;border-radius:10px;border:none;font-family:'Public Sans',sans-serif;font-weight:700;font-size:0.78rem;cursor:pointer;transition:all 0.15s}
-.ibtn-yes{background:var(--purple);color:#fff;box-shadow:0 4px 12px rgba(193,96,47,0.3)} .ibtn-no{background:var(--surface2);color:var(--text2);border:1.5px solid var(--border)}
-
-.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;padding:10px 20px;border-radius:12px;font-size:0.85rem;opacity:0;transition:all 0.3s;z-index:1000;white-space:nowrap;box-shadow:var(--shadow-lg)}
+.install-banner-text{flex:1}
+.install-banner-text strong{display:block;font-family:var(--serif);font-size:14px;margin-bottom:2px}
+.install-banner-text span{font-size:11.5px;color:var(--ink2)}
+.install-banner-btns{display:flex;gap:6px;flex-shrink:0}
+.ibtn{padding:7px 14px;border-radius:10px;border:none;font-weight:700;font-size:12.5px}
+.ibtn-yes{background:var(--clay);color:#FAF9F5}
+.ibtn-no{background:var(--ivory);color:var(--ink2);border:1px solid var(--border)}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--slate);color:#FAF9F5;padding:10px 20px;border-radius:10px;font-size:13px;opacity:0;transition:all .3s;z-index:1000;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-#other-label-wrap{margin-top:0}
 
-/* ── DESKTOP LAYOUT (min-width: 768px) ── */
-@media (min-width: 768px) {
+/* ── Desktop (768px+) — matches the Concept A canvas ── */
+@media (min-width:768px){
+  .topbar{flex-wrap:nowrap;height:76px;padding:0 28px;justify-content:space-between}
+  .tb-search{order:0;flex:1;max-width:440px;margin:0 32px}
+  .tb-right{margin-left:0}
+  .kpi-strip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));padding:20px 28px 14px;overflow:visible}
+  .kpi{flex:none}
+  .ledger{margin:0 28px 14px}
+  .ledger-num{font-size:24px}
+  .list-wrap{padding:6px 28px 96px}
+  .fab{bottom:28px;right:32px}
+  .tile-grid{grid-template-columns:repeat(4,1fr)}
+  .stage-grid{grid-template-columns:repeat(6,1fr)}
 
-  /* Centered container wrapping all app content */
-  #app {
-    max-width: 900px;
-    margin: 0 auto;
-  }
+  .modal-backdrop{align-items:center}
+  .modal{border-radius:18px;max-height:88dvh;max-width:560px;padding:26px 28px 30px;transform:translateY(16px) scale(.98)}
+  .modal-backdrop.open .modal{transform:none}
+  .modal-handle{display:none}
+  .modal-title{font-size:1.45rem}
+  .type-grid{grid-template-columns:repeat(5,1fr)}
+  #stats-sheet-backdrop .modal{max-width:760px}
 
-  /* Topbar — full width, content centered inside */
-  .topbar {
-    position: sticky;
-    top: 0;
-    width: 100%;
-    max-width: 100%;
-    padding: 0 32px;
-    height: 68px;
-  }
-  .topbar-title { font-size: 1.2rem; }
-  .topbar-subtitle { font-size: 0.75rem; }
-  .topbar-icon { width: 42px; height: 42px; font-size: 1.4rem; }
-
-  /* KPI strip — even 7-column grid instead of a scroll row */
-  .kpi-strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; padding: 16px 28px 6px; overflow-x: visible; }
-  .kpi-card { min-width: 0; padding: 12px 12px; }
-  .kpi-num { font-size: 1.5rem; }
-
-  /* Finance strip — bigger cards, more breathing room */
-  .finance-strip { padding: 6px 28px 16px; gap: 14px; }
-  .finance-card { padding: 14px 18px; }
-  .finance-num { font-size: 1.5rem; }
-  .role-badge { font-size: 0.75rem; padding: 5px 14px; }
-  .logout-btn { font-size: 0.85rem; padding: 8px 18px; }
-
-  /* Stats row — already 4 col, just bigger padding + cards */
-  .stats-sheet { max-width: 900px; left: 50%; transform: translateX(-50%) translateY(100%); border-radius: 24px; bottom: 20px; }
-  .stats-sheet-backdrop.open .stats-sheet { transform: translateX(-50%) translateY(0); }
-  .stats-row {
-    padding: 0 0 12px;
-    gap: 14px;
-  }
-  .stat-card { padding: 18px 14px; border-radius: 16px; }
-  .stat-icon { font-size: 1.5rem; margin-bottom: 6px; }
-  .stat-num { font-size: 1.8rem; }
-  .stat-lbl { font-size: 0.65rem; margin-top: 4px; }
-  .stage-row { padding: 10px 28px 0; gap: 10px; }
-  .stage-card { padding: 12px 6px; border-radius: 14px; }
-  .stage-icon { font-size: 1.1rem; }
-  .stage-num { font-size: 1.2rem; }
-  .stage-lbl { font-size: 0.58rem; }
-
-  /* Group headers */
-  .group-header { padding: 20px 28px 10px; }
-  .group-header-title { font-size: 1rem; }
-  .type-section-header { padding: 24px 28px 12px; }
-  .type-section-title { font-size: 1.1rem; }
-  .group-header-count { font-size: 0.75rem; padding: 3px 10px; }
-  .group-divider { margin: 0 28px; }
-
-  /* Overdue banner */
-  /* overdue banner removed — shown as topbar badge */
-
-  /* Cards list — auto-fill grid: adds columns as the window widens */
-  .projects-list {
-    padding: 0 28px 80px;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-    gap: 16px;
-    align-items: start;
-  }
-
-
-  /* Overdue, group headers span full width in grid */
-  .group-header,
-  .group-divider,
-  .type-section-header { grid-column: 1 / -1; }
-
-  /* Cards */
-  .project-card { border-radius: 18px; }
-  .card-header { padding: 16px 20px; }
-  .card-title { font-size: 1.05rem; }
-  .card-desc { font-size: 0.82rem; }
-  .days-badge { font-size: 1.05rem; padding: 8px 12px; border-radius: 14px; min-width: 58px; }
-  .days-badge-lbl { font-size: 0.55rem; }
-  .card-meta { gap: 8px; margin-bottom: 14px; }
-  .meta-chip { font-size: 0.76rem; padding: 5px 12px; border-radius: 9px; }
-  .status-label { font-size: 0.75rem; padding: 5px 12px; border-radius: 9px; }
-  .step { height: 6px; border-radius: 3px; }
-
-  /* Card expandable */
-  .card-expandable { padding: 0 20px 4px; }
-  .card-items { border-radius: 14px; }
-  .card-items-hdr { padding: 8px 14px; font-size: 0.7rem; }
-  .card-item-row { padding: 10px 14px; }
-  .card-item-name { font-size: 0.88rem; }
-  .card-item-dims { font-size: 0.8rem; }
-  .card-item-qty { font-size: 0.8rem; padding: 3px 10px; }
-  .card-notes { padding: 11px 14px; font-size: 0.85rem; margin: 10px 0; }
-
-  /* Card action buttons */
-  .card-actions { padding: 0 20px 16px; gap: 10px; }
-  .card-actions .btn { padding: 10px; font-size: 0.82rem; border-radius: 12px; }
-
-  /* FAB — reposition for desktop */
-  .fab {
-    bottom: 32px;
-    right: calc(50% - 450px + 24px);
-    width: 62px;
-    height: 62px;
-    border-radius: 20px;
-    font-size: 1.8rem;
-  }
-
-  /* Modal — center on screen instead of bottom sheet */
-  .modal-backdrop {
-    align-items: center;
-  }
-  .modal {
-    border-radius: 24px;
-    max-height: 88dvh;
-    max-width: 560px;
-    padding: 0 28px 40px;
-    transform: translateY(20px) scale(0.97);
-  }
-  .modal-backdrop.open .modal {
-    transform: translateY(0) scale(1);
-  }
-  .modal-handle { display: none; }
-  .modal-title { font-size: 1.3rem; margin-bottom: 24px; }
-
-  /* Type grid in modal — 5 cols */
-  .type-grid { grid-template-columns: repeat(5, 1fr); }
-
-  /* New/Edit Order form — full desktop layout: a wide two-column panel instead
-     of a narrow mobile-style dialog. DOM order is preserved within each column
-     so Tab still moves left-to-right, top-to-bottom exactly as laid out. */
-  #project-modal .modal { max-width: 1100px; width: 94vw; max-height: 94dvh; padding: 0 36px 36px; }
-  #project-modal .modal-title { font-size: 1.5rem; }
-  .modal-body { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 0 32px; align-items: start; }
-  .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 18px; }
-  .field-grid .field.full { grid-column: 1 / -1; }
-  .modal-actions { flex-direction: row-reverse; flex-wrap: wrap; }
-  .modal-actions .btn { width: auto; flex: 1 1 auto; min-width: 160px; }
-
-  /* Filter popup */
-  .fpop { max-width: 380px; padding: 24px; }
-  .fpop-title { font-size: 1.1rem; margin-bottom: 16px; }
-  .fpop-opt { padding: 12px 14px; font-size: 0.9rem; }
-  .fpop-done { padding: 13px; font-size: 0.95rem; }
-
-  /* Install banner */
-  .install-banner {
-    left: calc(50% - 450px + 14px);
-    right: calc(50% - 450px + 14px);
-    max-width: 520px;
-    left: 50%;
-    transform: translateX(-50%) translateY(20px);
-  }
-  .install-banner.show {
-    transform: translateX(-50%) translateY(0);
-  }
-
-  /* Toast */
-  .toast { font-size: 0.9rem; padding: 12px 24px; }
-
-  /* Auth screen */
-  #auth-screen { padding: 40px; }
-  .auth-logo { font-size: 2.4rem; }
-  .auth-sub { font-size: 0.9rem; margin-bottom: 44px; }
-  .auth-card { padding: 36px; border-radius: 28px; }
-  .auth-card h2 { font-size: 1.3rem; margin-bottom: 24px; }
-
-  /* Fields in modal/form */
-  .field { margin-bottom: 18px; }
-  .field label { font-size: 0.78rem; margin-bottom: 7px; }
-  .field input, .field select, .field textarea { padding: 13px 16px; font-size: 0.98rem; border-radius: 13px; }
-
-}
-
-/* Wider desktop — 1200px+: let the app use most of the screen instead of
-   staying capped at a fixed width. --app-w tracks the actual rendered
-   width of #app so the FAB can stay pinned to its right edge. */
-@media (min-width: 1200px) {
-  :root { --app-w: min(2000px, 96vw); }
-  #app { max-width: var(--app-w); }
-  .fab { right: calc((100vw - var(--app-w)) / 2 + 24px); }
+  /* New / Edit order — real two-column desktop panel. DOM order is preserved
+     inside each column so Tab moves left-to-right, top-to-bottom. */
+  #project-modal .modal{max-width:1100px;width:94vw;max-height:94dvh;padding:28px 36px 32px}
+  .modal-body{display:grid;grid-template-columns:1.1fr .9fr;gap:0 32px;align-items:start}
+  .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
+  .field-grid .field.full{grid-column:1/-1}
+  .modal-actions{flex-direction:row-reverse;flex-wrap:wrap}
+  .modal-actions .btn{width:auto;flex:1 1 auto;min-width:160px}
+  .install-banner{left:50%;right:auto;max-width:520px;width:calc(100% - 28px);transform:translateX(-50%) translateY(20px)}
+  .install-banner.show{transform:translateX(-50%) translateY(0)}
 }
 </style>
 </head>
 <body>
 
 <div id="loading-screen" class="loading-screen">
-  <div class="loading-logo">&#129681; Amar Furniture</div>
-  <div class="loading-sub">Order Tracker</div>
+  <div class="brand-row">
+    <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker</div></div>
+  </div>
   <div class="spinner"></div>
 </div>
 
 <!-- AUTH -->
 <div id="auth-screen" style="display:none">
-  <div class="auth-logo">&#129681; Amar Furniture</div>
-  <div class="auth-sub">Order Tracker · v3.22.0</div>
+  <div class="brand-row">
+    <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.23.0</div></div>
+  </div>
   <div class="auth-card">
     <h2>Sign In</h2>
     <div class="field"><label>Email</label><input type="email" id="auth-email" placeholder="you@email.com" autocomplete="email"></div>
@@ -559,114 +312,98 @@ body{background:var(--bg);color:var(--text);font-family:'Public Sans',sans-serif
 
 <!-- APP -->
 <div id="app">
-    <div class="topbar">
-    <div class="topbar-left">
-      <div class="topbar-icon">&#129681;</div>
-      <div>
-        <div class="topbar-title">Amar Furniture</div>
-        <div class="topbar-subtitle">Order Tracker</div>
-      </div>
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="tb-left">
+      <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
+      <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker</div></div>
     </div>
 
-    <div class="topbar-search-wrap">
-      <span class="topbar-search-icon">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.5-4.5"/></svg>
-      </span>
-      <input class="topbar-search" type="search" id="search-input" placeholder="Search project or client…" oninput="onSearchInput()">
+    <div class="tb-search">
+      <span class="tb-search-ico"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#8A8371" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.5-4.5"/></svg></span>
+      <input type="text" inputmode="search" id="search-input" placeholder="Search project or client…" autocomplete="off" oninput="onSearchInput()">
     </div>
 
-    <div class="topbar-right">
-      <button class="topbar-icon-btn" onclick="openStats()" title="Stats">
-        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="1.7" fill="currentColor" stroke="none"/><circle cx="16" cy="12" r="1.7" fill="currentColor" stroke="none"/><circle cx="11" cy="18" r="1.7" fill="currentColor" stroke="none"/></svg>
+    <div class="tb-right">
+      <button class="tb-btn" aria-label="Overview" title="Overview" onclick="openStats()">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#D8D2C2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="1.7" fill="#D8D2C2" stroke="none"/><circle cx="16" cy="12" r="1.7" fill="#D8D2C2" stroke="none"/><circle cx="11" cy="18" r="1.7" fill="#D8D2C2" stroke="none"/></svg>
       </button>
-      <button class="topbar-icon-btn" id="settings-gear-btn" onclick="openSettingsModal()" title="Settings" style="display:none">
-        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2.6"/><path d="M12 4v2.2M12 17.8V20M4 12h2.2M17.8 12H20M6.3 6.3l1.6 1.6M16.1 16.1l1.6 1.6M17.7 6.3l-1.6 1.6M7.9 16.1l-1.6 1.6"/></svg>
+      <button class="tb-btn" id="settings-gear-btn" aria-label="Settings" title="Settings" onclick="openSettingsModal()" style="display:none">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#D8D2C2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2.6"/><path d="M12 4v2.2M12 17.8V20M4 12h2.2M17.8 12H20M6.3 6.3l1.6 1.6M16.1 16.1l1.6 1.6M17.7 6.3l-1.6 1.6M7.9 16.1l-1.6 1.6"/></svg>
       </button>
-      <span class="role-badge" id="role-badge">Admin</span>
-      <button class="logout-btn" onclick="signOut()"><span class="logout-text">Logout</span><span class="logout-icon">&#128682;</span></button>
+      <div class="role-badge" id="role-badge">Admin</div>
+      <button class="logout-btn" onclick="signOut()">Logout</button>
     </div>
   </div>
 
-  <!-- KPI STRIP (always visible — counts by project type) -->
+  <!-- KPI strip -->
   <div class="kpi-strip">
-    <div class="kpi-card kpi-wood"><div class="kpi-icon">&#129704;</div><div class="kpi-num" id="kpi-wood">0</div><div class="kpi-lbl">Woodwork</div></div>
-    <div class="kpi-card kpi-ply"><div class="kpi-icon">&#127968;</div><div class="kpi-num" id="kpi-ply">0</div><div class="kpi-lbl">Plywood</div></div>
-    <div class="kpi-card kpi-lathe"><div class="kpi-icon">&#9881;&#65039;</div><div class="kpi-num" id="kpi-lathe">0</div><div class="kpi-lbl">Lathe</div></div>
-    <div class="kpi-card kpi-modular"><div class="kpi-icon">&#128230;</div><div class="kpi-num" id="kpi-modular">0</div><div class="kpi-lbl">Modular &amp; Others</div></div>
-    <div class="kpi-card kpi-ready"><div class="kpi-icon">&#128188;</div><div class="kpi-num" id="kpi-ready">0</div><div class="kpi-lbl">Ready</div></div>
-    <div class="kpi-card kpi-hold"><div class="kpi-icon">&#9208;&#65039;</div><div class="kpi-num" id="kpi-hold">0</div><div class="kpi-lbl">On Hold</div></div>
-    <div class="kpi-card kpi-overdue"><div class="kpi-icon">&#9888;&#65039;</div><div class="kpi-num" id="kpi-overdue">0</div><div class="kpi-lbl">Overdue</div></div>
+    <div class="kpi" style="--kc:var(--clay)"><div class="kpi-head"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg><span class="kpi-lbl">Woodwork</span></div><div class="kpi-num" id="kpi-wood">0</div></div>
+    <div class="kpi" style="--kc:#4E7DB5"><div class="kpi-head"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10.5V20h12v-9.5"/></svg><span class="kpi-lbl">Plywood</span></div><div class="kpi-num" id="kpi-ply">0</div></div>
+    <div class="kpi" style="--kc:#5C8A6B"><div class="kpi-head"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M21.5 12h-3M5.5 12h-3M18.5 5.5l-2.1 2.1M7.6 16.4l-2.1 2.1M18.5 18.5l-2.1-2.1M7.6 7.6 5.5 5.5"/></svg><span class="kpi-lbl">Lathe</span></div><div class="kpi-num" id="kpi-lathe">0</div></div>
+    <div class="kpi" style="--kc:var(--ink3)"><div class="kpi-head"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.2"/></svg><span class="kpi-lbl">Modular &amp; Others</span></div><div class="kpi-num" id="kpi-modular">0</div></div>
+    <div class="kpi" style="--kc:#8B6B2E"><div class="kpi-head"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8 12 3.5 20.5 8 12 12.5 3.5 8Z"/><path d="M3.5 8v9L12 21l8.5-4V8"/><path d="M12 12.5V21"/></svg><span class="kpi-lbl">Ready</span></div><div class="kpi-num" id="kpi-ready">0</div></div>
+    <div class="kpi" style="--kc:#9C7A1E"><div class="kpi-head"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg><span class="kpi-lbl">On Hold</span></div><div class="kpi-num" id="kpi-hold">0</div></div>
+    <div class="kpi overdue" style="--kc:var(--red)"><div class="kpi-head"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 21.5 20h-19L12 3.5Z"/><path d="M12 9.5v4.2"/><circle cx="12" cy="16.7" r="0.9" fill="currentColor" stroke="none"/></svg><span class="kpi-lbl">Overdue</span></div><div class="kpi-num" id="kpi-overdue">0</div></div>
   </div>
 
-  <!-- FINANCE STRIP (admin-only — pipeline value / received / pending) -->
-  <div class="finance-strip" id="finance-strip" style="display:none">
-    <div class="finance-card finance-value"><div class="finance-lbl">Pipeline Value</div><div class="finance-num" id="fin-value">₹0</div></div>
-    <div class="finance-card finance-received"><div class="finance-lbl">Received</div><div class="finance-num" id="fin-received">₹0</div></div>
-    <div class="finance-card finance-pending"><div class="finance-lbl">Pending</div><div class="finance-num" id="fin-pending">₹0</div></div>
+  <!-- Money ledger (admin only) -->
+  <div class="ledger" id="finance-strip" style="display:none">
+    <div class="ledger-cell"><div class="ledger-lbl">Pipeline Value</div><div class="ledger-num" id="fin-value">₹0</div></div>
+    <div class="ledger-cell recv"><div class="ledger-lbl">Received</div><div class="ledger-num" id="fin-received">₹0</div></div>
+    <div class="ledger-cell pend"><div class="ledger-lbl">Pending</div><div class="ledger-num" id="fin-pending">₹0</div></div>
   </div>
 
-  <!-- STATS BOTTOM SHEET -->
-  <div class="stats-sheet-backdrop" id="stats-sheet-backdrop" onclick="closeStats()">
-    <div class="stats-sheet" onclick="event.stopPropagation()">
-      <div class="stats-sheet-handle"></div>
-      <div class="stats-sheet-title">📊 Stats</div>
-      <div class="stats-sheet-sub" id="stats-sheet-sub">Loading…</div>
-      <div class="stats-row">
-        <div class="stat-card stat-total"><div class="stat-icon">&#128203;</div><div class="stat-num" id="stat-total">0</div><div class="stat-lbl" id="lbl-total">Total</div></div>
-        <div class="stat-card stat-ok"><div class="stat-icon">&#9989;</div><div class="stat-num" id="stat-ok">0</div><div class="stat-lbl" id="lbl-ok">On Track</div></div>
-        <div class="stat-card stat-warn"><div class="stat-icon">&#9200;</div><div class="stat-num" id="stat-warn">0</div><div class="stat-lbl" id="lbl-warn">Due Soon</div></div>
-        <div class="stat-card stat-danger"><div class="stat-icon">&#128308;</div><div class="stat-num" id="stat-danger">0</div><div class="stat-lbl" id="lbl-overdue">Overdue</div></div>
-      </div>
-      <div class="stage-row" style="padding:12px 0 0">
-        <div class="stage-card" onclick="jumpToStage(0);closeStats()"><div class="stage-icon">&#128203;</div><div class="stage-num zero" id="sst-0">0</div><div class="stage-lbl">Taken</div></div>
-        <div class="stage-card" onclick="jumpToStage(1);closeStats()"><div class="stage-icon">&#128296;</div><div class="stage-num zero" id="sst-1">0</div><div class="stage-lbl">WIP</div></div>
-        <div class="stage-card" onclick="jumpToStage(2);closeStats()"><div class="stage-icon">&#10024;</div><div class="stage-num zero" id="sst-2">0</div><div class="stage-lbl">Finishing</div></div>
-        <div class="stage-card" onclick="jumpToStage(3);closeStats()"><div class="stage-icon">&#128230;</div><div class="stage-num zero" id="sst-3">0</div><div class="stage-lbl">Ready</div></div>
-        <div class="stage-card" onclick="jumpToStage(4);closeStats()"><div class="stage-icon">&#9989;</div><div class="stage-num zero" id="sst-4">0</div><div class="stage-lbl">Delivered</div></div>
-      </div>
+  <!-- Orders -->
+  <div class="list-wrap"><div id="projects-list" class="card-grid"></div></div>
+
+  <button class="fab" id="fab-btn" aria-label="New order" onclick="openAddModal()">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#FAF9F5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+</div>
+
+<!-- OVERVIEW SHEET -->
+<div class="modal-backdrop" id="stats-sheet-backdrop" onclick="closeStats()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Overview</div>
+    <div class="modal-sub" id="stats-sheet-sub">Loading…</div>
+    <div class="tile-grid">
+      <div class="kpi" style="--kc:var(--clay)"><div class="kpi-head"><span class="kpi-lbl" id="lbl-total">Total</span></div><div class="kpi-num" id="stat-total">0</div></div>
+      <div class="kpi" style="--kc:var(--green)"><div class="kpi-head"><span class="kpi-lbl" id="lbl-ok">On Track</span></div><div class="kpi-num" id="stat-ok">0</div></div>
+      <div class="kpi" style="--kc:var(--amber)"><div class="kpi-head"><span class="kpi-lbl" id="lbl-warn">Due Soon</span></div><div class="kpi-num" id="stat-warn">0</div></div>
+      <div class="kpi overdue" style="--kc:var(--red)"><div class="kpi-head"><span class="kpi-lbl" id="lbl-overdue">Overdue</span></div><div class="kpi-num" id="stat-danger">0</div></div>
     </div>
-  </div>
-
-  <!-- hidden pill compat elements -->
-  <span id="type-pill-val" style="display:none">Active</span>
-  <span id="stage-pill-val" style="display:none">All Stages</span>
-  <span id="lbl-type-pill" style="display:none">Type</span>
-  <span id="lbl-stage-pill" style="display:none">Stage</span>
-  <div id="type-pill" style="display:none"></div>
-  <div id="stage-pill" style="display:none"></div>
-
-
-  <!-- FILTER SHEET -->
-  <div class="fpop-backdrop" id="fpop-backdrop" onclick="closeFpop()">
-    <div class="fpop" onclick="event.stopPropagation()">
-      <div class="fpop-title" id="fpop-title">Filter</div>
-      <div id="fpop-opts"></div>
-      <button class="fpop-done" id="fpop-done-btn" onclick="closeFpop()">Done</button>
+    <div class="sheet-h">Browse by stage</div>
+    <div class="stage-grid">
+      <button class="stage-btn" onclick="jumpToStage(0)"><div class="sb-l">Order Taken</div><div class="sb-n" id="sst-0">0</div></button>
+      <button class="stage-btn" onclick="jumpToStage(1)"><div class="sb-l">In Progress</div><div class="sb-n" id="sst-1">0</div></button>
+      <button class="stage-btn" onclick="jumpToStage(2)"><div class="sb-l">Finishing</div><div class="sb-n" id="sst-2">0</div></button>
+      <button class="stage-btn" onclick="jumpToStage(3)"><div class="sb-l">Ready</div><div class="sb-n" id="sst-3">0</div></button>
+      <button class="stage-btn" onclick="jumpToStage(4)"><div class="sb-l">Delivered</div><div class="sb-n" id="sst-4">0</div></button>
+      <button class="stage-btn" onclick="jumpToArchived()"><div class="sb-l">Archived</div><div class="sb-n" id="sst-a">0</div></button>
     </div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeStats()">Close</button></div>
   </div>
-
-  <!-- ORDERS VIEW -->
-  <div id="projects-list" class="projects-list"></div>
-
-  <button class="fab" id="fab-btn" onclick="openAddModal()">+</button>
 </div>
 
 <!-- ADD / EDIT MODAL -->
 <div class="modal-backdrop" id="project-modal">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title" id="modal-title">New Order</div>
+    <div class="modal-title spaced" id="modal-title">New Order</div>
 
     <div class="modal-body">
       <div class="modal-col">
         <div class="field">
           <label>Project Type *</label>
           <div class="type-grid">
-            <div class="type-opt sel" id="pt-woodwork" onclick="selectType('woodwork')"><span class="t-icon">🪵</span><span class="t-lbl">Woodworking</span></div>
-            <div class="type-opt"    id="pt-plywood"   onclick="selectType('plywood')" ><span class="t-icon">🏠</span><span class="t-lbl">Plywood / Home</span></div>
-            <div class="type-opt"    id="pt-modular"   onclick="selectType('modular')" ><span class="t-icon">🍳</span><span class="t-lbl">Modular Kitchen</span></div>
-            <div class="type-opt"    id="pt-lathe"     onclick="selectType('lathe')"   ><span class="t-icon">⚙️</span><span class="t-lbl">Lathe Work</span></div>
-            <div class="type-opt"    id="pt-other"     onclick="selectType('other')"   ><span class="t-icon">📝</span><span class="t-lbl">Other</span></div>
+            <div class="type-opt sel" id="pt-woodwork" onclick="selectType('woodwork')"><span class="t-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></span><span class="t-lbl">Woodwork</span></div>
+            <div class="type-opt"    id="pt-plywood"   onclick="selectType('plywood')"><span class="t-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10.5V20h12v-9.5"/></svg></span><span class="t-lbl">Plywood / Home</span></div>
+            <div class="type-opt"    id="pt-modular"   onclick="selectType('modular')"><span class="t-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.2"/></svg></span><span class="t-lbl">Modular Kitchen</span></div>
+            <div class="type-opt"    id="pt-lathe"     onclick="selectType('lathe')"><span class="t-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M21.5 12h-3M5.5 12h-3M18.5 5.5l-2.1 2.1M7.6 16.4l-2.1 2.1M18.5 18.5l-2.1-2.1M7.6 7.6 5.5 5.5"/></svg></span><span class="t-lbl">Lathe Work</span></div>
+            <div class="type-opt"    id="pt-other"     onclick="selectType('other')"><span class="t-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5h16v10H9.5L5 19v-3.5H4Z"/></svg></span><span class="t-lbl">Other</span></div>
           </div>
           <div id="other-label-wrap" style="display:none">
             <input type="text" id="other-label-inp" placeholder="Describe project type…">
@@ -685,22 +422,16 @@ body{background:var(--bg);color:var(--text);font-family:'Public Sans',sans-serif
 
         <div class="on-hold-toggle" id="on-hold-toggle" onclick="toggleOnHold()">
           <div class="on-hold-toggle-left">
-            <span class="on-hold-toggle-icon">&#9208;</span>
-            <div class="on-hold-toggle-text">
-              <strong>Put on Hold</strong>
-              <span>Pause this project temporarily</span>
-            </div>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+            <div class="on-hold-toggle-text"><strong>Put on Hold</strong><span>Pause this project temporarily</span></div>
           </div>
           <div class="toggle-switch"></div>
         </div>
 
         <div class="on-hold-toggle" id="create-folder-toggle" onclick="toggleCreateFolder()" style="display:none">
           <div class="on-hold-toggle-left">
-            <span class="on-hold-toggle-icon">&#128193;</span>
-            <div class="on-hold-toggle-text">
-              <strong>Create Drive Folder</strong>
-              <span>Copy the project template folder for this order</span>
-            </div>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4.2l2 2.2H19a1.5 1.5 0 0 1 1.5 1.5v7.8A1.5 1.5 0 0 1 19 19H5a1.5 1.5 0 0 1-1.5-1.5v-10Z"/></svg>
+            <div class="on-hold-toggle-text"><strong>Create Drive Folder</strong><span>Copy the project template folder for this order</span></div>
           </div>
           <div class="toggle-switch"></div>
         </div>
@@ -725,8 +456,8 @@ body{background:var(--bg);color:var(--text);font-family:'Public Sans',sans-serif
     <div class="modal-actions">
       <button class="btn btn-primary" onclick="saveProject()">Save Order</button>
       <button class="btn btn-ghost"   onclick="closeModal()">Cancel</button>
-      <button class="btn btn-archive" id="archive-btn" style="display:none" onclick="archiveProject()">&#128451; Archive Order</button>
-      <button class="btn btn-danger"  id="delete-btn"  style="display:none" onclick="deleteProject()">&#128465; Delete Forever</button>
+      <button class="btn btn-archive" id="archive-btn" style="display:none" onclick="archiveProject()">Archive Order</button>
+      <button class="btn btn-danger"  id="delete-btn"  style="display:none" onclick="deleteProject()">Delete Forever</button>
     </div>
   </div>
 </div>
@@ -736,7 +467,7 @@ body{background:var(--bg);color:var(--text);font-family:'Public Sans',sans-serif
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title" id="status-modal-title">Update Status</div>
-    <div id="status-modal-info" style="margin-bottom:16px;font-size:0.9rem;color:var(--text2)"></div>
+    <div id="status-modal-info" class="modal-sub"></div>
     <div class="field"><label id="lbl-new-status">New Status</label><div class="status-selector" id="status-update-opts"></div></div>
     <div class="modal-actions">
       <button class="btn btn-primary" id="btn-update-status" onclick="saveStatusUpdate()">Update Status</button>
@@ -749,14 +480,11 @@ body{background:var(--bg);color:var(--text);font-family:'Public Sans',sans-serif
 <div class="modal-backdrop" id="settings-modal">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title">Settings</div>
+    <div class="modal-title spaced">Settings</div>
     <div class="on-hold-toggle" id="drive-automation-toggle" onclick="toggleDriveAutomation()">
       <div class="on-hold-toggle-left">
-        <span class="on-hold-toggle-icon">&#128193;</span>
-        <div class="on-hold-toggle-text">
-          <strong>Auto-create Drive folders</strong>
-          <span>Copy the project template folder for every new order</span>
-        </div>
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4.2l2 2.2H19a1.5 1.5 0 0 1 1.5 1.5v7.8A1.5 1.5 0 0 1 19 19H5a1.5 1.5 0 0 1-1.5-1.5v-10Z"/></svg>
+        <div class="on-hold-toggle-text"><strong>Auto-create Drive folders</strong><span>Copy the project template folder for every new order</span></div>
       </div>
       <div class="toggle-switch"></div>
     </div>
@@ -767,14 +495,13 @@ body{background:var(--bg);color:var(--text);font-family:'Public Sans',sans-serif
 </div>
 
 <div class="install-banner" id="install-banner">
-  <div class="install-banner-icon">📲</div>
   <div class="install-banner-text">
     <strong>Install AF Orders</strong>
     <span>Add to home screen for the best experience</span>
   </div>
   <div class="install-banner-btns">
     <button class="ibtn ibtn-yes" onclick="doInstall()">Install</button>
-    <button class="ibtn ibtn-no"  onclick="dismissInstall()">✕</button>
+    <button class="ibtn ibtn-no"  onclick="dismissInstall()" aria-label="Dismiss">✕</button>
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -837,7 +564,7 @@ onAuthStateChanged(auth, user => {
     document.getElementById('role-badge').className   = 'role-badge ' + roleCls;
     document.getElementById('fab-btn').style.display  = isAdmin ? 'flex' : 'none';
     document.getElementById('settings-gear-btn').style.display = isAdmin ? 'flex' : 'none';
-    document.getElementById('finance-strip').style.display = isAdmin ? 'flex' : 'none';
+    document.getElementById('finance-strip').style.display = isAdmin ? 'grid' : 'none';
     applyLanguage();
     startListening();
     requestNotificationPermission();
@@ -944,7 +671,7 @@ window.deleteProject = async function() {
 };
 
 window.archiveProject = async function() {
-  if (!confirm('Archive this order? You can restore it anytime from the Archived filter.')) return;
+  if (!confirm('Archive this order? You can restore it anytime from Overview → Archived.')) return;
   await _updateDoc(_doc(_db, 'projects', window._editId), {
     archived: true, archivedAt: _serverTimestamp(), updatedAt: _serverTimestamp()
   });
@@ -970,17 +697,13 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.22.0';
+const APP_VERSION = 'v3.23.0';
 
 // -- LANGUAGE --
 const LANG = {
   en: {
     total:'Total', onTrack:'On Track', dueSoon:'Due Soon', overdue:'Overdue',
-    typeLabel:'Type', stageLabel:'Stage',
     searchPlaceholder:'Search project or client…',
-    expandAll:'▼ All', collapseAll:'▲ All',
-    filterByType:'Filter by Type', filterByStage:'Filter by Stage', done:'Done',
-    active:'Active', allOrders:'All Orders',
     woodwork:'Woodwork', plywood:'Plywood', modular:'Modular',
     lathe:'Lathe', other:'Other',
     overdueFilter:'Overdue', delivered:'Delivered',
@@ -993,20 +716,16 @@ const LANG = {
     noOrdersFound:'No orders found.',
     updateStatus:'Update Status', edit:'Edit', call:'Call',
     newStatus:'New Status', cancel:'Cancel',
-    itemsHdr:'Items', activityHdr:'📝 Activity / Call Notes',
-    noActivity:'No activity yet — add a call note or update',
-    addNote:'Add note or call update…', add:'Add',
+    itemsHdr:'Items', activityHdr:'Notes',
+    noActivity:'No notes yet',
+    addNote:'Add a note…', add:'Add',
     daysLeft:'left', daysOverdue:'overdue', daysDue:'due', daysDone:'done',
     balanceDue:'due', balancePaid:'Paid ✓',
     onHold:'On Hold',
   },
   hi: {
     total:'कुल', onTrack:'सही है', dueSoon:'जल्द है', overdue:'देरी हुई',
-    typeLabel:'प्रकार', stageLabel:'स्टेज',
     searchPlaceholder:'प्रोजेक्ट या ग्राहक खोजें…',
-    expandAll:'▼ सब खोलें', collapseAll:'▲ सब बंद करें',
-    filterByType:'प्रकार से फ़िल्टर', filterByStage:'स्टेज से फ़िल्टर', done:'ठीक है',
-    active:'चालू काम', allOrders:'सभी ऑर्डर',
     woodwork:'लकड़ी का काम', plywood:'प्लाईवुड', modular:'मॉडुलर',
     lathe:'लेथ वर्क', other:'अन्य',
     overdueFilter:'देरी हुई', delivered:'डिलीवर',
@@ -1019,8 +738,8 @@ const LANG = {
     noOrdersFound:'कोई ऑर्डर नहीं मिला।',
     updateStatus:'स्टेटस बदलें', edit:'बदलें', call:'फ़ोन',
     newStatus:'नया स्टेटस', cancel:'रद्द करें',
-    itemsHdr:'सामान', activityHdr:'गतिविधि / कॉल नोट्स',
-    noActivity:'अभी कोई गतिविधि नहीं — नोट डालें',
+    itemsHdr:'सामान', activityHdr:'नोट्स',
+    noActivity:'अभी कोई नोट नहीं',
     addNote:'नोट डालें…', add:'डालें',
     daysLeft:'बाकी', daysOverdue:'देरी', daysDue:'आज', daysDone:'हो गया',
     balanceDue:'बाकी', balancePaid:'भुगतान ✓',
@@ -1179,23 +898,45 @@ window.resolveStuckFolder = function(id) {
   }
 };
 
+// ── ICONS (Concept A set — 24px grid, round strokes) ──
+const IC = {
+  wood:    '<rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/>',
+  home:    '<path d="M4 11.5 12 4l8 7.5"/><path d="M6 10.5V20h12v-9.5"/>',
+  lathe:   '<circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M21.5 12h-3M5.5 12h-3M18.5 5.5l-2.1 2.1M7.6 16.4l-2.1 2.1M18.5 18.5l-2.1-2.1M7.6 7.6 5.5 5.5"/>',
+  grid:    '<rect x="3.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.2"/>',
+  box:     '<path d="M3.5 8 12 3.5 20.5 8 12 12.5 3.5 8Z"/><path d="M3.5 8v9L12 21l8.5-4V8"/><path d="M12 12.5V21"/>',
+  hold:    '<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>',
+  note:    '<path d="M4 5.5h16v10H9.5L5 19v-3.5H4Z"/>',
+  send:    '<path d="M4 12 20 4l-6 16-3-7-7-3Z"/>',
+  refresh: '<path d="M4 12a8 8 0 0 1 13.7-5.6M20 12a8 8 0 0 1-13.7 5.6"/><path d="M17 3.5V7h-3.5M7 20.5V17h3.5"/>',
+  edit:    '<path d="M4 20 4.8 16.2 15.6 5.4a1.8 1.8 0 0 1 2.5 0l0.5 0.5a1.8 1.8 0 0 1 0 2.5L7.8 19.2 4 20Z"/>',
+  list:    '<path d="M5 7h14M5 12h14M5 17h9"/>',
+  phone:   '<path d="M5 4h3.5l1.8 4.5-2.3 1.4a11 11 0 0 0 5.1 5.1l1.4-2.3L19 14.5V18a2 2 0 0 1-2 2A13 13 0 0 1 3 6a2 2 0 0 1 2-2Z"/>',
+  folder:  '<path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4.2l2 2.2H19a1.5 1.5 0 0 1 1.5 1.5v7.8A1.5 1.5 0 0 1 19 19H5a1.5 1.5 0 0 1-1.5-1.5v-10Z"/>',
+  clock:   '<path d="M12 6v6l4 2"/><circle cx="12" cy="12" r="9"/>',
+  close:   '<path d="M6 6l12 12M18 6 6 18"/>',
+};
+function svgi(name, size, sw) {
+  return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="${sw || 1.8}" stroke-linecap="round" stroke-linejoin="round">${IC[name]}</svg>`;
+}
+
+// Project types — icon, colours and empty-state copy used by sections + cards
 const TYPES = {
-  woodwork: { icon:'🪵', label:'Woodwork',        chip:'chip-wood',    items:true  },
-  plywood:  { icon:'🏠', label:'Plywood / Home',  chip:'chip-plywood', items:false },
-  modular:  { icon:'🍳', label:'Modular Kitchen', chip:'chip-modular', items:false },
-  lathe:    { icon:'⚙️', label:'Lathe Work',      chip:'chip-lathe',   items:false },
-  other:    { icon:'📝', label:'Other',            chip:'chip-other',   items:true  },
+  woodwork: { label:'Woodwork',        ico:'wood',  color:'#C1602F', bg:'#F5E3D5' },
+  plywood:  { label:'Plywood / Home',  ico:'home',  color:'#4E7DB5', bg:'#E4EDF6' },
+  modular:  { label:'Modular Kitchen', ico:'grid',  color:'#9C9483', bg:'#EFECE4' },
+  lathe:    { label:'Lathe Work',      ico:'lathe', color:'#5C8A6B', bg:'#E3EDE6' },
+  other:    { label:'Other',           ico:'grid',  color:'#9C9483', bg:'#EFECE4' },
 };
 
 // Fixed 5-stage pipeline for all project types
 function getPipeline() { return [
-  { v:0, icon:'📋', label:T('orderTaken') },
-  { v:1, icon:'🔨', label:T('inProgress') },
-  { v:2, icon:'✨',       label:T('finishing')   },
-  { v:3, icon:'📦', label:T('ready')       },
-  { v:4, icon:'✅',       label:T('deliveredStage') },
+  { v:0, label:T('orderTaken') },
+  { v:1, label:T('inProgress') },
+  { v:2, label:T('finishing')  },
+  { v:3, label:T('ready')      },
+  { v:4, label:T('deliveredStage') },
 ];}
-const SSTYLES = ['s0','s1','s2','s3','s4'];
 
 window._projects       = [];
 window._settings       = {};
@@ -1208,6 +949,8 @@ window._typeFilter     = 'active';
 window._stageFilter    = 'all';
 window._statusUpdateId = null;
 window._updateStatusVal= null;
+window._showHold       = false;
+window._expandedCards  = new Set();
 
 const isDelivered = p => (p.status ?? 0) >= 4;
 const isArchived  = p => !!p.archived;
@@ -1220,250 +963,151 @@ function daysLeft(deadline) {
   const d = new Date(deadline); d.setHours(0,0,0,0);
   return Math.ceil((d - today) / 86400000);
 }
-function urgClass(days, del) {
-  if (del) return 'done';
-  if (days < 0) return 'danger';
-  if (days <= 3) return 'warn';
-  return 'ok';
-}
-
-function getTypeOpts() { return [
-  {v:'active',    label:T('active')},
-  {v:'all',       label:T('allOrders')},
-  {v:'woodwork',  label:'🪵 '+T('woodwork')},
-  {v:'plywood',   label:'🏠 '+T('plywood')},
-  {v:'modular',   label:'🍳 '+T('modular')},
-  {v:'lathe',     label:'⚙️ '+T('lathe')},
-  {v:'other',     label:'📝 '+T('other')},
-  {v:'overdue',   label:'⚠️ '+T('overdueFilter')},
-  {v:'delivered', label:'✅ '+T('delivered')},
-  {v:'archived',  label:'🗄 Archived'},
-];}
-function getStageOpts() { return [
-  {v:'all', label:T('allStages')},
-  {v:'0',   label:'📋 '+T('orderTaken')},
-  {v:'1',   label:'🔨 '+T('inProgress')},
-  {v:'2',   label:'✨ '+T('finishing')},
-  {v:'3',   label:'📦 '+T('ready')},
-  {v:'4',   label:'✅ '+T('deliveredStage')},
-];}
-
-let _fpopType = null;
-
-function openFpop(kind) {
-  _fpopType = kind;
-  const opts = kind === 'type' ? getTypeOpts() : getStageOpts();
-  const cur  = kind === 'type' ? window._typeFilter : window._stageFilter;
-  document.getElementById('fpop-title').textContent = kind === 'type' ? T('filterByType') : T('filterByStage');
-  document.getElementById('fpop-opts').innerHTML = opts.map(o =>
-    '<div class="fpop-opt ' + (o.v === cur ? 'sel' : '') + '" onclick="pickFpop(\'' + o.v + '\')">' +
-    '<div class="fpop-dot"></div>' + o.label + '</div>'
-  ).join('');
-  document.getElementById('fpop-backdrop').classList.add('open');
-}
-
-function openFilterSheet() {
-  const tCur = window._typeFilter;
-  const sCur = window._stageFilter;
-  _fpopType  = null; // combined mode
-  document.getElementById('fpop-title').textContent = 'Filter Orders';
-  const typeOpts  = getTypeOpts();
-  const stageOpts = getStageOpts();
-  document.getElementById('fpop-opts').innerHTML =
-    '<div style="font-size:0.7rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Type</div>' +
-    typeOpts.map(o => '<div class="fpop-opt ' + (o.v === tCur ? 'sel' : '') + '" data-kind="type" data-v="' + o.v + '" onclick="pickTypeFilter(\'' + o.v + '\')">' +
-      '<div class="fpop-dot"></div>' + o.label + '</div>').join('') +
-    '<div style="font-size:0.7rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin:14px 0 8px">Stage</div>' +
-    stageOpts.map(o => '<div class="fpop-opt ' + (o.v === sCur ? 'sel' : '') + '" data-kind="stage" data-v="' + o.v + '" onclick="pickStageFilter(\'' + o.v + '\')">' +
-      '<div class="fpop-dot"></div>' + o.label + '</div>').join('');
-  document.getElementById('fpop-backdrop').classList.add('open');
-}
-
-function pickTypeFilter(v) {
-  window._typeFilter = v;
-  document.querySelectorAll('#fpop-opts .fpop-opt[data-kind="type"]').forEach(el =>
-    el.classList.toggle('sel', el.dataset.v === v)
-  );
-  updateFilterDot(); renderProjects();
-}
-
-function pickStageFilter(v) {
-  window._stageFilter = v;
-  document.querySelectorAll('#fpop-opts .fpop-opt[data-kind="stage"]').forEach(el =>
-    el.classList.toggle('sel', el.dataset.v === v)
-  );
-  updateFilterDot(); renderProjects();
-}
-
-function updateFilterDot() {
-  const hasFilter = window._typeFilter !== 'active' || window._stageFilter !== 'all';
-  const btn = document.getElementById('filter-btn');
-  if (btn) btn.classList.toggle('active-filter', hasFilter);
-}
-
-function pickFpop(v) {
-  const opts = _fpopType === 'type' ? getTypeOpts() : getStageOpts();
-  const label = opts.find(o => o.v === v)?.label || v;
-  if (_fpopType === 'type') {
-    window._typeFilter = v;
-  } else {
-    window._stageFilter = v;
-  }
-  document.querySelectorAll('.fpop-opt').forEach(el =>
-    el.classList.toggle('sel', el.textContent.trim() === label)
-  );
-  updateFilterDot();
-  renderProjects();
-}
-
-function closeFpop() {
-  document.getElementById('fpop-backdrop').classList.remove('open');
-  _fpopType = null;
-}
 
 function toggleOnHold() {
   window._editOnHold = !window._editOnHold;
   document.getElementById('on-hold-toggle').classList.toggle('active', window._editOnHold);
 }
-
 function toggleCreateFolder() {
   window._editCreateFolder = !window._editCreateFolder;
   document.getElementById('create-folder-toggle').classList.toggle('active', window._editCreateFolder);
+}
+
+function fmtAmt(n) {
+  const num = +n;
+  if (num >= 100000) return (num/100000).toFixed(num%100000===0?0:1)+'L';
+  if (num >= 1000)   return (num/1000).toFixed(num%1000===0?0:1)+'k';
+  return num.toLocaleString('en-IN');
+}
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function fmtDay(d) { return d.getDate() + ' ' + MONTHS[d.getMonth()]; }
+function fmtStamp(iso) {
+  const d = new Date(iso);
+  return fmtDay(d) + ' ' + d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ── ORDER CARD (Concept A) ──
+function typeLabelOf(p) {
+  const t = TYPES[p.projectType] || TYPES.other;
+  return p.projectType === 'other' && p.otherLabel ? 'Other · ' + p.otherLabel : t.label;
+}
+
+function timelineHtml(log) {
+  return log.length
+    ? log.map(e => `<div class="tl-row"><div class="tl-dot"></div><div class="tl-text">${escHtml(e.text)}</div><div class="tl-time">${fmtStamp(e.time)}</div></div>`).join('')
+    : `<div class="tl-empty">${T('noActivity')}</div>`;
 }
 
 function buildCard(p) {
   const days  = daysLeft(p.deadline);
   const del   = isDelivered(p);
   const hold  = isOnHold(p);
-  const urg   = hold ? 'warn' : urgClass(days, del);
-  const cardCls = p.archived ? 'delivered archived-card' : del ? 'delivered' : hold ? 'warning' : urg === 'danger' ? 'urgent' : urg === 'warn' ? 'warning' : 'ok-card';
-  const daysText = del ? '✓' : days < 0 ? Math.abs(days)+'d' : days === 0 ? 'Today' : days+'d';
+  const ready = isReady(p);
+  const tone  = del ? 'var(--ink3)' : (hold || (days >= 0 && days <= 3)) ? 'var(--amber)' : days < 0 ? 'var(--red)' : 'var(--green)';
+  const daysText = del ? '✓' : days < 0 ? Math.abs(days) + 'd' : days === 0 ? 'Today' : days + 'd';
   const daysLbl  = del ? T('daysDone') : days < 0 ? T('daysOverdue') : days === 0 ? T('daysDue') : T('daysLeft');
-
-  let stepsHtml = '';
-  for (let i = 0; i < 4; i++)
-    stepsHtml += `<div class="step ${i < (p.status||0) ? (del?'done-del':'done-ok') : ''}"></div>`;
 
   const stageIdx = Math.min(p.status || 0, 4);
   const stage    = getPipeline()[stageIdx];
-  const stageCls = SSTYLES[stageIdx];
-  const typeInfo  = TYPES[p.projectType] || TYPES.other;
-  const typeLabel = p.projectType === 'other' && p.otherLabel ? p.otherLabel : typeInfo.label;
-  const date      = p.deadline ? new Date(p.deadline+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'}) : '';
-  const typeChip  = `<div class="meta-chip ${typeInfo.chip}">${typeInfo.icon} ${typeLabel}</div>`;
-  let amtChip = '';
+  const date     = p.deadline ? fmtDay(new Date(p.deadline + 'T00:00:00')) : '';
+
+  // Stage row: stepper (in-progress) or type label (ready / on hold groups)
+  let steps = '';
+  for (let i = 0; i < 4; i++) steps += `<div class="step ${i < (p.status||0) ? 'on' + (del ? ' fin' : '') : ''}"></div>`;
+  const lead = (ready || hold) ? `<div class="oc-type">${escHtml(typeLabelOf(p))}</div>` : `<div class="steps">${steps}</div>`;
+  const holdChip = hold ? `<div class="chip warn">${svgi('hold', 11, 2)} ${T('onHold')}</div>` : '';
+  let folderChip = '';
+  if (p.driveFolderStatus === 'pending') {
+    folderChip = window._isAdmin
+      ? `<button class="chip warn" onclick="resolveStuckFolder('${p.id}')" title="Stuck? Tap to fix">${svgi('clock', 11, 2)} Folder pending</button>`
+      : `<div class="chip warn">${svgi('clock', 11, 2)} Folder pending</div>`;
+  }
+  const archChip = p.archived ? `<div class="chip plain">Archived</div>` : '';
+
+  // Chips row: due date + money
+  let money = '';
   if (window._isAdmin && p.amount) {
-    amtChip = p.advance
-      ? `<div class="meta-chip amount">₹${fmtAmt(p.advance)} adv / ₹${fmtAmt(p.amount)}</div>`
-      : `<div class="meta-chip amount">₹${fmtAmt(p.amount)}</div>`;
+    money += p.advance
+      ? `<div class="chip money">₹${fmtAmt(p.advance)} adv / ₹${fmtAmt(p.amount)}</div>`
+      : `<div class="chip money">₹${fmtAmt(p.amount)}</div>`;
+    if (!del) {
+      const bal = (Number(p.amount) || 0) - (Number(p.advance) || 0);
+      money += bal > 0 ? `<div class="chip due">₹${fmtAmt(bal)} ${T('balanceDue')}</div>` : `<div class="chip paid">${T('balancePaid')}</div>`;
+    }
   }
-  let balChip = '';
-  if (window._isAdmin && p.amount && !isDelivered(p)) {
-    const bal = (Number(p.amount) || 0) - (Number(p.advance) || 0);
-    if (bal > 0) balChip = `<div class="meta-chip balance">₹${fmtAmt(bal)} ${T('balanceDue')}</div>`;
-    else if (bal <= 0 && p.amount) balChip = `<div class="meta-chip balance-paid">${T('balancePaid')}</div>`;
+
+  // Note block (latest note always at index 0)
+  const log = p.activityLog || [];
+  const latest = log.length ? escHtml(log[0].text) : '';
+  const noteId = 'note-in-' + p.id;
+
+  // Actions
+  const acts = [];
+  if (p.archived) {
+    if (window._isAdmin) acts.push(`<button class="pill-btn" onclick="restoreProject('${p.id}')">Restore order</button>`);
+  } else {
+    if (!window._isManager) acts.push(`<button class="icon-btn" aria-label="${T('updateStatus')}" title="${T('updateStatus')}" onclick="openStatusModal('${p.id}')">${svgi('refresh', 15)}</button>`);
+    if (window._isAdmin)    acts.push(`<button class="icon-btn" aria-label="${T('edit')}" title="${T('edit')}" onclick="openEditModal('${p.id}')">${svgi('edit', 15)}</button>`);
   }
-  const holdChip  = hold ? `<div class="meta-chip" style="background:rgba(245,158,11,0.12);color:#d97706">⏸ ${T('onHold')}</div>` : '';
-  const archBadge = p.archived ? `<span class="archived-badge">&#128451; Archived</span>` : '';
-  const descHtml  = p.item ? `<div class="card-desc">${escHtml(p.item)}</div>` : '';
-  let itemsHtml = '';
+  acts.push(`<button class="icon-btn ${window._expandedCards.has(p.id) ? 'on' : ''}" aria-label="Details" title="Items, specs &amp; note history" onclick="toggleCard('${p.id}')">${svgi('list', 15)}</button>`);
+  if (p.phone) acts.push(`<a class="icon-btn" href="tel:${escHtml(p.phone)}" aria-label="${T('call')}" title="${T('call')}">${svgi('phone', 15)}</a>`);
+  if (p.driveFolderUrl) {
+    acts.push(`<a class="icon-btn" href="${escHtml(p.driveFolderUrl)}" target="_blank" rel="noopener" aria-label="Drive folder" title="Open Drive folder">${svgi('folder', 15)}</a>`);
+  } else if (window._isAdmin && !p.archived && p.driveFolderStatus !== 'pending' && isDriveAutomationOn()) {
+    acts.push(`<button class="icon-btn" aria-label="Create Drive folder" title="${p.driveFolderStatus === 'failed' ? 'Retry Drive folder' : 'Create Drive folder'}" onclick="createFolderForProject('${p.id}')">${svgi('folder', 15)}</button>`);
+  }
+
+  // Expandable details: items, specs, full note timeline (latest first)
+  let items = '';
   if (p.items?.length) {
-    itemsHtml = `<div class="card-items">
-      <div class="card-items-hdr">${T('itemsHdr')} (${p.items.length})</div>
-      ${p.items.map((it, i) => {
-        const dims = [it.l, it.b, it.w].filter(Boolean).join(' × ');
-        const dimsHtml = dims ? `<span class="card-item-dims">${dims}</span><span style="color:var(--border)">|</span>` : '';
-        return `<div class="card-item-row">
-          <div class="card-item-top"><span class="card-item-sr">${i+1}</span><span class="card-item-name">${escHtml(it.name)}</span></div>
-          <div class="card-item-meta">${dimsHtml}<span class="card-item-qty">${escHtml(it.qty)} ${escHtml(it.unit||'Nos')}</span></div>
-        </div>`;
-      }).join('')}
-    </div>`;
+    items = `<div><div class="dt-lbl">${T('itemsHdr')} (${p.items.length})</div>` + p.items.map(it => {
+      const dims = [it.l, it.b, it.w].filter(Boolean).join(' × ');
+      return `<div class="dt-item"><div class="dt-item-n">${escHtml(it.name)}</div>${dims ? `<div class="dt-item-d">${escHtml(dims)}</div>` : ''}<div class="dt-item-q">${escHtml(it.qty)} ${escHtml(it.unit || 'Nos')}</div></div>`;
+    }).join('') + '</div>';
   }
-  const notesHtml = p.notes ? `<div class="card-notes">${escHtml(p.notes)}</div>` : '';
+  const specs = p.notes ? `<div><div class="dt-lbl">Specs</div><div class="dt-specs">${escHtml(p.notes)}</div></div>` : '';
+  const details = `<div class="oc-details">${items}${specs}<div><div class="dt-lbl">${T('activityHdr')}</div><div class="tl" id="tl-${p.id}">${timelineHtml(log)}</div></div></div>`;
 
-  // ── Activity Log ──
-  const logEntries = (p.activityLog || []);
-  const logHtml = logEntries.length
-    ? logEntries.map(e => {
-        const d = new Date(e.time);
-        const label = d.toLocaleDateString('en-IN',{day:'numeric',month:'short'}) + ' ' + d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
-        return `<div class="activity-entry"><div class="activity-dot"></div><div class="activity-text">${escHtml(e.text)}</div><div class="activity-time">${label}</div></div>`;
-      }).join('')
-    : `<div class="activity-empty">${T('noActivity')}</div>`;
-  const activityHtml = `<div class="activity-log">
-    <div class="activity-log-hdr"><span>${T('activityHdr')}</span></div>
-    ${logHtml}
-    <div class="activity-add-row">
-      <input class="activity-add-inp" type="text" id="act-inp-${p.id}" placeholder="${T('addNote')}" onkeydown="if(event.key==='Enter')addActivityLog('${p.id}')">
-      <button class="activity-add-btn" onclick="addActivityLog('${p.id}')">${T('add')}</button>
-    </div>
-  </div>`;
-
-  const adminBtn    = window._isAdmin ? `<button class="btn btn-outline" style="flex:1" onclick="openEditModal('${p.id}')">Edit</button>` : '';
-  const callBtn     = p.phone ? `<a href="tel:${p.phone}" class="btn btn-ghost" style="flex:0.6;text-decoration:none">&#128222; Call</a>` : '';
-  const driveBtn    = p.driveFolderUrl
-    ? `<a href="${p.driveFolderUrl}" target="_blank" rel="noopener" class="btn btn-ghost" style="flex:0.6;text-decoration:none">&#128193; Folder</a>`
-    : p.driveFolderStatus === 'pending'
-      ? (window._isAdmin
-          ? `<button class="btn btn-ghost" style="flex:0.6;opacity:0.7" onclick="resolveStuckFolder('${p.id}')" title="Stuck? Tap to fix">&#128193; Creating…</button>`
-          : `<button class="btn btn-ghost" style="flex:0.6;opacity:0.6" disabled>&#128193; Creating…</button>`)
-      : (window._isAdmin && !p.archived && isDriveAutomationOn() ? `<button class="btn btn-ghost" style="flex:0.6" onclick="createFolderForProject('${p.id}')">&#128193; ${p.driveFolderStatus === 'failed' ? 'Retry' : 'Create'}</button>` : '');
-  const statusBtn   = (!window._isManager && !p.archived) ? `<button class="btn btn-ghost" style="flex:1" onclick="openStatusModal('${p.id}')">${T('updateStatus')}</button>` : '';
-  const restoreBtn  = (window._isAdmin && p.archived) ? `<button class="btn btn-restore" style="flex:1" onclick="restoreProject('${p.id}')">&#8617; Restore Order</button>` : '';
-  const latestNote = p.activityLog?.length ? escHtml(p.activityLog[0].text) : '';
-  const hasExtra  = !!(itemsHtml || notesHtml || true); // always show activity log
-  const chevron   = `<span class="card-chevron">&#9660;</span>`;
-  const quickNoteId = 'quick-note-' + p.id;
-  const noteBar = `<div class="card-note-bar" onclick="event.stopPropagation()">
-      <div class="card-last-note ${latestNote ? '' : 'empty'}"><div class="card-last-note-dot"></div><div class="card-last-note-text">${latestNote || T('noActivity')}</div></div>
-      <div class="card-note-add-row">
-        <input class="card-note-add-inp" type="text" id="${quickNoteId}" placeholder="${T('addNote')}" onkeydown="if(event.key==='Enter')addActivityLog('${p.id}','${quickNoteId}')">
-        <button class="card-note-add-btn" aria-label="${T('add')}" onclick="addActivityLog('${p.id}','${quickNoteId}')">&#10148;</button>
-      </div>
-    </div>`;
   return `
-  <div class="project-card ${cardCls}" id="card-${p.id}">
-    <div class="card-urgency-bar ${urg}"></div>
-    <div class="card-header" onclick="toggleCard('${p.id}')">
-      <div class="card-top">
-        <div style="min-width:0"><div class="card-title">${escHtml(p.client)}</div>${descHtml}</div>
-        <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
-          <div class="days-badge ${urg}">${daysText}<span class="days-badge-lbl">${daysLbl}</span></div>
-          ${chevron}
-        </div>
+  <div class="order-card ${p.archived ? 'archived' : ''} ${window._expandedCards.has(p.id) ? 'expanded' : ''}" id="card-${p.id}" style="--tone:${tone}">
+    <div class="oc-top">
+      <div>
+        <div class="oc-name">${escHtml(p.client)}</div>
+        <div class="oc-desc ${p.item ? '' : 'none'}">${p.item ? escHtml(p.item) : 'No description'}</div>
       </div>
-      <div class="card-meta">${typeChip}<div class="meta-chip date-chip">&#128197; ${date}</div>${amtChip}${balChip}${holdChip}${archBadge}</div>
-      <div class="status-row">
-        <div class="status-stepper">${stepsHtml}</div>
-        <div class="status-label ${stageCls}">${stage.icon} ${stage.label}</div>
+      <div class="oc-days"><div class="oc-days-n">${daysText}</div><div class="oc-days-l">${daysLbl}</div></div>
+    </div>
+    <div class="oc-stage">${lead}<div class="chip s${stageIdx}">${stage.label}</div>${holdChip}${folderChip}${archChip}</div>
+    <div class="oc-chips"><div class="chip plain">Due ${date}</div>${money}</div>
+    <div class="note-block">
+      <div class="note-row">${svgi('note', 13)}<div class="note-text ${latest ? 'has' : ''}">${latest || T('noActivity')}</div></div>
+      <div class="note-add-row">
+        <input class="note-input" type="text" id="${noteId}" placeholder="${T('addNote')}" onkeydown="if(event.key==='Enter')addActivityLog('${p.id}')">
+        <button class="note-send" aria-label="${T('add')}" onclick="addActivityLog('${p.id}')">${svgi('send', 13)}</button>
       </div>
     </div>
-    ${noteBar}
-    <div class="card-expandable">${itemsHtml}${notesHtml}${activityHtml}<div style="height:6px"></div></div>
-    ${statusBtn || restoreBtn || adminBtn || callBtn || driveBtn ? `<div class="card-actions">${statusBtn}${restoreBtn}${adminBtn}${callBtn}${driveBtn}</div>` : ''}
+    <div class="oc-actions">${acts.join('')}</div>
+    ${details}
   </div>`;
 }
 
-function groupHeader(icon, title, count) {
-  return `<div class="group-header"><div class="group-header-left"><span>${icon}</span><span class="group-header-title">${title}</span><span class="group-header-count">${count}</span></div></div>`;
+// ── SECTIONS ──
+function sectionHeader(ico, bg, color, title, count, dim) {
+  return `<div class="section-header"><div class="sec-ico" style="background:${bg};color:${color}">${svgi(ico, 16, 1.9)}</div><div class="sec-title ${dim ? 'dim' : ''}">${title}</div><div class="sec-count">${count}</div></div><div class="section-divider"></div>`;
 }
 
 function applyFilters(p) {
-  const q  = (document.getElementById('search-input')?.value || '').toLowerCase();
+  const q  = (document.getElementById('search-input')?.value || '').trim().toLowerCase();
   if (q && !p.client?.toLowerCase().includes(q) && !p.item?.toLowerCase().includes(q)) return false;
   const tf = window._typeFilter;
   const sf = window._stageFilter;
-  const del  = isDelivered(p);
-  const days = daysLeft(p.deadline);
-  // type filter
-  if (tf === 'active') { /* handled by grouping */ }
-  else if (tf === 'all')      { if (isArchived(p)) return false; }
-  else if (tf === 'overdue')  { if (!(!del && !p.onHold && !isArchived(p) && days < 0)) return false; }
-  else if (tf === 'delivered'){ if (!del || isArchived(p)) return false; }
+  if (tf === 'delivered') { if (!isDelivered(p) || isArchived(p)) return false; }
   else if (tf === 'archived') { if (!isArchived(p)) return false; }
-  else { if (p.projectType !== tf || isArchived(p)) return false; }
-  // stage filter
+  else if (tf === 'all') { if (isArchived(p)) return false; }
   if (sf !== 'all' && (p.status ?? 0) !== parseInt(sf)) return false;
   return true;
 }
@@ -1472,94 +1116,69 @@ function sortByDeadline(arr) {
   return [...arr].sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
 }
 
+function toggleHold() {
+  window._showHold = !window._showHold;
+  renderProjects();
+}
+function resetView() {
+  window._typeFilter = 'active'; window._stageFilter = 'all';
+  renderProjects();
+}
+
+const SECTIONS = [
+  { label:'Woodwork',         ico:'wood',  bg:'#F5E3D5', color:'#C1602F', match:p => p.projectType === 'woodwork', empty:'No woodwork orders right now' },
+  { label:'Plywood / Home',   ico:'home',  bg:'#E4EDF6', color:'#4E7DB5', match:p => p.projectType === 'plywood',  empty:'No plywood orders right now' },
+  { label:'Lathe Work',       ico:'lathe', bg:'#E3EDE6', color:'#5C8A6B', match:p => p.projectType === 'lathe',    empty:'No lathe orders right now' },
+  { label:'Modular & Others', ico:'grid',  bg:'#EFECE4', color:'#9C9483', match:p => p.projectType === 'modular' || p.projectType === 'other', empty:'No modular kitchen or other-type orders right now' },
+];
+
 function renderProjects() {
   updateKpiStrip();
   const list = document.getElementById('projects-list');
   const tf   = window._typeFilter;
+  const q    = (document.getElementById('search-input')?.value || '').trim();
   const all  = (window._projects || []).filter(applyFilters);
+  let html = '';
 
-  // Grouped view (default Active mode)
   if (tf === 'active') {
-    const activeAll = sortByDeadline(all.filter(p => isActive(p)));
-    const readyAll  = sortByDeadline(all.filter(p => isReady(p)));
+    const activeAll = sortByDeadline(all.filter(isActive));
+    const readyAll  = sortByDeadline(all.filter(isReady));
     const onHoldAll = sortByDeadline(all.filter(p => isOnHold(p) && !isDelivered(p)));
 
     if (!activeAll.length && !readyAll.length && !onHoldAll.length) {
-      list.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>${T('noOrders')}<br>${window._isAdmin ? T('tapToAdd') : T('nothingToShow')}</p></div>`;
+      list.innerHTML = `<div class="section-empty">${q ? 'No orders match your search' : T('noOrders') + ' ' + (window._isAdmin ? T('tapToAdd') : T('nothingToShow'))}</div>`;
       return;
     }
 
-    // Update Orders tab label (counts across all project types combined)
-    const tabLbl = document.getElementById('tab-orders-label');
-    if (tabLbl) {
-      const parts = ['📋 ' + activeAll.length];
-      if (readyAll.length)  parts.push('📦 ' + readyAll.length);
-      if (onHoldAll.length) parts.push('⏸ ' + onHoldAll.length);
-      tabLbl.textContent = parts.join('  ');
-    }
-
-    // Top-level sections by project type — for the in-progress ("active")
-    // orders only, so it's easy to see how many wood/plywood/lathe jobs
-    // are currently running at a glance, in a fixed order. Modular Kitchen
-    // and Other are folded into one "Modular & Others" section for now.
-    // Ready-to-deliver and On-hold orders are NOT split by type — they
-    // stay as single combined sections at the very end, same as before.
-    const typeSections = [
-      { icon: TYPES.woodwork.icon, label: TYPES.woodwork.label, match: p => p.projectType === 'woodwork' },
-      { icon: TYPES.plywood.icon,  label: TYPES.plywood.label,  match: p => p.projectType === 'plywood'  },
-      { icon: TYPES.lathe.icon,    label: TYPES.lathe.label,    match: p => p.projectType === 'lathe'    },
-      { icon: '📦',                label: 'Modular & Others',   match: p => p.projectType === 'modular' || p.projectType === 'other' },
-    ];
-
-    let html = '';
-    typeSections.forEach(section => {
-      const activeP = activeAll.filter(section.match);
-      if (!activeP.length) return; // hide empty sections entirely
-      html += `<div class="type-section-header"><span>${section.icon}</span><span class="type-section-title">${section.label}</span><span class="type-section-count">${activeP.length}</span></div>`;
-      html += `<div class="group-divider"></div>`;
-      activeP.forEach(p => { html += buildCard(p); });
+    SECTIONS.forEach(sec => {
+      const ps = activeAll.filter(sec.match);
+      if (!ps.length && q) return;            // while searching, hide empty sections
+      html += sectionHeader(sec.ico, sec.bg, sec.color, sec.label, ps.length + ' running', !ps.length);
+      html += ps.length ? ps.map(buildCard).join('') : `<div class="section-empty">${sec.empty}</div>`;
     });
 
-    // Ready-to-deliver and On-hold, combined across all types, at the end.
     if (readyAll.length) {
-      html += groupHeader('📦', T('groupReady'), readyAll.length);
-      html += `<div class="group-divider"></div>`;
-      readyAll.forEach(p => { html += buildCard(p); });
+      html += sectionHeader('box', '#F2E7CE', '#8B6B2E', T('groupReady'), readyAll.length + (readyAll.length === 1 ? ' order' : ' orders'));
+      html += readyAll.map(buildCard).join('');
     }
     if (onHoldAll.length) {
-      html += groupHeader('⏸', T('groupOnHold'), onHoldAll.length);
-      html += `<div class="group-divider"></div>`;
-      onHoldAll.forEach(p => { html += buildCard(p); });
+      const n = onHoldAll.length, open = window._showHold || !!q;
+      html += sectionHeader('hold', '#F2E7CE', '#9C7A1E', T('groupOnHold'), n + (n === 1 ? ' order' : ' orders'));
+      html += `<div class="section-banner">${svgi('hold', 16, 1.9)}<div class="sb-text">${n} ${n === 1 ? 'order is' : 'orders are'} currently on hold</div>${q ? '' : `<button onclick="toggleHold()">${open ? 'Hide ↑' : 'View →'}</button>`}</div>`;
+      if (open) html += onHoldAll.map(buildCard).join('');
     }
-
     list.innerHTML = html;
-    // restore expanded state
-    window._expandedCards.forEach(id => {
-      document.getElementById('card-' + id)?.classList.add('expanded');
-    });
-    syncExpandBtn();
     return;
   }
 
-  // All other filters — flat list
-  if (!all.length) {
-    list.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>${T('noOrdersFound')}</p></div>`;
-    return;
-  }
-  const sorted = sortByDeadline(all);
-  const overdueN = sorted.filter(p => !isDelivered(p) && !p.onHold && daysLeft(p.deadline) < 0).length;
-  let html = overdueN > 0 && tf !== 'delivered'
-    ? `<div class="overdue-banner">⚠️ ${overdueN} ${T('overdueMsg')}</div>` : '';
-  sorted.forEach(p => { html += buildCard(p); });
+  // Filtered views (opened from Overview): flat list with a way back
+  const label = tf === 'archived' ? 'Archived orders'
+    : tf === 'delivered' ? 'Delivered orders'
+    : (getPipeline()[parseInt(window._stageFilter)]?.label || 'All') + ' orders';
+  html += `<div class="section-banner neutral"><div class="sb-text">Showing: ${label}</div><button onclick="resetView()">Back to active →</button></div>`;
+  html += all.length ? sortByDeadline(all).map(buildCard).join('') : `<div class="section-empty">${T('noOrdersFound')}</div>`;
   list.innerHTML = html;
-  // restore expanded state after re-render
-  window._expandedCards.forEach(id => {
-    document.getElementById('card-' + id)?.classList.add('expanded');
-  });
-  syncExpandBtn();
-  // keep items view in sync if visible
 }
-
 
 function applyLanguage() {
   const set = (id, val) => { const el = document.getElementById(id); if (el && val !== undefined) el.textContent = val; };
@@ -1569,79 +1188,40 @@ function applyLanguage() {
   set('lbl-ok',             T('onTrack'));
   set('lbl-warn',           T('dueSoon'));
   set('lbl-overdue',        T('overdue'));
-  set('lbl-type-pill',      '📂 ' + T('typeLabel'));
-  set('lbl-stage-pill',     '🔄 ' + T('stageLabel'));
-  set('fpop-done-btn',      T('done'));
-  set('type-pill-val',      T('active'));
-  set('stage-pill-val',     T('allStages'));
   set('status-modal-title', T('updateStatus'));
   set('lbl-new-status',     T('newStatus'));
   set('btn-update-status',  T('updateStatus'));
-  const eb = document.getElementById('expand-all-btn');
-  if (eb) eb.innerHTML = T('expandAll');
 }
-
 
 function toggleCard(id) {
   const card = document.getElementById('card-' + id);
   if (!card) return;
-  card.classList.toggle('expanded');
-  if (card.classList.contains('expanded')) window._expandedCards.add(id);
-  else window._expandedCards.delete(id);
-  syncExpandBtn();
-}
-
-// ── VIEW SWITCHING ──
-window._currentView  = 'orders';
-window._expandedCards = new Set(); // persist expanded state across re-renders
-
-function switchView(view) {
-  window._currentView = view;
-  document.getElementById('projects-list').style.display  = '';
-  renderProjects();
+  const open = card.classList.toggle('expanded');
+  if (open) window._expandedCards.add(id); else window._expandedCards.delete(id);
+  card.querySelector('.oc-actions .icon-btn[aria-label="Details"]')?.classList.toggle('on', open);
 }
 
 function onSearchInput() { renderProjects(); }
 
-
-
-let _allExpanded = false;
-function toggleAllCards() {
-  _allExpanded = !_allExpanded;
-  document.querySelectorAll('.project-card[id^="card-"]').forEach(card => {
-    card.classList.toggle('expanded', _allExpanded);
-    const pid = card.id.replace('card-', '');
-    if (_allExpanded) window._expandedCards.add(pid);
-    else window._expandedCards.delete(pid);
-  });
-  syncExpandBtn();
-}
-
-function syncExpandBtn() {
-  const all  = document.querySelectorAll('.project-card[id^="card-"]');
-  const open = document.querySelectorAll('.project-card.expanded');
-  _allExpanded = all.length > 0 && open.length === all.length;
-  const btn = document.getElementById('expand-all-btn');
-  if (!btn) return;
-  btn.innerHTML = _allExpanded ? '&#9650;' : '&#9660;';
-  btn.classList.toggle('all-open', _allExpanded);
-}
-
+// ── KPI strip + money ledger ──
 function updateKpiStrip() {
   const all = (window._projects || []).filter(p => !isArchived(p));
   const byType = t => all.filter(p => isActive(p) && p.projectType === t).length;
-  const modularOthers = all.filter(p => isActive(p) && (p.projectType === 'modular' || p.projectType === 'other')).length;
-  const readyCount   = all.filter(p => isReady(p)).length;
-  const holdCount    = all.filter(p => isOnHold(p) && !isDelivered(p)).length;
-  const overdueCount = all.filter(p => !isDelivered(p) && daysLeft(p.deadline) < 0).length;
-  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-  set('kpi-wood',    byType('woodwork'));
-  set('kpi-ply',     byType('plywood'));
-  set('kpi-lathe',   byType('lathe'));
-  set('kpi-modular', modularOthers);
-  set('kpi-ready',   readyCount);
-  set('kpi-hold',    holdCount);
-  set('kpi-overdue', overdueCount);
+  const vals = {
+    'kpi-wood':    byType('woodwork'),
+    'kpi-ply':     byType('plywood'),
+    'kpi-lathe':   byType('lathe'),
+    'kpi-modular': all.filter(p => isActive(p) && (p.projectType === 'modular' || p.projectType === 'other')).length,
+    'kpi-ready':   all.filter(p => isReady(p)).length,
+    'kpi-hold':    all.filter(p => isOnHold(p) && !isDelivered(p)).length,
+    'kpi-overdue': all.filter(p => !isDelivered(p) && daysLeft(p.deadline) < 0).length,
+  };
+  Object.keys(vals).forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = vals[id];
+    el.closest('.kpi')?.classList.toggle('dim', vals[id] === 0);
+  });
   updateFinanceStrip(all);
 }
 
@@ -1650,89 +1230,57 @@ function updateFinanceStrip(all) {
   const pipeline = (all || (window._projects || []).filter(p => !isArchived(p))).filter(p => !isDelivered(p));
   let value = 0, received = 0, pending = 0;
   pipeline.forEach(p => {
-    const amt = Number(p.amount) || 0;
-    const adv = Number(p.advance) || 0;
-    value    += amt;
-    received += adv;
-    pending  += Math.max(0, amt - adv);
+    const amt = Number(p.amount) || 0, adv = Number(p.advance) || 0;
+    value += amt; received += adv; pending += Math.max(0, amt - adv);
   });
   const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = '₹' + fmtAmt(v); };
-  set('fin-value',    value);
-  set('fin-received', received);
-  set('fin-pending',  pending);
+  set('fin-value', value); set('fin-received', received); set('fin-pending', pending);
 }
 
+// ── Overview sheet ──
 function updateStats() {
   const all    = window._projects || [];
-  const active = all.filter(p => isActive(p));
+  const active = all.filter(isActive);
   const total  = active.length;
   const danger = active.filter(p => daysLeft(p.deadline) < 0).length;
-  const warn   = active.filter(p => { const d=daysLeft(p.deadline); return d>=0&&d<=3; }).length;
-  document.getElementById('stat-total').textContent  = total;
-  document.getElementById('stat-ok').textContent     = active.filter(p => daysLeft(p.deadline) > 3).length;
-  document.getElementById('stat-warn').textContent   = warn;
-  document.getElementById('stat-danger').textContent = danger;
+  const warn   = active.filter(p => { const d = daysLeft(p.deadline); return d >= 0 && d <= 3; }).length;
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('stat-total', total);
+  set('stat-ok', active.filter(p => daysLeft(p.deadline) > 3).length);
+  set('stat-warn', warn);
+  set('stat-danger', danger);
+  const parts = [total + ' active'];
+  if (danger > 0) parts.push(danger + ' overdue');
+  if (warn   > 0) parts.push(warn   + ' due soon');
+  set('stats-sheet-sub', parts.join(' · '));
 
-  // Overdue badge in topbar
-  const badge = document.getElementById('overdue-badge');
-  if (badge) {
-    badge.classList.toggle('visible', danger > 0);
-    badge.textContent = '⚠️ ' + danger;
-  }
-  const sub = document.getElementById('stats-sheet-sub');
-  if (sub) {
-    const parts = [total + ' active'];
-    if (danger > 0) parts.push(danger + ' overdue');
-    if (warn   > 0) parts.push(warn   + ' due soon');
-    sub.textContent = parts.join(' · ');
-  }
-
-  // Stage row counts
   const nonDel = all.filter(p => !isDelivered(p) && !isOnHold(p) && !isArchived(p));
-  const delCount = all.filter(p => isDelivered(p)).length;
-  [0,1,2,3].forEach(s => {
-    const el = document.getElementById('sst-' + s);
-    if (!el) return;
-    const n = nonDel.filter(p => (p.status ?? 0) === s).length;
-    el.textContent = n;
-    el.className   = 'stage-num' + (n === 0 ? ' zero' : '');
-  });
-  const el4 = document.getElementById('sst-4');
-  if (el4) { el4.textContent = delCount; el4.className = 'stage-num' + (delCount === 0 ? ' zero' : ''); }
+  [0,1,2,3].forEach(s => set('sst-' + s, nonDel.filter(p => (p.status ?? 0) === s).length));
+  set('sst-4', all.filter(p => isDelivered(p) && !isArchived(p)).length);
+  set('sst-a', all.filter(isArchived).length);
 }
 
-function openStats() {
-  document.getElementById('stats-sheet-backdrop')?.classList.add('open');
-}
-function closeStats() {
-  document.getElementById('stats-sheet-backdrop')?.classList.remove('open');
-}
+function openStats()  { document.getElementById('stats-sheet-backdrop')?.classList.add('open'); }
+function closeStats() { document.getElementById('stats-sheet-backdrop')?.classList.remove('open'); }
 
 function jumpToStage(stage) {
-  // Set stage filter and re-render
-  window._stageFilter = stage === 4 ? '4' : String(stage);
+  window._stageFilter = String(stage);
   window._typeFilter  = stage === 4 ? 'delivered' : 'all';
-  // Update pill labels
-  const stageOpts = getStageOpts();
-  const typeOpts  = getTypeOpts();
-  const sLabel = stageOpts.find(o => o.v === window._stageFilter)?.label || T('allStages');
-  const tLabel = typeOpts.find(o => o.v === window._typeFilter)?.label || T('active');
-  const spv = document.getElementById('stage-pill-val');
-  const tpv = document.getElementById('type-pill-val');
-  if (spv) spv.textContent = sLabel;
-  if (tpv) tpv.textContent = tLabel;
-  document.getElementById('stage-pill')?.classList.toggle('has-filter', window._stageFilter !== 'all');
-  document.getElementById('type-pill')?.classList.toggle('has-filter', window._typeFilter !== 'active');
-  // Highlight active stage card
-  document.querySelectorAll('.stage-card').forEach((c,i) => c.classList.toggle('active-stage', i === stage));
+  closeStats();
+  renderProjects();
+}
+function jumpToArchived() {
+  window._stageFilter = 'all';
+  window._typeFilter  = 'archived';
+  closeStats();
   renderProjects();
 }
 
+// ── Order form ──
 function openAddModal() {
   if (!window._isAdmin) return;
   window._editId = null; window._editStatus = 0; window._editType = 'woodwork'; window._editOnHold = false;
-  const tog = document.getElementById('on-hold-toggle');
-  if (tog) tog.classList.remove('active');
+  document.getElementById('on-hold-toggle')?.classList.remove('active');
   window._editCreateFolder = false;
   const folderTog = document.getElementById('create-folder-toggle');
   if (folderTog) {
@@ -1757,8 +1305,8 @@ function openEditModal(id) {
   if (!p) return;
   window._editId = id; window._editStatus = p.status ?? 0; window._editType = p.projectType || 'woodwork';
   document.getElementById('modal-title').textContent   = 'Edit Order';
-  document.getElementById('delete-btn').style.display  = 'block';
-  document.getElementById('archive-btn').style.display = p.archived ? 'none' : 'block';
+  document.getElementById('delete-btn').style.display  = 'flex';
+  document.getElementById('archive-btn').style.display = p.archived ? 'none' : 'flex';
   document.getElementById('f-client').value            = p.client || '';
   document.getElementById('f-phone').value             = p.phone || '';
   document.getElementById('f-item').value              = p.item || '';
@@ -1768,17 +1316,17 @@ function openEditModal(id) {
   document.getElementById('f-advance').value           = p.advance || '';
   document.getElementById('f-notes').value             = p.notes || '';
   window._editOnHold = !!(p.onHold);
-  const tog = document.getElementById('on-hold-toggle');
-  if (tog) tog.classList.toggle('active', window._editOnHold);
+  document.getElementById('on-hold-toggle')?.classList.toggle('active', window._editOnHold);
   // Per-order folder creation only applies to brand-new orders, not edits —
   // an existing order already has (or deliberately skipped) its folder, and
-  // the card's own Create/Retry button covers doing it after the fact.
+  // the card's own folder button covers doing it after the fact.
   const folderTog = document.getElementById('create-folder-toggle');
   if (folderTog) folderTog.style.display = 'none';
   document.getElementById('other-label-inp').value     = p.otherLabel || '';
   document.getElementById('items-edit-list').innerHTML = '';
   (p.items || []).forEach(it => addItemRow(it.name, it.l||'', it.b||'', it.w||'', it.qty, it.unit||'Nos'));
   selectType(p.projectType || 'woodwork');
+  window._editStatus = p.status ?? 0;
   renderStatusSel('status-selector-opts', p.status ?? 0, false);
   openModal('project-modal');
 }
@@ -1787,11 +1335,8 @@ function openStatusModal(id) {
   const p = window._projects.find(x => x.id === id);
   if (!p) return;
   window._statusUpdateId = id; window._updateStatusVal = p.status ?? 0;
-  const typeInfo  = TYPES[p.projectType] || TYPES.other;
-  const typeLabel = p.projectType === 'other' && p.otherLabel ? p.otherLabel : typeInfo.label;
   document.getElementById('status-modal-info').innerHTML =
-    `<strong>${escHtml(p.client)}</strong> <span style="font-size:0.78rem;color:var(--text3)">${typeInfo.icon} ${typeLabel}</span>
-     ${p.item ? `<br><span style="font-size:0.78rem;color:var(--text3)">${escHtml(p.item)}</span>` : ''}`;
+    `<strong style="color:var(--ink)">${escHtml(p.client)}</strong> · ${escHtml(typeLabelOf(p))}${p.item ? '<br>' + escHtml(p.item) : ''}`;
   renderStatusSel('status-update-opts', p.status ?? 0, true);
   openModal('status-modal');
 }
@@ -1799,19 +1344,20 @@ function openStatusModal(id) {
 function renderStatusSel(containerId, current, isUpdate) {
   document.getElementById(containerId).innerHTML = getPipeline().map(s => {
     const fn = isUpdate ? `selectUpdateSt(${s.v})` : `selectFormSt(${s.v})`;
-    return `<div class="status-opt ${s.v === current ? 'selected' : ''}" data-v="${s.v}" onclick="${fn}">${s.icon} ${s.label}</div>`;
+    return `<div class="status-opt ${s.v === current ? 'selected' : ''}" data-v="${s.v}" onclick="${fn}"><span class="dot s${s.v}"></span>${s.label}</div>`;
   }).join('');
 }
 
 function selectType(type) {
+  const keepStatus = window._editStatus;
   window._editType = type;
   Object.keys(TYPES).forEach(k => {
-    document.getElementById('pt-'+k).className = 'type-opt' + (k === type ? ' sel' : '');
+    document.getElementById('pt-' + k).className = 'type-opt' + (k === type ? ' sel' : '');
   });
   document.getElementById('items-field').style.display      = 'block';
   document.getElementById('other-label-wrap').style.display = type === 'other' ? 'block' : 'none';
-  window._editStatus = 0;
-  renderStatusSel('status-selector-opts', 0, false);
+  window._editStatus = keepStatus ?? 0;
+  renderStatusSel('status-selector-opts', window._editStatus, false);
 }
 
 function selectFormSt(v) {
@@ -1834,7 +1380,7 @@ function addItemRow(name='', l='', b='', w='', qty='', unit='Nos') {
     <div class="item-edit-row-top">
       <span class="item-sr-badge">${sr}</span>
       <input class="item-name-inp" type="text" placeholder="Item name e.g. Dining Table" value="${escHtml(name)}">
-      <button class="item-del-btn" onclick="removeItemRow(this)">&#10005;</button>
+      <button class="item-del-btn" aria-label="Remove item" onclick="removeItemRow(this)">${svgi('close', 13, 2)}</button>
     </div>
     <div class="item-edit-row-dims">
       <div class="item-dim-wrap"><div class="item-dim-label">L (in)</div><input class="item-dim-inp item-l-inp" type="number" step="0.01" placeholder="—" value="${escHtml(l)}"></div>
@@ -1849,7 +1395,6 @@ function addItemRow(name='', l='', b='', w='', qty='', unit='Nos') {
 
 function removeItemRow(btn) {
   btn.closest('.item-edit-row').remove();
-  // re-number remaining rows
   document.querySelectorAll('.item-sr-badge').forEach((el, i) => el.textContent = i + 1);
 }
 
@@ -1887,72 +1432,35 @@ function showToast(msg) {
   t.textContent = msg; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
 }
-function fmtAmt(n) {
-  const num = +n;
-  if (num >= 100000) return (num/100000).toFixed(num%100000===0?0:1)+'L';
-  if (num >= 1000)   return (num/1000).toFixed(num%1000===0?0:1)+'k';
-  return num.toLocaleString('en-IN');
-}
-function addActivityLog(id, inputId) {
-  const inp  = document.getElementById(inputId || ('act-inp-' + id));
+
+// ── Notes: newest always first (activityLog[0] is the latest everywhere) ──
+function addActivityLog(id) {
+  const inp  = document.getElementById('note-in-' + id);
   const text = (inp?.value || '').trim();
   if (!text) return;
-  const p   = window._projects.find(x => x.id === id);
+  const p = window._projects.find(x => x.id === id);
   if (!p) return;
   const now = new Date().toISOString();
-  const newEntry = { text, time: now };
-  // Newest entry always goes to the front — activityLog[0] is the latest note everywhere it's read.
-  const log = [newEntry, ...(p.activityLog || [])];
-
-  // ── Optimistic DOM update — no re-render, card stays open/collapsed as-is ──
-  // 1. Update local project data immediately
+  const log = [{ text, time: now }, ...(p.activityLog || [])];
   p.activityLog = log;
 
+  // Optimistic DOM update — no re-render, so the card keeps its open/closed state
   const cardEl = document.getElementById('card-' + id);
-
-  // 2. Insert the new entry at the TOP of the full activity list (timeline: latest first)
-  const logContainer = cardEl?.querySelector('.activity-log');
-  if (logContainer) {
-    const existingEmpty = logContainer.querySelector('.activity-empty');
-    if (existingEmpty) existingEmpty.remove();
-    const firstEntry = logContainer.querySelector('.activity-entry');
-    const addRow = logContainer.querySelector('.activity-add-row');
-    const entryEl = document.createElement('div');
-    entryEl.className = 'activity-entry';
-    const d = new Date(now);
-    const label = d.toLocaleDateString('en-IN',{day:'numeric',month:'short'}) + ' ' + d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
-    entryEl.innerHTML = `<div class="activity-dot"></div><div class="activity-text">${escHtml(text)}</div><div class="activity-time">${label}</div>`;
-    logContainer.insertBefore(entryEl, firstEntry || addRow);
+  const noteText = cardEl?.querySelector('.note-text');
+  if (noteText) { noteText.textContent = text; noteText.classList.add('has'); }
+  const tl = document.getElementById('tl-' + id);
+  if (tl) {
+    tl.querySelector('.tl-empty')?.remove();
+    const row = document.createElement('div');
+    row.className = 'tl-row';
+    row.innerHTML = `<div class="tl-dot"></div><div class="tl-text">${escHtml(text)}</div><div class="tl-time">${fmtStamp(now)}</div>`;
+    tl.insertBefore(row, tl.firstChild);
   }
-
-  // 3. Update the always-visible latest-note preview
-  const previewEl = cardEl?.querySelector('.card-last-note');
-  if (previewEl) {
-    previewEl.classList.remove('empty');
-    const noteText = previewEl.querySelector('.card-last-note-text');
-    if (noteText) noteText.textContent = text;
-  }
-
-  // 4. Clear + sync both note inputs (quick add-note bar and the full activity log's own input)
-  const quickInp = cardEl?.querySelector('.card-note-add-inp');
-  const innerInp = cardEl?.querySelector('.activity-add-inp');
-  [quickInp, innerInp].forEach(el => { if (el) { el.value = ''; el.disabled = true; } });
+  inp.value = ''; inp.disabled = true;
 
   _updateDoc(_doc(_db, 'projects', id), { activityLog: log, updatedAt: _serverTimestamp() })
-    .then(() => {
-      showToast('Note added \u2713');
-      [quickInp, innerInp].forEach(el => { if (el) el.disabled = false; });
-      inp.focus();
-    })
-    .catch(() => {
-      showToast('Error saving note');
-      [quickInp, innerInp].forEach(el => { if (el) el.disabled = false; });
-    });
-}
-
-function escHtml(s) {
-  if (!s) return '';
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    .then(() => { showToast('Note added ✓'); inp.disabled = false; inp.focus(); })
+    .catch(() => { showToast('Error saving note'); inp.disabled = false; });
 }
 </script>
 </body>
