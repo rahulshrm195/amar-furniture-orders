@@ -237,6 +237,11 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .group-header-title{font-family:'Syne',sans-serif;font-weight:800;font-size:0.9rem;color:var(--text)}
 .group-header-count{font-size:0.72rem;font-weight:700;color:var(--text3);background:var(--surface2);border:1.5px solid var(--border);padding:2px 8px;border-radius:20px}
 .group-divider{height:1.5px;background:var(--border);margin:0 14px}
+.type-section-header{display:flex;align-items:center;gap:10px;padding:20px 14px 10px;margin-top:8px;border-top:2px solid var(--border)}
+.type-section-header:first-child{margin-top:0;border-top:none;padding-top:8px}
+.type-section-header span:first-child{font-size:1.15rem}
+.type-section-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.02rem;color:var(--text);flex:1}
+.type-section-count{font-size:0.78rem;font-weight:800;color:var(--accent, #6366f1);background:var(--surface2);border:1.5px solid var(--border);padding:3px 10px;border-radius:20px}
 .on-hold-toggle{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(245,158,11,0.08);border:1.5px solid rgba(245,158,11,0.25);border-radius:14px;margin-bottom:16px;cursor:pointer;transition:all 0.15s}
 .on-hold-toggle.active{background:rgba(245,158,11,0.15);border-color:rgba(245,158,11,0.5)}
 .on-hold-toggle-left{display:flex;align-items:center;gap:10px}
@@ -362,6 +367,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
   /* Group headers */
   .group-header { padding: 20px 28px 10px; }
   .group-header-title { font-size: 1rem; }
+  .type-section-header { padding: 24px 28px 12px; }
+  .type-section-title { font-size: 1.1rem; }
   .group-header-count { font-size: 0.75rem; padding: 3px 10px; }
   .group-divider { margin: 0 28px; }
 
@@ -380,7 +387,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 
   /* Overdue, group headers span full width in grid */
   .group-header,
-  .group-divider { grid-column: 1 / -1; }
+  .group-divider,
+  .type-section-header { grid-column: 1 / -1; }
 
   /* Cards */
   .project-card { border-radius: 18px; }
@@ -494,7 +502,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 <!-- AUTH -->
 <div id="auth-screen" style="display:none">
   <div class="auth-logo">&#129681; Amar Furniture</div>
-  <div class="auth-sub">Order Tracker · v3.16.0</div>
+  <div class="auth-sub">Order Tracker · v3.17.0</div>
   <div class="auth-card">
     <h2>Sign In</h2>
     <div class="field"><label>Email</label><input type="email" id="auth-email" placeholder="you@email.com" autocomplete="email"></div>
@@ -515,7 +523,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
       </div>
     </div>
     <div class="topbar-right">
-      <span class="ver-tag">v3.16.0</span>
+      <span class="ver-tag">v3.17.0</span>
       <button class="overdue-badge" id="overdue-badge" onclick="openStats()" title="Overdue orders"></button>
       <button class="stats-btn" onclick="openStats()" title="Stats">&#128202;</button>
       <button class="stats-btn" id="settings-gear-btn" onclick="openSettingsModal()" title="Settings" style="display:none">&#9881;&#65039;</button>
@@ -892,7 +900,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.16.0';
+const APP_VERSION = 'v3.17.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -1393,40 +1401,61 @@ function renderProjects() {
 
   // Grouped view (default Active mode)
   if (tf === 'active') {
-    const activeP   = sortByDeadline(all.filter(p => isActive(p)));
-    const readyP    = sortByDeadline(all.filter(p => isReady(p)));
-    const onHoldP   = sortByDeadline(all.filter(p => isOnHold(p) && !isDelivered(p)));
+    const activeAll = sortByDeadline(all.filter(p => isActive(p)));
+    const readyAll  = sortByDeadline(all.filter(p => isReady(p)));
+    const onHoldAll = sortByDeadline(all.filter(p => isOnHold(p) && !isDelivered(p)));
 
-    if (!activeP.length && !readyP.length && !onHoldP.length) {
+    if (!activeAll.length && !readyAll.length && !onHoldAll.length) {
       list.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>${T('noOrders')}<br>${window._isAdmin ? T('tapToAdd') : T('nothingToShow')}</p></div>`;
       return;
     }
 
-    let html = '';
-
-    // Update Orders tab label
+    // Update Orders tab label (counts across all project types combined)
     const tabLbl = document.getElementById('tab-orders-label');
     if (tabLbl) {
-      const parts = ['📋 ' + activeP.length];
-      if (readyP.length)  parts.push('📦 ' + readyP.length);
-      if (onHoldP.length) parts.push('⏸ ' + onHoldP.length);
+      const parts = ['📋 ' + activeAll.length];
+      if (readyAll.length)  parts.push('📦 ' + readyAll.length);
+      if (onHoldAll.length) parts.push('⏸ ' + onHoldAll.length);
       tabLbl.textContent = parts.join('  ');
     }
 
-    if (activeP.length) {
-      html += `<div class="group-divider"></div>`;
-      activeP.forEach(p => { html += buildCard(p); });
-    }
-    if (readyP.length) {
-      html += groupHeader('📦', T('groupReady'), readyP.length);
-      html += `<div class="group-divider"></div>`;
-      readyP.forEach(p => { html += buildCard(p); });
-    }
-    if (onHoldP.length) {
-      html += groupHeader('⏸', T('groupOnHold'), onHoldP.length);
-      html += `<div class="group-divider"></div>`;
-      onHoldP.forEach(p => { html += buildCard(p); });
-    }
+    // Top-level sections by project type, so it's easy to see how many
+    // wood/plywood/lathe projects are currently running at a glance.
+    // Modular Kitchen and Other are folded into one "Modular & Others"
+    // section for now — split those out too later if it's ever useful.
+    const typeSections = [
+      { icon: TYPES.woodwork.icon, label: TYPES.woodwork.label,       match: p => p.projectType === 'woodwork' },
+      { icon: TYPES.plywood.icon,  label: TYPES.plywood.label,        match: p => p.projectType === 'plywood'  },
+      { icon: TYPES.lathe.icon,    label: TYPES.lathe.label,          match: p => p.projectType === 'lathe'    },
+      { icon: '📦',                label: 'Modular & Others',         match: p => p.projectType === 'modular' || p.projectType === 'other' },
+    ];
+
+    let html = '';
+    typeSections.forEach(section => {
+      const activeP = activeAll.filter(section.match);
+      const readyP  = readyAll.filter(section.match);
+      const onHoldP = onHoldAll.filter(section.match);
+      const total   = activeP.length + readyP.length + onHoldP.length;
+      if (!total) return; // hide empty sections entirely
+
+      html += `<div class="type-section-header"><span>${section.icon}</span><span class="type-section-title">${section.label}</span><span class="type-section-count">${total}</span></div>`;
+
+      if (activeP.length) {
+        html += `<div class="group-divider"></div>`;
+        activeP.forEach(p => { html += buildCard(p); });
+      }
+      if (readyP.length) {
+        html += groupHeader('📦', T('groupReady'), readyP.length);
+        html += `<div class="group-divider"></div>`;
+        readyP.forEach(p => { html += buildCard(p); });
+      }
+      if (onHoldP.length) {
+        html += groupHeader('⏸', T('groupOnHold'), onHoldP.length);
+        html += `<div class="group-divider"></div>`;
+        onHoldP.forEach(p => { html += buildCard(p); });
+      }
+    });
+
     list.innerHTML = html;
     // restore expanded state
     window._expandedCards.forEach(id => {
