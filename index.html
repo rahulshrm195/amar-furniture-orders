@@ -11,7 +11,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-/* ── v3.20.0 — Concept A visual redesign (Amar Furniture palette) ── */
+/* ── v3.21.0 — Topbar/header matched to Concept A prototype ── */
 :root {
   --bg:#FAF9F5; --surface:#FFFFFF; --surface2:#F5F1E7; --border:#E7E1D3;
   --purple:#C1602F; --purple-dark:#17160F; --purple-mid:#8A4423;
@@ -66,12 +66,28 @@ body{background:var(--bg);color:var(--text);font-family:'Public Sans',sans-serif
 #auth-error{color:var(--red);font-size:0.82rem;margin-top:12px;text-align:center;min-height:18px}
 
 #app{display:none}
-.topbar{position:sticky;top:0;z-index:100;background:linear-gradient(135deg,var(--purple-dark),var(--purple-mid));padding:0 16px;height:60px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 4px 20px rgba(23,22,15,0.35)}
-.topbar-left{display:flex;align-items:center;gap:10px}
-.topbar-icon{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:1.2rem}
+.topbar{position:sticky;top:0;z-index:100;background:linear-gradient(135deg,var(--purple-dark),var(--purple-mid));padding:10px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;box-shadow:0 4px 20px rgba(23,22,15,0.35)}
+.topbar-left{display:flex;align-items:center;gap:10px;flex:0 0 auto}
+.topbar-icon{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
 .topbar-title{font-family:'Public Sans',sans-serif;font-weight:800;font-size:1.05rem;color:#fff;line-height:1}
 .topbar-subtitle{font-size:0.68rem;color:rgba(255,255,255,0.6);line-height:1;margin-top:1px}
-.topbar-right{display:flex;align-items:center;gap:8px}
+.topbar-right{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+
+/* Header search bar — concept style */
+.topbar-search-wrap{position:relative;order:3;flex:1 1 100%}
+.topbar-search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);display:flex;color:#8A8371;pointer-events:none}
+.topbar-search{width:100%;box-sizing:border-box;padding:10px 14px 10px 40px;border-radius:10px;border:1px solid #34322A;background:#211F18;color:#EDE9DD;font-family:'Public Sans',sans-serif;font-size:13.5px;outline:none;transition:border-color 0.15s}
+.topbar-search::placeholder{color:#8A8371}
+.topbar-search:focus{border-color:var(--purple)}
+
+/* Header icon buttons (stats / settings) — concept style */
+.topbar-icon-btn{width:38px;height:38px;border-radius:10px;border:1px solid #34322A;background:#211F18;color:#D8D2C2;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background 0.15s;flex-shrink:0}
+.topbar-icon-btn:hover{background:#2b2920}
+
+@media (min-width:768px){
+  .topbar-search-wrap{order:0;flex:1 1 auto;max-width:440px;margin:0 28px}
+  .topbar{flex-wrap:nowrap;height:68px;padding:0 32px}
+}
 
 /* ── KPI strip (type counts, always visible) ── */
 .kpi-strip{display:flex;gap:8px;overflow-x:auto;padding:12px 14px 4px;-webkit-overflow-scrolling:touch}
@@ -92,10 +108,8 @@ body{background:var(--bg);color:var(--text);font-family:'Public Sans',sans-serif
 .role-staff{background:rgba(245,158,11,0.25);color:#fde68a;border:1px solid rgba(245,158,11,0.4)}
 .logout-btn{padding:6px 14px;border-radius:10px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);color:#fff;font-family:'Public Sans',sans-serif;font-weight:700;font-size:0.78rem;cursor:pointer;transition:all 0.15s}
 .logout-btn:hover{background:rgba(255,255,255,0.25)}
-.ver-tag{font-size:0.6rem;color:rgba(255,255,255,0.4);font-family:'Public Sans',sans-serif}
 /* mobile: compress topbar */
 @media (max-width:767px){
-  .ver-tag{display:none}
   .logout-text{display:none}
   .logout-icon{display:inline}
   .logout-btn{padding:6px 9px;font-size:1rem}
@@ -115,8 +129,6 @@ body{background:var(--bg);color:var(--text);font-family:'Public Sans',sans-serif
 .stats-sheet-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:14px auto 16px}
 .stats-sheet-title{font-family:'Public Sans',sans-serif;font-weight:800;font-size:1.1rem;color:var(--text);margin-bottom:4px}
 .stats-sheet-sub{font-size:0.78rem;color:var(--text3);margin-bottom:16px}
-.stats-btn{width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);color:#fff;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;flex-shrink:0}
-.stats-btn:hover{background:rgba(255,255,255,0.25)}
 .stat-card{background:var(--surface);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:var(--shadow)}
 .stat-icon{font-size:1.2rem;margin-bottom:3px}
 .stat-num{font-family:'Public Sans',sans-serif;font-size:1.4rem;font-weight:800;line-height:1}
@@ -133,17 +145,6 @@ body{background:var(--bg);color:var(--text);font-family:'Public Sans',sans-serif
 .stage-num.zero{color:var(--text3)}
 .stage-lbl{font-size:0.52rem;color:var(--text3);margin-top:2px;text-transform:uppercase;letter-spacing:0.03em;line-height:1.2}
 
-/* ── COMPACT TOOLBAR ── */
-.toolbar{display:flex;align-items:center;gap:6px;padding:10px 14px;background:var(--bg)}
-.toolbar-search{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:9px 12px 9px 36px;color:var(--text);font-family:'Public Sans',sans-serif;font-size:0.88rem;outline:none;transition:all 0.2s;box-shadow:var(--shadow);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:12px center;min-width:0}
-.toolbar-search:focus{border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-dim)}
-.toolbar-btn{flex-shrink:0;width:38px;height:38px;border-radius:11px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;box-shadow:var(--shadow);position:relative}
-.toolbar-btn:hover{background:var(--surface2)}
-.toolbar-btn.active-filter{border-color:var(--purple);background:var(--purple-soft);color:var(--purple)}
-.toolbar-btn.tab-active{border-color:var(--purple);background:var(--purple-soft);color:var(--purple)}
-.toolbar-btn.all-open{border-color:var(--purple);background:var(--purple-soft);color:var(--purple)}
-.filter-dot{position:absolute;top:4px;right:4px;width:7px;height:7px;border-radius:50%;background:var(--red);border:1.5px solid var(--surface);display:none}
-.toolbar-btn.active-filter .filter-dot{display:block}
 /* hidden — kept for JS compat */
 .filter-pill-value{display:none}
 #type-pill-val{display:none}
@@ -326,9 +327,6 @@ body{background:var(--bg);color:var(--text);font-family:'Public Sans',sans-serif
 .empty-state{text-align:center;padding:60px 20px;color:var(--text3)}
 .empty-state .icon{font-size:3.5rem;margin-bottom:16px;opacity:0.5} .empty-state p{font-size:0.9rem;line-height:1.6;color:var(--text2)}
 .overdue-banner{display:none} /* moved to topbar badge */
-.overdue-badge{display:none;align-items:center;gap:4px;background:var(--red);color:#fff;font-family:'Public Sans',sans-serif;font-weight:800;font-size:0.72rem;padding:4px 9px;border-radius:10px;cursor:pointer;transition:all 0.15s;border:none;flex-shrink:0}
-.overdue-badge:hover{background:#dc2626}
-.overdue-badge.visible{display:flex}
 
 .install-banner{position:fixed;bottom:90px;left:14px;right:14px;z-index:300;background:var(--surface);border:1.5px solid #EAD9C4;border-radius:18px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow-lg);transform:translateY(20px);opacity:0;transition:all 0.3s;pointer-events:none}
 .install-banner.show{transform:translateY(0);opacity:1;pointer-events:all}
@@ -370,7 +368,6 @@ body{background:var(--bg);color:var(--text);font-family:'Public Sans',sans-serif
   .kpi-num { font-size: 1.5rem; }
   .role-badge { font-size: 0.75rem; padding: 5px 14px; }
   .logout-btn { font-size: 0.85rem; padding: 8px 18px; }
-  .ver-tag { font-size: 0.68rem; }
 
   /* Stats row — already 4 col, just bigger padding + cards */
   .stats-sheet { max-width: 900px; left: 50%; transform: translateX(-50%) translateY(100%); border-radius: 24px; bottom: 20px; }
@@ -388,14 +385,6 @@ body{background:var(--bg);color:var(--text);font-family:'Public Sans',sans-serif
   .stage-icon { font-size: 1.1rem; }
   .stage-num { font-size: 1.2rem; }
   .stage-lbl { font-size: 0.58rem; }
-
-  /* Filter pills — more breathing room */
-  .toolbar { padding: 12px 28px; gap: 10px; }
-  .toolbar-search { font-size: 0.92rem; padding: 10px 16px 10px 40px; border-radius: 14px; }
-  .toolbar-btn { width: 42px; height: 42px; border-radius: 13px; font-size: 1.05rem; }
-
-  /* Search + expand btn */
-
 
   /* Group headers */
   .group-header { padding: 20px 28px 10px; }
@@ -546,7 +535,7 @@ body{background:var(--bg);color:var(--text);font-family:'Public Sans',sans-serif
 <!-- AUTH -->
 <div id="auth-screen" style="display:none">
   <div class="auth-logo">&#129681; Amar Furniture</div>
-  <div class="auth-sub">Order Tracker · v3.20.0</div>
+  <div class="auth-sub">Order Tracker · v3.21.0</div>
   <div class="auth-card">
     <h2>Sign In</h2>
     <div class="field"><label>Email</label><input type="email" id="auth-email" placeholder="you@email.com" autocomplete="email"></div>
@@ -566,11 +555,21 @@ body{background:var(--bg);color:var(--text);font-family:'Public Sans',sans-serif
         <div class="topbar-subtitle">Order Tracker</div>
       </div>
     </div>
+
+    <div class="topbar-search-wrap">
+      <span class="topbar-search-icon">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.5-4.5"/></svg>
+      </span>
+      <input class="topbar-search" type="search" id="search-input" placeholder="Search project or client…" oninput="onSearchInput()">
+    </div>
+
     <div class="topbar-right">
-      <span class="ver-tag">v3.20.0</span>
-      <button class="overdue-badge" id="overdue-badge" onclick="openStats()" title="Overdue orders"></button>
-      <button class="stats-btn" onclick="openStats()" title="Stats">&#128202;</button>
-      <button class="stats-btn" id="settings-gear-btn" onclick="openSettingsModal()" title="Settings" style="display:none">&#9881;&#65039;</button>
+      <button class="topbar-icon-btn" onclick="openStats()" title="Stats">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="1.7" fill="currentColor" stroke="none"/><circle cx="16" cy="12" r="1.7" fill="currentColor" stroke="none"/><circle cx="11" cy="18" r="1.7" fill="currentColor" stroke="none"/></svg>
+      </button>
+      <button class="topbar-icon-btn" id="settings-gear-btn" onclick="openSettingsModal()" title="Settings" style="display:none">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2.6"/><path d="M12 4v2.2M12 17.8V20M4 12h2.2M17.8 12H20M6.3 6.3l1.6 1.6M16.1 16.1l1.6 1.6M17.7 6.3l-1.6 1.6M7.9 16.1l-1.6 1.6"/></svg>
+      </button>
       <span class="role-badge" id="role-badge">Admin</span>
       <button class="logout-btn" onclick="signOut()"><span class="logout-text">Logout</span><span class="logout-icon">&#128682;</span></button>
     </div>
@@ -617,13 +616,6 @@ body{background:var(--bg);color:var(--text);font-family:'Public Sans',sans-serif
   <div id="type-pill" style="display:none"></div>
   <div id="stage-pill" style="display:none"></div>
 
-  <!-- COMPACT TOOLBAR -->
-  <div class="toolbar">
-    <input class="toolbar-search" type="search" placeholder="Search…" id="search-input" oninput="onSearchInput()">
-    <button class="toolbar-btn tab-active" id="tab-orders" onclick="switchView('orders')" title="Orders" style="width:auto;padding:0 10px;min-width:38px;font-family:'Public Sans',sans-serif;font-weight:700;font-size:0.78rem">
-      <span id="tab-orders-label">📋</span>
-    </button>
-  </div>
 
   <!-- FILTER SHEET -->
   <div class="fpop-backdrop" id="fpop-backdrop" onclick="closeFpop()">
@@ -958,7 +950,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.20.0';
+const APP_VERSION = 'v3.21.0';
 
 // -- LANGUAGE --
 const LANG = {
