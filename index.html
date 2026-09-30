@@ -494,7 +494,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 <!-- AUTH -->
 <div id="auth-screen" style="display:none">
   <div class="auth-logo">&#129681; Amar Furniture</div>
-  <div class="auth-sub">Order Tracker · v3.13.0</div>
+  <div class="auth-sub">Order Tracker · v3.14.0</div>
   <div class="auth-card">
     <h2>Sign In</h2>
     <div class="field"><label>Email</label><input type="email" id="auth-email" placeholder="you@email.com" autocomplete="email"></div>
@@ -515,7 +515,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
       </div>
     </div>
     <div class="topbar-right">
-      <span class="ver-tag">v3.13.0</span>
+      <span class="ver-tag">v3.14.0</span>
       <button class="overdue-badge" id="overdue-badge" onclick="openStats()" title="Overdue orders"></button>
       <button class="stats-btn" onclick="openStats()" title="Stats">&#128202;</button>
       <button class="stats-btn" id="settings-gear-btn" onclick="openSettingsModal()" title="Settings" style="display:none">&#9881;&#65039;</button>
@@ -629,6 +629,17 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
         <div class="on-hold-toggle-text">
           <strong>Put on Hold</strong>
           <span>Pause this project temporarily</span>
+        </div>
+      </div>
+      <div class="toggle-switch"></div>
+    </div>
+
+    <div class="on-hold-toggle" id="create-folder-toggle" onclick="toggleCreateFolder()" style="display:none">
+      <div class="on-hold-toggle-left">
+        <span class="on-hold-toggle-icon">&#128193;</span>
+        <div class="on-hold-toggle-text">
+          <strong>Create Drive Folder</strong>
+          <span>Copy the project template folder for this order</span>
         </div>
       </div>
       <div class="toggle-switch"></div>
@@ -827,14 +838,18 @@ window.saveProject = async function() {
     showToast('Order updated');
   } else {
     data.createdAt = _serverTimestamp();
-    if (isDriveAutomationOn()) {
+    // Folder creation needs both the global Settings switch on AND this
+    // order's own "Create Drive Folder" checkbox ticked — the global switch
+    // is a kill switch, this checkbox is a per-order opt-in.
+    const wantsFolder = isDriveAutomationOn() && window._editCreateFolder;
+    if (wantsFolder) {
       // Marked pending up front (in the same doc the "Create" button's guard
       // checks) so a stray click on the card before this resolves is a no-op
       // instead of firing a second, duplicate folder-creation request.
       data.driveFolderStatus = 'pending';
     }
     const docRef = await _addDoc(_collection(_db, 'projects'), data);
-    if (isDriveAutomationOn()) {
+    if (wantsFolder) {
       window._creatingFolders.add(docRef.id);
       showToast('Order added — creating Drive folder…');
       createDriveFolder(data).then(result => {
@@ -883,7 +898,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.13.0';
+const APP_VERSION = 'v3.14.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -1075,6 +1090,7 @@ window._editId         = null;
 window._editStatus     = 0;
 window._editType       = 'woodwork';
 window._editOnHold     = false;
+window._editCreateFolder = false;
 window._typeFilter     = 'active';
 window._stageFilter    = 'all';
 window._statusUpdateId = null;
@@ -1195,6 +1211,11 @@ function closeFpop() {
 function toggleOnHold() {
   window._editOnHold = !window._editOnHold;
   document.getElementById('on-hold-toggle').classList.toggle('active', window._editOnHold);
+}
+
+function toggleCreateFolder() {
+  window._editCreateFolder = !window._editCreateFolder;
+  document.getElementById('create-folder-toggle').classList.toggle('active', window._editCreateFolder);
 }
 
 function buildCard(p) {
@@ -1536,6 +1557,12 @@ function openAddModal() {
   window._editId = null; window._editStatus = 0; window._editType = 'woodwork'; window._editOnHold = false;
   const tog = document.getElementById('on-hold-toggle');
   if (tog) tog.classList.remove('active');
+  window._editCreateFolder = false;
+  const folderTog = document.getElementById('create-folder-toggle');
+  if (folderTog) {
+    folderTog.classList.remove('active');
+    folderTog.style.display = isDriveAutomationOn() ? 'flex' : 'none';
+  }
   document.getElementById('modal-title').textContent = 'New Order';
   document.getElementById('delete-btn').style.display  = 'none';
   document.getElementById('archive-btn').style.display = 'none';
@@ -1567,6 +1594,11 @@ function openEditModal(id) {
   window._editOnHold = !!(p.onHold);
   const tog = document.getElementById('on-hold-toggle');
   if (tog) tog.classList.toggle('active', window._editOnHold);
+  // Per-order folder creation only applies to brand-new orders, not edits —
+  // an existing order already has (or deliberately skipped) its folder, and
+  // the card's own Create/Retry button covers doing it after the fact.
+  const folderTog = document.getElementById('create-folder-toggle');
+  if (folderTog) folderTog.style.display = 'none';
   document.getElementById('other-label-inp').value     = p.otherLabel || '';
   document.getElementById('items-edit-list').innerHTML = '';
   (p.items || []).forEach(it => addItemRow(it.name, it.l||'', it.b||'', it.w||'', it.qty, it.unit||'Nos'));
