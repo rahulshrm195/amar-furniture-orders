@@ -11,7 +11,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.44.0 — Reports section (Payments reports); UI is Concept A ── */
+/* ── v3.45.0 — Reports section (Payments reports); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -84,6 +84,8 @@ input,select,textarea{font-family:inherit}
 .tb-search input:placeholder-shown ~ .tb-search-x{display:none}
 .tb-search input:focus{border-color:var(--clay)}
 .tb-right{display:flex;align-items:center;gap:10px;margin-left:auto}
+@media (max-width:480px){.tb-right{gap:4px}.tb-btn{width:34px;height:34px}.role-badge{padding:6px 9px}.logout-btn{padding:7px 10px}}
+@media (max-width:374px){.role-badge{display:none}}
 .tb-btn{width:38px;height:38px;border-radius:10px;border:1px solid #34322A;background:#211F18;color:#D8D2C2;display:flex;align-items:center;justify-content:center;flex:0 0 auto;transition:background .15s}
 .tb-btn:hover{background:#2B2920}
 .tb-btn.tb-new{background:var(--clay);border-color:var(--clay)}
@@ -125,6 +127,15 @@ input,select,textarea{font-family:inherit}
 
 /* ── Reports (admin only) ── */
 .reports{padding:16px 16px 96px}
+.rp-top{display:flex;align-items:center;gap:8px 20px;flex-wrap:wrap;margin-bottom:12px}
+.rp-top .rp-head{margin-bottom:0}
+.rp-top .rp-title{flex:0 0 auto}
+.rp-top .rp-tabs{margin-bottom:0}
+.rp-filters{display:flex;flex-wrap:wrap;column-gap:20px;row-gap:0;align-items:flex-start}
+.rp-filters .rp-custom{flex:1 1 100%}
+.rp-info{display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;margin-bottom:12px}
+.rp-info .rp-note{flex:1 1 360px;margin:0}
+.rp-info .rp-period{margin:0;flex:0 1 auto}
 .rp-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
 .rp-back{width:34px;height:34px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--ink2);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
 .rp-back:hover{background:#F1EDE1}
@@ -159,10 +170,10 @@ input,select,textarea{font-family:inherit}
 .rp-row.dp{grid-template-columns:minmax(0,2.2fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 34px}
 .rp-row .dt{color:var(--ink2);white-space:nowrap;font-variant-numeric:tabular-nums}
 .rp-row.hd .dt{justify-content:flex-start}
-.rp-ranges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
-.rp-rg{font-size:12px;font-weight:700;color:var(--ink2);background:var(--surface);border:1px solid var(--border);padding:5px 12px;border-radius:16px}
+.rp-ranges{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.rp-rg{font-size:12px;font-weight:700;color:var(--ink2);background:var(--surface);border:1px solid var(--border);padding:5px 10px;border-radius:16px}
 .rp-rg:hover{color:var(--ink);border-color:var(--ink3)}
-.rp-rl{font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink3);margin-right:4px;align-self:center;min-width:72px}
+.rp-rl{font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink3);margin-right:2px;align-self:center}
 .rp-custom{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:-2px 0 10px}
 .rp-custom label{display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink3)}
 .rp-custom input{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:7px 10px;color:var(--ink);font-size:13px;font-family:inherit;outline:none}
@@ -437,7 +448,7 @@ button.chip{border:none;font-family:inherit}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.44.0</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.45.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -503,11 +514,13 @@ button.chip{border:none;font-family:inherit}
 
   <!-- Reports (admin only) -->
   <div class="reports" id="reports-view" style="display:none">
+    <div class="rp-top">
     <div class="rp-head">
       <button class="rp-back" aria-label="Back to orders" onclick="closeReports()"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
       <div class="rp-title">Reports</div>
     </div>
     <div class="rp-tabs" id="rp-tabs"></div>
+    </div>
     <div id="rp-body"></div>
   </div>
 
@@ -900,7 +913,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.44.0';
+const APP_VERSION = 'v3.45.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -1639,7 +1652,7 @@ function rangeInfo() {
     { id: 'lastq',     label: 'Last quarter',       r: qR(-1) },
     { id: 'fy',        label: 'This FY',            r: fyR(0), sub: fyL(0) },
     { id: 'lastfy',    label: 'Last FY',            r: fyR(-1), sub: fyL(-1) },
-    { id: 'custom',    label: 'Custom range',       r: [window._rpFrom || '', window._rpTo || '9999-12-31'] },
+    { id: 'custom',    label: 'Custom',       r: [window._rpFrom || '', window._rpTo || '9999-12-31'] },
   ];
 }
 window._rpIssue = null;
@@ -1948,7 +1961,7 @@ function renderReports() {
     if (lo && hi) period = `<div class="rp-period">Period covered: <b>${f(lo)}</b> → <b>${f(hi)}</b>${tag}${basis}${noDate ? `<small>· ${noDate} older ${noDate === 1 ? 'order has' : 'orders have'} no delivery date saved, so the due date is used</small>` : ''}</div>`;
   }
   const customBar = (rng.id === 'custom' && rep.ranged) ? `<div class="rp-custom"><label>From <input type="date" id="rp-from" value="${window._rpFrom || ''}" onchange="setCustom('from', this.value)"></label><label>To <input type="date" id="rp-to" value="${window._rpTo || ''}" onchange="setCustom('to', this.value)"></label></div>` : '';
-  const deptBar = rep.dept ? '' : `<div class="rp-ranges" role="group" aria-label="Department"><span class="rp-rl">Department</span><button class="rp-rg ${dsel === 'all' ? 'on' : ''}" onclick="pickDept('all')">All departments</button>${Object.keys(TYPES).filter(k => deptCount[k]).map(k => `<button class="rp-rg ${dsel === k ? 'on' : ''}" onclick="pickDept('${k}')">${TYPES[k].label} · ${deptCount[k]}</button>`).join('')}</div>`;
+  const deptBar = rep.dept ? '' : `<div class="rp-ranges" role="group" aria-label="Department"><span class="rp-rl">Department</span><button class="rp-rg ${dsel === 'all' ? 'on' : ''}" onclick="pickDept('all')">All</button>${Object.keys(TYPES).filter(k => deptCount[k]).map(k => `<button class="rp-rg ${dsel === k ? 'on' : ''}" onclick="pickDept('${k}')">${TYPES[k].label} · ${deptCount[k]}</button>`).join('')}</div>`;
   const rangeBar = rep.ranged ? `<div class="rp-ranges" role="group" aria-label="Timeline"><span class="rp-rl">Period</span>${ranges.map(x => `<button class="rp-rg ${x.id === rng.id ? 'on' : ''}" onclick="pickRange('${x.id}')"${x.sub ? ` title="${x.sub}"` : ''}>${x.label}</button>`).join('')}</div>` : '';
 
   const arrows = '<svg width="9" height="13" viewBox="0 0 9 13" aria-hidden="true"><path class="up" d="M4.5 0 9 5H0z"/><path class="dn" d="M4.5 13 0 8h9z"/></svg>';
@@ -1958,11 +1971,8 @@ function renderReports() {
   };
 
   document.getElementById('rp-body').innerHTML = `
-    <div class="rp-note">${rep.note}</div>
-    ${rangeBar}
-    ${customBar}
-    ${deptBar}
-    ${period}
+    <div class="rp-filters">${rangeBar}${deptBar}${customBar}</div>
+    <div class="rp-info"><div class="rp-note">${rep.note}</div>${period}</div>
     <div class="rp-cards ${(balCard || rep.all) ? 'c4' : ''}">${cards}</div>
     ${check}
     <div class="rp-table">
