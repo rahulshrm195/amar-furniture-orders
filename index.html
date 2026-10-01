@@ -11,7 +11,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.29.0 — Reports section (Payments reports); UI is Concept A ── */
+/* ── v3.30.0 — Reports section (Payments reports); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -63,6 +63,8 @@ input,select,textarea{font-family:inherit}
 #app{display:none}
 .topbar{position:sticky;top:0;z-index:100;background:var(--slate);display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;padding:12px 16px}
 .tb-left{display:flex;align-items:center;gap:12px;flex:0 0 auto}
+.tb-home{cursor:pointer;border-radius:12px}
+.tb-home:focus-visible{outline:2px solid var(--clay);outline-offset:4px}
 .tb-search{position:relative;order:3;flex:1 1 100%}
 .tb-search-ico{position:absolute;left:14px;top:50%;transform:translateY(-50%);display:flex;pointer-events:none}
 .tb-search input{width:100%;padding:10px 14px 10px 40px;border-radius:10px;border:1px solid #34322A;background:#211F18;color:#EDE9DD;font-size:13.5px;outline:none;transition:border-color .15s}
@@ -365,7 +367,7 @@ button.chip{border:none;font-family:inherit}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.29.0</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.30.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -381,7 +383,7 @@ button.chip{border:none;font-family:inherit}
 
   <!-- Topbar -->
   <div class="topbar">
-    <div class="tb-left">
+    <div class="tb-left tb-home" role="button" tabindex="0" title="Home" aria-label="Home" onclick="goHome()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goHome()}">
       <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
       <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker</div></div>
     </div>
@@ -705,6 +707,9 @@ window.signIn = async function() {
 };
 window.signOut = async () => { if (confirm('Sign out?')) await _fbSignOut(_auth); };
 
+// Local calendar date (YYYY-MM-DD) — used to stamp the delivery day.
+function _todayStr() { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
+
 window.saveProject = async function() {
   const client   = document.getElementById('f-client').value.trim();
   const date     = document.getElementById('f-date').value;
@@ -737,6 +742,10 @@ window.saveProject = async function() {
     updatedAt: _serverTimestamp()
   };
   if (window._editId) {
+    const prevP = (window._projects || []).find(x => x.id === window._editId);
+    const wasDelE = prevP && (prevP.status ?? 0) === 4;
+    if (data.status === 4 && !wasDelE)      data.deliveredAt = _todayStr();
+    else if (data.status !== 4 && wasDelE)  data.deliveredAt = '';
     // Drive folder link: only written when the admin actually changed it here
     const oldLink = (window._projects.find(x => x.id === window._editId) || {}).driveFolderUrl || '';
     const newLink = document.getElementById('f-drive').value.trim();
@@ -749,6 +758,7 @@ window.saveProject = async function() {
     showToast('Order updated');
   } else {
     data.createdAt = _serverTimestamp();
+    if (data.status === 4) data.deliveredAt = _todayStr();
     // Folder creation needs both the global Settings switch on AND this
     // order's own "Create Drive Folder" checkbox ticked — the global switch
     // is a kill switch, this checkbox is a per-order opt-in.
@@ -787,23 +797,26 @@ window.archiveProject = async function() {
 window.restoreProject = async function(id) {
   if (!confirm('Restore this order? It will come back as a fresh Order Taken.')) return;
   await _updateDoc(_doc(_db, 'projects', id), {
-    archived: false, archivedAt: null, status: 0, onHold: false, updatedAt: _serverTimestamp()
+    archived: false, archivedAt: null, status: 0, onHold: false, deliveredAt: '', updatedAt: _serverTimestamp()
   });
   showToast('\u2705 Order restored \u2014 back to Order Taken');
 };
 
 window.saveStatusUpdate = async function() {
   if (window._statusUpdateId == null || window._updateStatusVal == null) return;
-  await _updateDoc(_doc(_db, 'projects', window._statusUpdateId), {
-    status: window._updateStatusVal, updatedAt: _serverTimestamp()
-  });
+  const patch = { status: window._updateStatusVal, updatedAt: _serverTimestamp() };
+  const prev = (window._projects || []).find(x => x.id === window._statusUpdateId);
+  const wasDel = prev && (prev.status ?? 0) === 4;
+  if (patch.status === 4 && !wasDel)      patch.deliveredAt = _todayStr();   // remember the day it was delivered
+  else if (patch.status !== 4 && wasDel)  patch.deliveredAt = '';            // moved back out of Delivered
+  await _updateDoc(_doc(_db, 'projects', window._statusUpdateId), patch);
   showToast('Status updated'); closeStatusModal();
 };
 </script>
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.29.0';
+const APP_VERSION = 'v3.30.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -1235,6 +1248,16 @@ function toggleHold() {
   window._showHold = !window._showHold;
   renderProjects();
 }
+// Brand (logo + name) → back to the plain home view from any screen
+function goHome() {
+  if (window._reportsOpen) closeReports();
+  closeStats(); closeSettingsModal(); closeStatusModal(); closePayModal();
+  const si = document.getElementById('search-input'); if (si) si.value = '';
+  window._showHold = false;
+  window._typeFilter = 'active'; window._stageFilter = 'all';
+  renderProjects();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 function resetView() {
   window._typeFilter = 'active'; window._stageFilter = 'all';
   renderProjects();
@@ -1425,7 +1448,7 @@ const REPORTS = [
     rows: () => (window._projects || []).filter(p => !isArchived(p) && isDelivered(p) && Number(p.amount) > 0),
     cards: ['Delivered value', 'Received', 'Outstanding'], listTitle:'Delivered orders with balance due', onlyDue:true },
   { id:'completed', label:'Completed orders',
-    note:'Every delivered order (archived ones are not counted): how many, and what they are worth in total.',
+    note:'Every delivered order (archived ones are not counted): how many, and what they are worth in total. Newest delivery first; orders delivered before date tracking began use their due date.',
     rows: () => (window._projects || []).filter(p => !isArchived(p) && isDelivered(p)),
     cards: ['Orders completed', 'Total value', 'Received'], countFirst:true, listTitle:'All completed orders', onlyDue:false, byDate:true },
 ];
@@ -1528,7 +1551,7 @@ function renderReports() {
   let value = 0, received = 0, due = 0;
   rows.forEach(p => { value += Number(p.amount) || 0; received += Number(p.advance) || 0; due += balOf(p); });
   const list = rows.filter(p => !rep.onlyDue || balOf(p) > 0)
-                   .sort(rep.byDate ? ((a, b) => new Date(b.deadline || 0) - new Date(a.deadline || 0))
+                   .sort(rep.byDate ? ((a, b) => new Date(b.deliveredAt || b.deadline || 0) - new Date(a.deliveredAt || a.deadline || 0))
                                     : ((a, b) => balOf(b) - balOf(a) || new Date(a.deadline) - new Date(b.deadline)));
 
   const cards = (rep.countFirst ? [
@@ -1544,7 +1567,7 @@ function renderReports() {
   const body = list.length
     ? list.map(p => {
         const bal = balOf(p);
-        const stage = getPipeline()[Math.min(p.status || 0, 4)].label;
+        const stage = getPipeline()[Math.min(p.status || 0, 4)].label + ((p.status === 4 && p.deliveredAt) ? ' ' + fmtDay(new Date(p.deliveredAt + 'T00:00:00')) : '');
         return `<div class="rp-row ${window._rpSel === p.id ? 'sel' : ''}" onclick="selRow('${p.id}', event)"><div class="rp-who"><b title="Show payment history">${escHtml(p.client)}</b><small>${escHtml(typeLabelOf(p))} · ${stage} · Due ${p.deadline ? fmtDay(new Date(p.deadline + 'T00:00:00')) : '—'}</small></div>
           <div class="n hide-m">${rupee(Number(p.amount) || 0)}</div><div class="n">${rupee(Number(p.advance) || 0)}</div><div class="n bal ${bal ? '' : 'zero'}">${bal ? rupee(bal) : 'Paid'}</div>
           <button class="rp-add" aria-label="Add payment" title="Add payment" ${bal ? '' : 'disabled style="opacity:.35;cursor:default"'} onclick="openPayModal('${p.id}')">+</button></div>${window._rpOpen.has(p.id) ? historyHtml(p) : ''}`;
