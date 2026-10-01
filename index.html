@@ -11,7 +11,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.38.0 — Reports section (Payments reports); UI is Concept A ── */
+/* ── v3.39.0 — Reports section (Payments reports); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -423,7 +423,7 @@ button.chip{border:none;font-family:inherit}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.38.0</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.39.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -881,7 +881,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.38.0';
+const APP_VERSION = 'v3.39.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -1499,11 +1499,15 @@ if (window.ResizeObserver) new ResizeObserver(updateDock).observe(document.query
 
 // ── REPORTS (admin only) ──
 window._reportsOpen = false;
-window._reportTab = 'pipeline';
+window._reportTab = 'all';
 const rupee = n => '₹' + Math.round(n).toLocaleString('en-IN');
 const balOf  = p => Math.max(0, (Number(p.amount) || 0) - (Number(p.advance) || 0));
 
 const REPORTS = [
+  { id:'all', label:'All orders',
+    note:'Everything in one place: every order that is not archived (in progress, ready, on hold and delivered), whatever its status.',
+    rows: () => (window._projects || []).filter(p => !isArchived(p)),
+    cards: ['Total orders', 'Total value', 'Received'], countFirst:true, listTitle:'All orders by balance due', onlyDue:false, all:true },
   { id:'pipeline',  label:'Pipeline payments',
     note:'Orders currently in the pipeline (in progress, ready and on hold). Delivered and archived orders are not counted.',
     rows: () => (window._projects || []).filter(p => !isArchived(p) && !isDelivered(p) && Number(p.amount) > 0),
@@ -1825,6 +1829,7 @@ function renderReports() {
     { lbl: rep.cards[0], txt: String(rows.length), kc: 'var(--ink)',   color: '' },
     { lbl: rep.cards[1], val: value,               kc: 'var(--clay)',  color: 'var(--clay)' },
     { lbl: rep.cards[2], val: received,            kc: 'var(--green)', color: 'var(--green)' },
+    ...(rep.all ? [{ lbl: 'Pending', val: due, kc: 'var(--amber)', color: 'var(--amber)' }] : []),
   ] : [
     { lbl: rep.cards[0], val: value,    kc: 'var(--ink)',   color: '' },
     { lbl: rep.cards[1], val: received, kc: 'var(--green)', color: 'var(--green)' },
@@ -1842,17 +1847,18 @@ function renderReports() {
   const body = deptRows ? deptBody : list.length
     ? list.map(p => {
         const bal = balOf(p);
-        const stage = getPipeline()[Math.min(p.status || 0, 4)].label + ((p.status === 4 && p.deliveredAt) ? ' ' + fmtDay(new Date(p.deliveredAt + 'T00:00:00')) : '');
+        const stage = getPipeline()[Math.min(p.status || 0, 4)].label + ((p.status === 4 && p.deliveredAt) ? ' ' + fmtDay(new Date(p.deliveredAt + 'T00:00:00')) : '') + ((p.onHold && p.status !== 4) ? ' · On hold' : '');
+        const noAmt = rep.all && !(Number(p.amount) > 0) && !(Number(p.advance) > 0);
         return `<div class="rp-row ${window._rpSel === p.id ? 'sel' : ''}" onclick="selRow('${p.id}', event)"><div class="rp-who"><b>${escHtml(p.client)}</b><small>${escHtml(typeLabelOf(p))} · ${stage} · Due ${p.deadline ? fmtDay(new Date(p.deadline + 'T00:00:00')) : '—'}</small></div>
-          <div class="dt hide-m">${fmtFull(p.orderDate)}</div><div class="n hide-m">${rupee(Number(p.amount) || 0)}</div><div class="n">${rupee(Number(p.advance) || 0)}</div><div class="n bal ${bal ? '' : 'zero'}">${bal ? rupee(bal) : 'Paid'}</div>
+          <div class="dt hide-m">${fmtFull(p.orderDate)}</div><div class="n hide-m">${rupee(Number(p.amount) || 0)}</div><div class="n">${rupee(Number(p.advance) || 0)}</div><div class="n bal ${bal ? '' : 'zero'}" ${noAmt ? 'style="color:var(--ink3);font-weight:600"' : ''}>${bal ? rupee(bal) : noAmt ? 'No amount' : 'Paid'}</div>
           <button class="rp-add" aria-label="Add payment" title="Add payment" ${bal ? '' : 'disabled style="opacity:.35;cursor:default"'} onclick="openPayModal('${p.id}')">+</button></div>`;
       }).join('')
     : q ? `<div class="rp-empty">No orders match “${escHtml(q)}”.</div>`
-    : `<div class="rp-empty">${rep.id === 'completed' ? (rng.r ? 'No delivered orders in this period.' : 'No delivered orders yet.') : rep.onlyDue ? 'No delivered orders have a balance due.' : 'No orders with an amount in the pipeline yet.'}</div>`;
+    : `<div class="rp-empty">${rep.all ? 'No orders yet.' : rep.id === 'completed' ? (rng.r ? 'No delivered orders in this period.' : 'No delivered orders yet.') : rep.onlyDue ? 'No delivered orders have a balance due.' : 'No orders with an amount in the pipeline yet.'}</div>`;
 
   // Period covered: earliest → latest delivery date of the delivered orders behind the cards.
   let period = '';
-  if (rep.id !== 'pipeline') {
+  if (rep.ranged || rep.id === 'delivered') {
     const ds = rows.map(dayOf).filter(Boolean).sort();
     const noDate = rows.filter(p => !p.deliveredAt).length;
     const f = d => new Date(d + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -1874,7 +1880,7 @@ function renderReports() {
     ${rangeBar}
     ${deptBar}
     ${period}
-    <div class="rp-cards ${balCard ? 'c4' : ''}">${cards}</div>
+    <div class="rp-cards ${(balCard || rep.all) ? 'c4' : ''}">${cards}</div>
     ${check}
     <div class="rp-table">
       <div class="rp-table-h">${(issue ? 'Showing: ' + ({ unpaid: 'money still to receive', over: 'received more than total', zero: 'no amount entered' })[issue] : rep.listTitle) + (q ? ' · matching “' + escHtml(q) + '”' : '')}<span>${deptRows ? list.length + (list.length === 1 ? ' department' : ' departments') : ((q || issue) ? list.length + ' of ' + baseCount : list.length) + ' ' + ((q || issue ? baseCount : list.length) === 1 ? 'order' : 'orders')}</span></div>
