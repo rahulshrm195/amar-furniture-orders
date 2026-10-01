@@ -11,7 +11,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.32.2 — Reports section (Payments reports); UI is Concept A ── */
+/* ── v3.33.0 — Reports section (Payments reports); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -361,8 +361,17 @@ button.chip{border:none;font-family:inherit}
 
   /* New / Edit order — real two-column desktop panel. DOM order is preserved
      inside each column so Tab moves left-to-right, top-to-bottom. */
-  #project-modal .modal{max-width:1100px;width:94vw;max-height:94dvh;padding:28px 36px 32px}
-  .modal-body{display:grid;grid-template-columns:1.1fr .9fr;gap:0 32px;align-items:start}
+  #project-modal .modal{max-width:1100px;width:94vw;max-height:94dvh;padding:28px 36px 32px;display:flex;flex-direction:column;overflow:hidden}
+  .modal-body{display:grid;grid-template-columns:1.1fr .9fr;gap:0 32px;align-items:stretch}
+  /* Title and the action row stay put; only the columns (and the items list) scroll. */
+  #project-modal .modal-title,#project-modal .modal-actions{flex:none}
+  #project-modal .modal-body{flex:1 1 auto;min-height:0;overflow:hidden;grid-template-rows:minmax(0,1fr)}
+  #project-modal .modal-col{min-height:0;overflow-y:auto;padding-right:8px}
+  #project-modal .modal-col:last-child{display:flex;flex-direction:column}
+  #project-modal #items-field{flex:1 1 0;min-height:210px;display:flex;flex-direction:column}
+  #project-modal .items-list-edit{flex:1 1 0;min-height:0;overflow-y:auto;padding-right:4px}
+  #project-modal .add-item-btn{flex:none}
+  #project-modal .items-list-edit:empty::before{content:'No items yet — use “Add Item” below';display:block;padding:18px 4px;font-size:12.5px;color:var(--ink3)}
   .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
   .field-grid .field.full{grid-column:1/-1}
   .modal-actions{flex-direction:row-reverse;flex-wrap:wrap}
@@ -386,7 +395,7 @@ button.chip{border:none;font-family:inherit}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.32.2</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.33.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -533,6 +542,10 @@ button.chip{border:none;font-family:inherit}
           </div>
           <div class="toggle-switch"></div>
         </div>
+
+        <div class="field"><label>Notes / Specs</label><textarea id="f-notes" placeholder="Material, measurements, design details…"></textarea></div>
+
+        <div class="field" id="f-drive-field" style="display:none"><label>Drive folder link</label><input type="url" id="f-drive" placeholder="Paste Drive folder link (empty = none)" autocomplete="off"></div>
       </div>
 
       <div class="modal-col">
@@ -546,10 +559,6 @@ button.chip{border:none;font-family:inherit}
           <label>Status</label>
           <div class="status-selector" id="status-selector-opts"></div>
         </div>
-
-        <div class="field"><label>Notes / Specs</label><textarea id="f-notes" placeholder="Material, measurements, design details…"></textarea></div>
-
-        <div class="field" id="f-drive-field" style="display:none"><label>Drive folder link</label><input type="url" id="f-drive" placeholder="Paste Drive folder link (empty = none)" autocomplete="off"></div>
       </div>
     </div>
 
@@ -844,7 +853,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.32.2';
+const APP_VERSION = 'v3.33.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -1813,7 +1822,6 @@ function selectType(type) {
   Object.keys(TYPES).forEach(k => {
     document.getElementById('pt-' + k).className = 'type-opt' + (k === type ? ' sel' : '');
   });
-  document.getElementById('items-field').style.display      = 'block';
   document.getElementById('other-label-wrap').style.display = type === 'other' ? 'block' : 'none';
   window._editStatus = keepStatus ?? 0;
   renderStatusSel('status-selector-opts', window._editStatus, false);
