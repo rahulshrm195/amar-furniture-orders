@@ -11,7 +11,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.40.0 — Reports section (Payments reports); UI is Concept A ── */
+/* ── v3.40.1 — Reports section (Payments reports); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -76,7 +76,11 @@ input,select,textarea{font-family:inherit}
 .tb-search{position:relative;order:3;flex:1 1 100%}
 .tb-search-ico{position:absolute;left:14px;top:50%;transform:translateY(-50%);display:flex;pointer-events:none}
 .tb-search input{width:100%;padding:10px 14px 10px 40px;border-radius:10px;border:1px solid #34322A;background:#211F18;color:#EDE9DD;font-size:13.5px;outline:none;transition:border-color .15s}
+.tb-search input{padding-right:38px}
 .tb-search input::placeholder{color:#B8B2A0}
+.tb-search-x{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:50%;border:none;background:#34322A;color:#EDE9DD;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.tb-search-x:hover{background:var(--clay)}
+.tb-search input:placeholder-shown ~ .tb-search-x{display:none}
 .tb-search input:focus{border-color:var(--clay)}
 .tb-right{display:flex;align-items:center;gap:10px;margin-left:auto}
 .tb-btn{width:38px;height:38px;border-radius:10px;border:1px solid #34322A;background:#211F18;color:#D8D2C2;display:flex;align-items:center;justify-content:center;flex:0 0 auto;transition:background .15s}
@@ -427,7 +431,7 @@ button.chip{border:none;font-family:inherit}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.40.0</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.40.1</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -450,7 +454,8 @@ button.chip{border:none;font-family:inherit}
 
     <div class="tb-search">
       <span class="tb-search-ico"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#8A8371" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.5-4.5"/></svg></span>
-      <input type="text" inputmode="search" id="search-input" placeholder="Search project or client…" autocomplete="off" oninput="onSearchInput()">
+      <input type="text" inputmode="search" id="search-input" placeholder="Search project or client…" autocomplete="off" oninput="onSearchInput()" onkeydown="if(event.key==='Escape')clearSearch()">
+      <button type="button" class="tb-search-x" aria-label="Clear search" title="Clear search" onclick="clearSearch()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     </div>
 
     <div class="tb-right">
@@ -885,7 +890,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.40.0';
+const APP_VERSION = 'v3.40.1';
 
 // -- LANGUAGE --
 const LANG = {
@@ -1424,6 +1429,13 @@ function toggleCard(id) {
   card.querySelector('.oc-actions .icon-btn[aria-label="Details"]')?.classList.toggle('on', open);
 }
 
+function clearSearch() {
+  const si = document.getElementById('search-input');
+  if (!si) return;
+  si.value = '';
+  onSearchInput();
+  si.focus();
+}
 function onSearchInput() { if (window._reportsOpen) renderReports(); else renderProjects(); }
 
 // ── KPI cards: scroll to a section (Overdue opens a filtered list) ──
