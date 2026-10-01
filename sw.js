@@ -1,11 +1,12 @@
-// AF Orders Service Worker — v1.3.34
-const CACHE = 'af-orders-v1.3.34';
+// AF Orders Service Worker — v1.3.35
+const CACHE = 'af-orders-v1.3.35';
 const ASSETS = ['/', '/index.html', '/manifest.json', '/icon-192.png', '/icon-512.png'];
 
 // ── INSTALL ──
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting())
+    // 'reload' skips the browser's HTTP cache, so the new version never caches a stale copy of itself
+    caches.open(CACHE).then(c => Promise.all(ASSETS.map(u => c.add(new Request(u, { cache: 'reload' }))))).then(() => self.skipWaiting())
   );
 });
 
@@ -21,8 +22,10 @@ self.addEventListener('activate', e => {
 // ── FETCH (network-first, fallback to cache) ──
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
+  // Our own files: always ask the network (GitHub Pages lets browsers reuse a copy for 10 minutes, which is why updates looked stuck)
+  const own = new URL(e.request.url).origin === self.location.origin;
   e.respondWith(
-    fetch(e.request)
+    fetch(e.request, own ? { cache: 'no-store' } : undefined)
       .then(res => {
         const clone = res.clone();
         caches.open(CACHE).then(c => c.put(e.request, clone));
