@@ -11,7 +11,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.39.0 — Reports section (Payments reports); UI is Concept A ── */
+/* ── v3.40.0 — Reports section (Payments reports); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -156,6 +156,10 @@ input,select,textarea{font-family:inherit}
 .rp-rg{font-size:12px;font-weight:700;color:var(--ink2);background:var(--surface);border:1px solid var(--border);padding:5px 12px;border-radius:16px}
 .rp-rg:hover{color:var(--ink);border-color:var(--ink3)}
 .rp-rl{font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink3);margin-right:4px;align-self:center;min-width:72px}
+.rp-custom{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:-2px 0 10px}
+.rp-custom label{display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink3)}
+.rp-custom input{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:7px 10px;color:var(--ink);font-size:13px;font-family:inherit;outline:none}
+.rp-custom input:focus{border-color:var(--clay)}
 .rp-rg.on{background:var(--clay-soft);border-color:var(--clay);color:var(--clay)}
 .rp-row:not(.hd){cursor:pointer;transition:background .12s,box-shadow .12s}
 .rp-row:not(.hd):hover{background:#F7F2E6;box-shadow:inset 3px 0 0 rgba(193,96,47,.45)}
@@ -423,7 +427,7 @@ button.chip{border:none;font-family:inherit}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.39.0</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.40.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -881,7 +885,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.39.0';
+const APP_VERSION = 'v3.40.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -1318,7 +1322,7 @@ function goHome() {
   if (window._reportsOpen) closeReports();
   closeStats(); closeSettingsModal(); closeStatusModal(); closePayModal(); closeOrderModal();
   const si = document.getElementById('search-input'); if (si) si.value = '';
-  window._showHold = false; window._rpIssue = null; window._rpRange = 'all'; window._rpDept = 'all';
+  window._showHold = false; window._rpIssue = null; window._rpRange = 'all'; window._rpDept = 'all'; window._rpFrom = ''; window._rpTo = '';
   window._typeFilter = 'active'; window._stageFilter = 'all';
   renderProjects();
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1507,15 +1511,15 @@ const REPORTS = [
   { id:'all', label:'All orders',
     note:'Everything in one place: every order that is not archived (in progress, ready, on hold and delivered), whatever its status.',
     rows: () => (window._projects || []).filter(p => !isArchived(p)),
-    cards: ['Total orders', 'Total value', 'Received'], countFirst:true, listTitle:'All orders by balance due', onlyDue:false, all:true },
+    cards: ['Total orders', 'Total value', 'Received'], countFirst:true, listTitle:'All orders by balance due', onlyDue:false, all:true, ranged:true, byOrderDate:true },
   { id:'pipeline',  label:'Pipeline payments',
     note:'Orders currently in the pipeline (in progress, ready and on hold). Delivered and archived orders are not counted.',
     rows: () => (window._projects || []).filter(p => !isArchived(p) && !isDelivered(p) && Number(p.amount) > 0),
-    cards: ['Pipeline value', 'Received', 'Pending'], listTitle:'Orders by balance due', onlyDue:false },
+    cards: ['Pipeline value', 'Received', 'Pending'], listTitle:'Orders by balance due', onlyDue:false, ranged:true, byOrderDate:true },
   { id:'delivered', label:'Delivered — balance due',
     note:'Orders already delivered. Totals cover every delivered order; the list shows only those that still owe money.',
     rows: () => (window._projects || []).filter(p => !isArchived(p) && isDelivered(p) && Number(p.amount) > 0),
-    cards: ['Delivered value', 'Received', 'Outstanding'], listTitle:'Delivered orders with balance due', onlyDue:true },
+    cards: ['Delivered value', 'Received', 'Outstanding'], listTitle:'Delivered orders with balance due', onlyDue:true, ranged:true },
   { id:'completed', label:'Completed orders',
     note:'Every delivered order (archived ones are not counted): how many, and what they are worth in total. Newest delivery first; orders delivered before date tracking began use their due date.',
     rows: () => (window._projects || []).filter(p => !isArchived(p) && isDelivered(p)),
@@ -1547,6 +1551,12 @@ function closeReports() {
 }
 window._rpRange = 'all';
 window._rpDept = 'all';
+window._rpFrom = ''; window._rpTo = '';
+function setCustom(which, v) {
+  if (which === 'from') window._rpFrom = v; else window._rpTo = v;
+  if (window._rpFrom && window._rpTo && window._rpFrom > window._rpTo) [window._rpFrom, window._rpTo] = [window._rpTo, window._rpFrom];
+  renderReports();
+}
 function pickRange(id) { window._rpRange = id; renderReports(); }
 function pickDept(id) { window._rpDept = id; renderReports(); }
 const deptOf = p => TYPES[p.projectType] ? p.projectType : 'other';
@@ -1568,6 +1578,7 @@ function rangeInfo() {
     { id: 'lastq',     label: 'Last quarter',       r: qR(-1) },
     { id: 'fy',        label: 'This FY',            r: fyR(0), sub: fyL(0) },
     { id: 'lastfy',    label: 'Last FY',            r: fyR(-1), sub: fyL(-1) },
+    { id: 'custom',    label: 'Custom range',       r: [window._rpFrom || '', window._rpTo || '9999-12-31'] },
   ];
 }
 window._rpIssue = null;
@@ -1748,7 +1759,7 @@ function renderReports() {
 
   const ranges = rangeInfo();
   const rng = rep.ranged ? (ranges.find(x => x.id === window._rpRange) || ranges[0]) : ranges[0];
-  const dayOf = p => p.deliveredAt || p.deadline || '';
+  const dayOf = rep.byOrderDate ? (p => p.orderDate || '') : (p => p.deliveredAt || p.deadline || '');
   // Department chips (all tabs except By department): only departments that have orders in this report are offered.
   const allRows = rep.rows().filter(p => !rng.r || (dayOf(p) >= rng.r[0] && dayOf(p) <= rng.r[1]));
   const deptCount = {};
@@ -1858,14 +1869,18 @@ function renderReports() {
 
   // Period covered: earliest → latest delivery date of the delivered orders behind the cards.
   let period = '';
-  if (rep.ranged || rep.id === 'delivered') {
+  {
     const ds = rows.map(dayOf).filter(Boolean).sort();
-    const noDate = rows.filter(p => !p.deliveredAt).length;
-    const f = d => new Date(d + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-    const span = rng.r ? [rng.r[0], rng.r[1]] : (ds.length ? [ds[0], ds[ds.length - 1]] : null);
-    const tag = rng.r ? ` <small>(${rng.sub ? rng.label + ', ' + rng.sub : rng.label})</small>` : '';
-    if (span) period = `<div class="rp-period">Period covered: <b>${f(span[0])}</b> → <b>${f(span[1])}</b>${tag}${noDate ? `<small>· ${noDate} older ${noDate === 1 ? 'order has' : 'orders have'} no delivery date saved, so the due date is used</small>` : ''}</div>`;
+    const noDate = rep.byOrderDate ? 0 : rows.filter(p => !p.deliveredAt).length;
+    const f = fmtFull;
+    const custom = rng.id === 'custom';
+    const lo = rng.r ? (custom ? (window._rpFrom || ds[0]) : rng.r[0]) : ds[0];
+    const hi = rng.r ? (custom ? (window._rpTo || ds[ds.length - 1]) : rng.r[1]) : ds[ds.length - 1];
+    const tag = (rng.r && !custom) ? ` <small>(${rng.sub ? rng.label + ', ' + rng.sub : rng.label})</small>` : '';
+    const basis = rep.byOrderDate ? '<small>· by order date</small>' : '';
+    if (lo && hi) period = `<div class="rp-period">Period covered: <b>${f(lo)}</b> → <b>${f(hi)}</b>${tag}${basis}${noDate ? `<small>· ${noDate} older ${noDate === 1 ? 'order has' : 'orders have'} no delivery date saved, so the due date is used</small>` : ''}</div>`;
   }
+  const customBar = (rng.id === 'custom' && rep.ranged) ? `<div class="rp-custom"><label>From <input type="date" id="rp-from" value="${window._rpFrom || ''}" onchange="setCustom('from', this.value)"></label><label>To <input type="date" id="rp-to" value="${window._rpTo || ''}" onchange="setCustom('to', this.value)"></label></div>` : '';
   const deptBar = rep.dept ? '' : `<div class="rp-ranges" role="group" aria-label="Department"><span class="rp-rl">Department</span><button class="rp-rg ${dsel === 'all' ? 'on' : ''}" onclick="pickDept('all')">All departments</button>${Object.keys(TYPES).filter(k => deptCount[k]).map(k => `<button class="rp-rg ${dsel === k ? 'on' : ''}" onclick="pickDept('${k}')">${TYPES[k].label} · ${deptCount[k]}</button>`).join('')}</div>`;
   const rangeBar = rep.ranged ? `<div class="rp-ranges" role="group" aria-label="Timeline"><span class="rp-rl">Period</span>${ranges.map(x => `<button class="rp-rg ${x.id === rng.id ? 'on' : ''}" onclick="pickRange('${x.id}')"${x.sub ? ` title="${x.sub}"` : ''}>${x.label}</button>`).join('')}</div>` : '';
 
@@ -1878,6 +1893,7 @@ function renderReports() {
   document.getElementById('rp-body').innerHTML = `
     <div class="rp-note">${rep.note}</div>
     ${rangeBar}
+    ${customBar}
     ${deptBar}
     ${period}
     <div class="rp-cards ${(balCard || rep.all) ? 'c4' : ''}">${cards}</div>
