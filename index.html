@@ -11,7 +11,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.41.0 — Reports section (Payments reports); UI is Concept A ── */
+/* ── v3.42.0 — Reports section (Payments reports); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -164,6 +164,9 @@ input,select,textarea{font-family:inherit}
 .rp-custom label{display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink3)}
 .rp-custom input{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:7px 10px;color:var(--ink);font-size:13px;font-family:inherit;outline:none}
 .rp-custom input:focus{border-color:var(--clay)}
+.rp-more{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid var(--border);background:var(--ivory);font-size:12px;color:var(--ink2);font-weight:700}
+.rp-more button{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:6px 14px;font-size:12px;font-weight:700;color:var(--clay)}
+.rp-more button:hover{border-color:var(--clay)}
 .rp-rg.on{background:var(--clay-soft);border-color:var(--clay);color:var(--clay)}
 .rp-row:not(.hd){cursor:pointer;transition:background .12s,box-shadow .12s}
 .rp-row:not(.hd):hover{background:#F7F2E6;box-shadow:inset 3px 0 0 rgba(193,96,47,.45)}
@@ -431,7 +434,7 @@ button.chip{border:none;font-family:inherit}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.41.0</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.42.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -890,7 +893,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.41.0';
+const APP_VERSION = 'v3.42.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -1575,6 +1578,9 @@ function closeReports() {
   document.getElementById('reports-view').style.display = 'none';
   updateDock();
 }
+const RP_PAGE = 30;
+window._rpShown = RP_PAGE; window._rpKey = '';
+function rpMore() { window._rpShown = (window._rpShown || RP_PAGE) + RP_PAGE; renderReports(); }
 window._rpRange = 'all';
 window._rpDept = 'all';
 window._rpFrom = ''; window._rpTo = '';
@@ -1882,8 +1888,13 @@ function renderReports() {
       }).join('') + `<div class="rp-row dp rp-total"><div class="rp-who"><b>All departments</b><small>${deptTotal.n} ${deptTotal.n === 1 ? 'order' : 'orders'}</small></div><div class="n hide-m">${rupee(deptTotal.a)}</div><div class="n">${rupee(deptTotal.r)}</div><div class="n bal ${deptTotal.b ? '' : 'zero'}">${deptTotal.b ? rupee(deptTotal.b) : 'Paid'}</div><div></div></div>`
     : `<div class="rp-empty">${q ? 'No orders match “' + escHtml(q) + '”.' : rng.r ? 'No delivered orders in this period.' : 'No delivered orders yet.'}</div>`);
 
+  // Lazy loading: show the first 30 rows, add 30 more each time the bottom is reached.
+  // The count starts over whenever the view itself changes (tab, chips, sort, search...), not when data refreshes.
+  const viewKey = [rep.id, rng.id, window._rpFrom, window._rpTo, dsel, window._rpSort.key, window._rpSort.dir, issue, q].join('|');
+  if (window._rpKey !== viewKey) { window._rpKey = viewKey; window._rpShown = RP_PAGE; }
+  const shownN = Math.max(window._rpShown || RP_PAGE, RP_PAGE);
   const body = deptRows ? deptBody : list.length
-    ? list.map(p => {
+    ? list.slice(0, shownN).map(p => {
         const bal = balOf(p);
         const stage = getPipeline()[Math.min(p.status || 0, 4)].label + ((p.status === 4 && p.deliveredAt) ? ' ' + fmtDay(new Date(p.deliveredAt + 'T00:00:00')) : '') + ((p.onHold && p.status !== 4) ? ' · On hold' : '');
         const noAmt = rep.all && !(Number(p.amount) > 0) && !(Number(p.advance) > 0);
@@ -1929,7 +1940,14 @@ function renderReports() {
       <div class="rp-table-h">${(issue ? 'Showing: ' + ({ unpaid: 'money still to receive', over: 'received more than total', zero: 'no amount entered' })[issue] : rep.listTitle) + (q ? ' · matching “' + escHtml(q) + '”' : '')}<span>${deptRows ? list.length + (list.length === 1 ? ' department' : ' departments') : ((q || issue) ? list.length + ' of ' + baseCount : list.length) + ' ' + ((q || issue ? baseCount : list.length) === 1 ? 'order' : 'orders')}</span></div>
       <div class="rp-row hd ${deptRows ? 'dp' : ''}">${th('name', deptRows ? 'Department' : 'Order')}${deptRows ? '' : th('ordered', 'Ordered', 'dt hide-m')}${th('total', 'Total', 'n hide-m')}${th('recv', 'Received', 'n')}${th('bal', 'Balance', 'n')}<div></div></div>
       ${body}
+      ${(!deptRows && list.length > shownN) ? `<div class="rp-more" id="rp-more"><span>Showing ${shownN} of ${list.length} orders</span><button onclick="rpMore()">Show ${Math.min(RP_PAGE, list.length - shownN)} more</button></div>` : ''}
     </div>`;
+  if (window._rpIO) { window._rpIO.disconnect(); window._rpIO = null; }
+  const more = document.getElementById('rp-more');
+  if (more && typeof IntersectionObserver === 'function') {
+    window._rpIO = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) rpMore(); }, { rootMargin: '300px' });
+    window._rpIO.observe(more);
+  }
   if (window._odId) renderOrderModal();
 }
 
