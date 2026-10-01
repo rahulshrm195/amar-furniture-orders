@@ -11,7 +11,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.35.1 — Reports section (Payments reports); UI is Concept A ── */
+/* ── v3.36.0 — Reports section (Payments reports); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -140,7 +140,14 @@ input,select,textarea{font-family:inherit}
 .rp-who{min-width:0}
 .rp-who b{display:block;width:fit-content;max-width:100%;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rp-who small{display:block;font-size:11px;color:var(--ink2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rp-row{grid-template-columns:minmax(0,2.2fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 34px}
+.rp-row{grid-template-columns:minmax(0,2.2fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 34px}
+.rp-row.dp{grid-template-columns:minmax(0,2.2fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 34px}
+.rp-row .dt{color:var(--ink2);white-space:nowrap;font-variant-numeric:tabular-nums}
+.rp-row.hd .dt{justify-content:flex-start}
+.rp-ranges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.rp-rg{font-size:12px;font-weight:700;color:var(--ink2);background:var(--surface);border:1px solid var(--border);padding:5px 12px;border-radius:16px}
+.rp-rg:hover{color:var(--ink);border-color:var(--ink3)}
+.rp-rg.on{background:var(--clay-soft);border-color:var(--clay);color:var(--clay)}
 .rp-row:not(.hd){cursor:pointer;transition:background .12s,box-shadow .12s}
 .rp-row:not(.hd):hover{background:#F7F2E6;box-shadow:inset 3px 0 0 rgba(193,96,47,.45)}
 .rp-row.sel,.rp-row.sel:hover{background:var(--clay-soft);box-shadow:inset 4px 0 0 var(--clay)}
@@ -186,12 +193,12 @@ input,select,textarea{font-family:inherit}
 .rp-empty{padding:22px 16px;text-align:center;color:var(--ink3);font-size:12.5px}
 .rp-total{background:var(--ivory);font-weight:800}
 .rp-row.dp,.rp-row.dp:hover{cursor:default;background:transparent;box-shadow:none}
-.rp-row.dp.rp-total,.rp-row.dp.rp-total:hover{background:var(--ivory)}
+.rp-row.dp.rp-total,.rp-row.dp.rp-total:hover,.rp-row.hd.dp{background:var(--ivory)}
 .dp-bar{height:5px;border-radius:3px;background:var(--border);margin-top:7px;max-width:260px;overflow:hidden}
 .dp-bar i{display:block;height:100%;border-radius:3px}
 @media (max-width:767px){
   .rp-cards,.rp-cards.c4{grid-template-columns:1fr}
-  .rp-row{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,1fr) 34px;padding:10px 12px}
+  .rp-row,.rp-row.dp{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,1fr) 34px;padding:10px 12px}
   .rp-row .hide-m{display:none}
 }
 
@@ -407,7 +414,7 @@ button.chip{border:none;font-family:inherit}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.35.1</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.36.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -865,7 +872,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.35.1';
+const APP_VERSION = 'v3.36.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -1302,7 +1309,7 @@ function goHome() {
   if (window._reportsOpen) closeReports();
   closeStats(); closeSettingsModal(); closeStatusModal(); closePayModal(); closeOrderModal();
   const si = document.getElementById('search-input'); if (si) si.value = '';
-  window._showHold = false; window._rpIssue = null;
+  window._showHold = false; window._rpIssue = null; window._rpRange = 'all';
   window._typeFilter = 'active'; window._stageFilter = 'all';
   renderProjects();
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1499,11 +1506,11 @@ const REPORTS = [
   { id:'completed', label:'Completed orders',
     note:'Every delivered order (archived ones are not counted): how many, and what they are worth in total. Newest delivery first; orders delivered before date tracking began use their due date.',
     rows: () => (window._projects || []).filter(p => !isArchived(p) && isDelivered(p)),
-    cards: ['Orders completed', 'Total value', 'Received'], countFirst:true, listTitle:'All completed orders', onlyDue:false, byDate:true },
+    cards: ['Orders completed', 'Total value', 'Received'], countFirst:true, listTitle:'All completed orders', onlyDue:false, byDate:true, ranged:true },
   { id:'dept', label:'By department',
     note:'How each department has performed: delivered orders grouped by type (archived ones are not counted). The bar shows each department\'s share of the total value.',
     rows: () => (window._projects || []).filter(p => !isArchived(p) && isDelivered(p)),
-    cards: ['Orders completed', 'Total value', 'Received'], countFirst:true, listTitle:'Performance by department', onlyDue:false, dept:true },
+    cards: ['Orders completed', 'Total value', 'Received'], countFirst:true, listTitle:'Performance by department', onlyDue:false, dept:true, ranged:true },
 ];
 
 function openReports() {
@@ -1524,6 +1531,28 @@ function closeReports() {
   document.getElementById('fab-btn').style.display = window._isAdmin ? 'flex' : 'none';
   document.getElementById('reports-view').style.display = 'none';
   updateDock();
+}
+window._rpRange = 'all';
+function pickRange(id) { window._rpRange = id; renderReports(); }
+// Timeline presets. Financial year runs 1 Apr – 31 Mar; quarters follow it (Apr–Jun, Jul–Sep, Oct–Dec, Jan–Mar).
+function rangeInfo() {
+  const now = new Date(), y = now.getFullYear(), m = now.getMonth();
+  const ymd = (yy, mm, dd) => { const d = new Date(yy, mm, dd); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+  const monthR = k => [ymd(y, m + k, 1), ymd(y, m + k + 1, 0)];
+  const qStart = Math.floor(m / 3) * 3;
+  const qR = k => [ymd(y, qStart + 3 * k, 1), ymd(y, qStart + 3 * k + 3, 0)];
+  const fy = m >= 3 ? y : y - 1;
+  const fyR = k => [ymd(fy + k, 3, 1), ymd(fy + k + 1, 3, 0)];
+  const fyL = k => 'FY ' + (fy + k) + '–' + String(fy + k + 1).slice(2);
+  return [
+    { id: 'all',       label: 'All time',           r: null },
+    { id: 'month',     label: 'This month',         r: monthR(0) },
+    { id: 'lastmonth', label: 'Last month',         r: monthR(-1) },
+    { id: 'quarter',   label: 'This quarter',       r: qR(0) },
+    { id: 'lastq',     label: 'Last quarter',       r: qR(-1) },
+    { id: 'fy',        label: 'This FY',            r: fyR(0), sub: fyL(0) },
+    { id: 'lastfy',    label: 'Last FY',            r: fyR(-1), sub: fyL(-1) },
+  ];
 }
 window._rpIssue = null;
 window._rpSort = { key: null, dir: 'desc' };
@@ -1656,7 +1685,10 @@ function renderReports() {
   document.getElementById('rp-tabs').innerHTML = REPORTS.map(r =>
     `<button class="rp-tab ${r.id === rep.id ? 'on' : ''}" onclick="pickReport('${r.id}')">${r.label}</button>`).join('');
 
-  const rows = rep.rows();
+  const ranges = rangeInfo();
+  const rng = rep.ranged ? (ranges.find(x => x.id === window._rpRange) || ranges[0]) : ranges[0];
+  const dayOf = p => p.deliveredAt || p.deadline || '';
+  const rows = rep.rows().filter(p => !rng.r || (dayOf(p) >= rng.r[0] && dayOf(p) <= rng.r[1]));
   let value = 0, received = 0, due = 0;
   rows.forEach(p => { value += Number(p.amount) || 0; received += Number(p.advance) || 0; due += balOf(p); });
   // Balance check (Completed orders): does received match total on every delivered order?
@@ -1719,7 +1751,7 @@ function renderReports() {
 
   if (window._rpSort.key) {
     const { key, dir } = window._rpSort, m = dir === 'asc' ? 1 : -1;
-    const val = { name: p => String(p.client || '').toLowerCase(), total: amt, recv: rec, bal: p => p._bal != null ? p._bal : balOf(p) }[key];
+    const val = { name: p => String(p.client || '').toLowerCase(), total: amt, recv: rec, bal: p => p._bal != null ? p._bal : balOf(p), ordered: p => String(p.orderDate || '') }[key];
     list.sort((a, b) => {
       const x = val(a), y = val(b);
       const c = typeof x === 'string' ? x.localeCompare(y) : x - y;
@@ -1743,28 +1775,30 @@ function renderReports() {
         return `<div class="rp-row dp"><div class="rp-who"><b>${escHtml(d.client)}</b><small>${d._n} ${d._n === 1 ? 'order' : 'orders'} · ${pct}% of value</small><div class="dp-bar"><i style="width:${pct}%;background:${TYPES[d.key].color}"></i></div></div>
           <div class="n hide-m">${rupee(d.amount)}</div><div class="n">${rupee(d.advance)}</div><div class="n bal ${d._bal ? '' : 'zero'}">${d._bal ? rupee(d._bal) : 'Paid'}</div><div></div></div>`;
       }).join('') + `<div class="rp-row dp rp-total"><div class="rp-who"><b>All departments</b><small>${deptTotal.n} ${deptTotal.n === 1 ? 'order' : 'orders'}</small></div><div class="n hide-m">${rupee(deptTotal.a)}</div><div class="n">${rupee(deptTotal.r)}</div><div class="n bal ${deptTotal.b ? '' : 'zero'}">${deptTotal.b ? rupee(deptTotal.b) : 'Paid'}</div><div></div></div>`
-    : `<div class="rp-empty">${q ? 'No orders match “' + escHtml(q) + '”.' : 'No delivered orders yet.'}</div>`);
+    : `<div class="rp-empty">${q ? 'No orders match “' + escHtml(q) + '”.' : rng.r ? 'No delivered orders in this period.' : 'No delivered orders yet.'}</div>`);
 
   const body = deptRows ? deptBody : list.length
     ? list.map(p => {
         const bal = balOf(p);
         const stage = getPipeline()[Math.min(p.status || 0, 4)].label + ((p.status === 4 && p.deliveredAt) ? ' ' + fmtDay(new Date(p.deliveredAt + 'T00:00:00')) : '');
         return `<div class="rp-row ${window._rpSel === p.id ? 'sel' : ''}" onclick="selRow('${p.id}', event)"><div class="rp-who"><b>${escHtml(p.client)}</b><small>${escHtml(typeLabelOf(p))} · ${stage} · Due ${p.deadline ? fmtDay(new Date(p.deadline + 'T00:00:00')) : '—'}</small></div>
-          <div class="n hide-m">${rupee(Number(p.amount) || 0)}</div><div class="n">${rupee(Number(p.advance) || 0)}</div><div class="n bal ${bal ? '' : 'zero'}">${bal ? rupee(bal) : 'Paid'}</div>
+          <div class="dt hide-m">${fmtFull(p.orderDate)}</div><div class="n hide-m">${rupee(Number(p.amount) || 0)}</div><div class="n">${rupee(Number(p.advance) || 0)}</div><div class="n bal ${bal ? '' : 'zero'}">${bal ? rupee(bal) : 'Paid'}</div>
           <button class="rp-add" aria-label="Add payment" title="Add payment" ${bal ? '' : 'disabled style="opacity:.35;cursor:default"'} onclick="openPayModal('${p.id}')">+</button></div>`;
       }).join('')
     : q ? `<div class="rp-empty">No orders match “${escHtml(q)}”.</div>`
-    : `<div class="rp-empty">${rep.id === 'completed' ? 'No delivered orders yet.' : rep.onlyDue ? 'No delivered orders have a balance due.' : 'No orders with an amount in the pipeline yet.'}</div>`;
+    : `<div class="rp-empty">${rep.id === 'completed' ? (rng.r ? 'No delivered orders in this period.' : 'No delivered orders yet.') : rep.onlyDue ? 'No delivered orders have a balance due.' : 'No orders with an amount in the pipeline yet.'}</div>`;
 
   // Period covered: earliest → latest delivery date of the delivered orders behind the cards.
   let period = '';
-  if (rep.id !== 'pipeline' && rows.length) {
-    const dayOf = p => p.deliveredAt || p.deadline || '';
+  if (rep.id !== 'pipeline') {
     const ds = rows.map(dayOf).filter(Boolean).sort();
     const noDate = rows.filter(p => !p.deliveredAt).length;
     const f = d => new Date(d + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-    if (ds.length) period = `<div class="rp-period">Period covered: <b>${f(ds[0])}</b> → <b>${f(ds[ds.length - 1])}</b>${noDate ? `<small>· ${noDate} older ${noDate === 1 ? 'order has' : 'orders have'} no delivery date saved, so the due date is used</small>` : ''}</div>`;
+    const span = rng.r ? [rng.r[0], rng.r[1]] : (ds.length ? [ds[0], ds[ds.length - 1]] : null);
+    const tag = rng.r ? ` <small>(${rng.sub ? rng.label + ', ' + rng.sub : rng.label})</small>` : '';
+    if (span) period = `<div class="rp-period">Period covered: <b>${f(span[0])}</b> → <b>${f(span[1])}</b>${tag}${noDate ? `<small>· ${noDate} older ${noDate === 1 ? 'order has' : 'orders have'} no delivery date saved, so the due date is used</small>` : ''}</div>`;
   }
+  const rangeBar = rep.ranged ? `<div class="rp-ranges" role="group" aria-label="Timeline">${ranges.map(x => `<button class="rp-rg ${x.id === rng.id ? 'on' : ''}" onclick="pickRange('${x.id}')"${x.sub ? ` title="${x.sub}"` : ''}>${x.label}</button>`).join('')}</div>` : '';
 
   const arrows = '<svg width="9" height="13" viewBox="0 0 9 13" aria-hidden="true"><path class="up" d="M4.5 0 9 5H0z"/><path class="dn" d="M4.5 13 0 8h9z"/></svg>';
   const th = (key, label, cls = '') => {
@@ -1774,12 +1808,13 @@ function renderReports() {
 
   document.getElementById('rp-body').innerHTML = `
     <div class="rp-note">${rep.note}</div>
+    ${rangeBar}
     ${period}
     <div class="rp-cards ${balCard ? 'c4' : ''}">${cards}</div>
     ${check}
     <div class="rp-table">
       <div class="rp-table-h">${(issue ? 'Showing: ' + ({ unpaid: 'money still to receive', over: 'received more than total', zero: 'no amount entered' })[issue] : rep.listTitle) + (q ? ' · matching “' + escHtml(q) + '”' : '')}<span>${deptRows ? list.length + (list.length === 1 ? ' department' : ' departments') : ((q || issue) ? list.length + ' of ' + baseCount : list.length) + ' ' + ((q || issue ? baseCount : list.length) === 1 ? 'order' : 'orders')}</span></div>
-      <div class="rp-row hd">${th('name', deptRows ? 'Department' : 'Order')}${th('total', 'Total', 'n hide-m')}${th('recv', 'Received', 'n')}${th('bal', 'Balance', 'n')}<div></div></div>
+      <div class="rp-row hd ${deptRows ? 'dp' : ''}">${th('name', deptRows ? 'Department' : 'Order')}${deptRows ? '' : th('ordered', 'Ordered', 'dt hide-m')}${th('total', 'Total', 'n hide-m')}${th('recv', 'Received', 'n')}${th('bal', 'Balance', 'n')}<div></div></div>
       ${body}
     </div>`;
   if (window._odId) renderOrderModal();
