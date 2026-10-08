@@ -8,7 +8,7 @@
 <title>Amar Furniture — Cutting List</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.64.1 — Workshop cutting list (tablet); UI is Concept A ── */
+/* ── v3.65.0 — Workshop cutting list (tablet); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -128,6 +128,28 @@ input{font-family:inherit}
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--slate);color:#FAF9F5;padding:12px 22px;border-radius:12px;font-size:14px;font-weight:600;opacity:0;transition:all .3s;z-index:1000;white-space:nowrap;pointer-events:none}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
+/* Printed slip: 2-inch (58 mm) thermal roll, via Android's Print screen (RawBT print service) */
+#slip{display:none}
+@media print{
+  @page{size:58mm auto;margin:0}
+  body{background:#fff;min-height:0}
+  body>*{display:none!important}
+  #slip{display:block!important;width:48mm;margin:0 auto;padding:2mm 0 8mm;color:#000;font-family:var(--sans);font-size:10pt;line-height:1.3}
+  #slip .s-c{text-align:center}
+  #slip .s-h{font-size:8pt;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+  #slip .s-name{font-size:13pt;font-weight:800;margin-top:2mm}
+  #slip .s-sub{font-size:9pt}
+  #slip .s-rule{border-top:1px dashed #000;margin:2mm 0}
+  #slip .s-notes{font-size:9pt;white-space:pre-wrap}
+  #slip .s-pc{display:flex;gap:2mm;padding:1.2mm 0;border-bottom:1px dotted #000;break-inside:avoid}
+  #slip .s-box{flex:0 0 auto;width:3.4mm;height:3.4mm;border:1.5px solid #000;margin-top:.6mm;font-size:8pt;line-height:3mm;text-align:center;font-weight:800}
+  #slip .s-pc>div:last-child{flex:1;min-width:0}
+  #slip .s-n{font-weight:800}
+  #slip .s-sz{font-size:11pt;font-weight:800}
+  #slip .s-w{font-size:8.5pt}
+  #slip .s-foot{font-size:8pt;margin-top:2mm}
+}
+
 /* Narrow / portrait: one pane at a time */
 @media (max-width:859px){
   .wrap{display:block;height:auto}
@@ -160,7 +182,7 @@ input{font-family:inherit}
 <div id="auth-screen">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Cutting List · v3.64.1</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Cutting List · v3.65.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Workshop Sign In</h2>
@@ -202,6 +224,7 @@ input{font-family:inherit}
   </div>
 </div>
 <div class="toast" id="toast"></div>
+<div id="slip"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -219,7 +242,7 @@ const firebaseConfig = {
   messagingSenderId: "460562943530",
   appId:             "1:460562943530:web:d89b913ec8e6ecd85e7d53"
 };
-const CUT_VERSION = 'v3.64.1';
+const CUT_VERSION = 'v3.65.0';
 
 const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -247,6 +270,7 @@ const byDue = (a, b) => (a.deadline || '9999') .localeCompare(b.deadline || '999
 const lastCut = c => Math.max(0, ...c.pieces.map(p => Date.parse(p.doneAt) || 0));
 const wide = () => matchMedia('(min-width:860px)').matches;
 const svgTick = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg>';
+const svgPrint = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9V4h10v5"/><rect x="4" y="9" width="16" height="7" rx="1.5"/><path d="M7 14h10v6H7Z"/></svg>';
 const svgPin  = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6l-1 5 3 3v2H7v-2l3-3-1-5Z"/><path d="M12 14v6"/></svg>';
 
 function toast(msg) {
@@ -333,10 +357,10 @@ function renderDetail() {
   const c = lists.find(x => x.id === selId);
   if (!c) { $('main').innerHTML = lists.length ? '<div class="empty">Pick a project on the left.</div>' : ''; return; }
   const n = c.pieces.length, d = doneOf(c);
-  const acts = d < n ? `
+  const acts = `<button class="abtn" onclick="printSlip()">${svgPrint} Print</button>` + (d < n ? `
       <button class="abtn ${c.active ? 'on' : ''}" onclick="togglePin()">${svgPin} ${c.active ? 'Cutting now' : 'Start cutting'}</button>
       <button class="abtn ${selecting ? 'on' : ''}" onclick="${selecting ? 'stopSelecting()' : 'startSelecting()'}">Select</button>
-      <button class="abtn go" onclick="markAll()">${svgTick} Mark all done</button>` : '';
+      <button class="abtn go" onclick="markAll()">${svgTick} Mark all done</button>` : '');
   $('main').innerHTML = `
     <div class="dh">
       <div>
@@ -423,6 +447,27 @@ async function setCut(ids, done, by = '') {
     toast(navigator.onLine ? 'Could not save: ' + (err.code || err.message) : 'No internet — try again');
   }
 }
+
+// ── Print: a 2-inch slip of the open project, through Android's Print screen ──
+// Done pieces are ticked, pending ones get an empty box to tick by hand.
+window.printSlip = () => {
+  const c = lists.find(x => x.id === selId); if (!c) return;
+  const now = new Date().toISOString();
+  $('slip').innerHTML = `
+    <div class="s-c s-h">Amar Furniture · Cut List</div>
+    <div class="s-c s-name">${c.orderNo ? '#' + c.orderNo + ' ' : ''}${esc(c.client)}</div>
+    ${c.title ? `<div class="s-c s-sub">${esc(c.title)}</div>` : ''}
+    ${c.deadline ? `<div class="s-c s-sub">Due ${fmtDay(new Date(c.deadline + 'T00:00:00'))}</div>` : ''}
+    <div class="s-rule"></div>
+    ${c.notes ? `<div class="s-notes"><b>Notes:</b> ${esc(c.notes)}</div><div class="s-rule"></div>` : ''}
+    ${c.pieces.map(p => `<div class="s-pc"><div class="s-box">${p.done ? '✓' : ''}</div><div>
+      <div class="s-n">${esc(p.name) || 'Piece'}</div>
+      <div class="s-sz">${esc(sizeOf(p))}${sizeOf(p) ? ' ' : ''}× ${esc(p.qty || '1')}</div>
+      ${p.wood ? `<div class="s-w">${esc(p.wood)}</div>` : ''}
+    </div></div>`).join('')}
+    <div class="s-foot">${doneOf(c)} of ${c.pieces.length} cut · Printed ${fmtStamp(now)}</div>`;
+  window.print();
+};
 
 // ── Sheet: big buttons, resolves with the chosen value (null = cancelled) ──
 let sheetResolve = null;
