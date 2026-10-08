@@ -33,6 +33,7 @@ A single-page PWA for tracking furniture orders. It is hosted on GitHub Pages (s
   - Each piece has `id`, `name`, `l`, `w`, `t` (inches), `qty`, `wood`, `done`, `doneBy`, `doneAt` and `createdAt`.
   - Editing: admins edit a cut list from the saw icon on woodwork order cards. Saves run in a transaction that keeps the workshop's ticks.
   - Sync: `syncCutLists()` keeps the name, number and deadline in step with the order. `hidden` is set when the order is delivered or archived.
+  - Copy from items (v3.62.0): a new cut list starts from the order's items, mapping L → L, B → W, W → T and keeping the qty. "Copy sizes from order items" adds any items that aren't on the list yet.
   - Carpenters: names live in `workshop/config.carpenters` and are edited in Settings.
   - Tablet: it can mark one piece, a selected group, or every remaining piece as cut, and it records who did it and when. Sizes show as `63" x 3" x 3"`. "Start cutting" pins a project to the "Cutting now" section.
   - Planned: a lathe department, using the same collection with a different `dept`.
