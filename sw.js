@@ -1,6 +1,6 @@
-// AF Orders Service Worker — v1.3.54
-const CACHE = 'af-orders-v1.3.54';
-const ASSETS = ['/', '/index.html', '/manifest.json', '/icon-192.png', '/icon-512.png'];
+// AF Orders Service Worker — v1.3.55
+const CACHE = 'af-orders-v1.3.55';
+const ASSETS = ['/', '/index.html', '/cut/', '/cut/manifest.json', '/manifest.json', '/icon-192.png', '/icon-512.png'];
 
 // ── INSTALL ──
 self.addEventListener('install', e => {

@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#17160F">
+<link rel="manifest" href="manifest.json">
+<title>Amar Furniture — Cutting List</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+/* ── v3.60.0 — Workshop cutting list (tablet); UI is Concept A ── */
+:root{
+  --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
+  --clay:#C1602F; --clay-soft:#F5E3D5;
+  --green:#1F7A44; --green-soft:#E2F1E5;
+  --amber:#A65E00; --amber-soft:#F8E9D2;
+  --red:#BF3324; --red-soft:#FBE5E0;
+  --slate:#17160F;
+  --serif:'Fraunces',Georgia,serif; --sans:'Public Sans',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--ivory);color:var(--ink);font-family:var(--sans);min-height:100dvh;overflow-x:hidden}
+button{font-family:inherit;cursor:pointer}
+input{font-family:inherit}
+::-webkit-scrollbar{width:8px;height:8px} ::-webkit-scrollbar-thumb{background:#DAD3C2;border-radius:8px}
+
+/* ── Loading + sign-in ── */
+.loading-screen{position:fixed;inset:0;background:var(--slate);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:999}
+.brand-tile{width:38px;height:38px;border-radius:10px;background:var(--clay);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.brand-row{display:flex;align-items:center;gap:12px}
+.brand-name{font-family:var(--serif);font-weight:700;font-size:20px;color:#FAF9F5;line-height:1.15}
+.brand-sub{font-size:10.5px;color:#A79F8C;letter-spacing:.09em;text-transform:uppercase}
+.spinner{width:26px;height:26px;border:3px solid #34322A;border-top-color:var(--clay);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#auth-screen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100dvh;padding:24px;background:var(--slate)}
+#auth-screen .brand-row{margin-bottom:28px}
+.auth-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:26px;width:100%;max-width:380px}
+.auth-card h2{font-family:var(--serif);font-size:1.25rem;font-weight:700;margin-bottom:18px}
+#auth-error{color:var(--red);font-size:12.5px;margin-top:12px;text-align:center;min-height:18px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:10.5px;color:var(--ink2);margin-bottom:6px;letter-spacing:.04em;text-transform:uppercase;font-weight:800}
+.field input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:13px 14px;color:var(--ink);font-size:15px;outline:none}
+.field input:focus{border-color:var(--clay)}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:12px;border:1px solid transparent;font-weight:700;font-size:15px}
+.btn-primary{background:var(--clay);color:#FAF9F5}
+.btn-ghost{background:var(--surface);color:var(--ink2);border-color:var(--border)}
+
+/* ── Topbar ── */
+#app{display:none}
+.topbar{position:sticky;top:0;z-index:50;background:var(--slate);display:flex;align-items:center;gap:12px;padding:0 20px;height:64px}
+.tb-sum{margin-left:auto;color:#CFC8B6;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-btn{width:40px;height:40px;border-radius:10px;border:1px solid #34322A;background:#211F18;color:#D8D2C2;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+
+/* ── Two panes: projects on the left, the selected project's pieces on the right ── */
+.wrap{display:grid;grid-template-columns:minmax(300px,380px) minmax(0,1fr);height:calc(100dvh - 64px)}
+.side{overflow-y:auto;border-right:1px solid var(--border);padding:6px 16px 24px}
+.main{overflow-y:auto;padding:22px 26px 120px}
+.back{display:none}
+.sec-h{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin:18px 4px 8px}
+.sec-h b{font-weight:800;color:var(--ink2)}
+.pj{display:block;width:100%;text-align:left;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 14px 12px;margin-bottom:10px;position:relative;overflow:hidden;color:var(--ink)}
+.pj.pinned::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--clay)}
+.pj.sel{border-color:var(--clay);box-shadow:0 0 0 2px var(--clay-soft)}
+.pj-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.pj-top>div{min-width:0}
+.pj-name{font-weight:800;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ono{color:var(--ink3);font-weight:700;margin-right:6px;font-variant-numeric:tabular-nums}
+.pj-desc{font-size:12.5px;color:var(--ink2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.due{font-size:11.5px;font-weight:800;white-space:nowrap;padding:4px 9px;border-radius:20px;background:var(--ivory);color:var(--ink2);border:1px solid var(--border)}
+.due.soon{background:var(--amber-soft);color:var(--amber);border-color:#E8CFA0}
+.due.late{background:var(--red-soft);color:var(--red);border-color:#EBC3BA}
+.bar{height:8px;border-radius:8px;background:#EFEADF;margin-top:12px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--clay);border-radius:8px}
+.bar.full i{background:var(--green)}
+.pj-cnt{font-size:12px;font-weight:700;color:var(--ink2);margin-top:6px}
+.more{width:100%;padding:12px;border-radius:12px;border:1px dashed var(--border);background:transparent;color:var(--ink2);font-weight:700;font-size:13px}
+.empty{text-align:center;color:var(--ink3);padding:70px 20px;font-size:15px;line-height:1.5}
+
+/* ── Selected project ── */
+.dh{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.dh-title{font-family:var(--serif);font-weight:700;font-size:27px;line-height:1.15}
+.dh-sub{color:var(--ink2);font-size:14px;margin-top:5px;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.dh-acts{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
+.abtn{height:48px;padding:0 18px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--ink);font-weight:700;font-size:15px;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.abtn.on{background:var(--clay-soft);border-color:var(--clay);color:var(--clay)}
+.abtn.go{background:var(--green);border-color:var(--green);color:#fff}
+.notes{background:var(--amber-soft);border:1px solid #E8CFA0;border-radius:12px;padding:12px 15px;color:#5E3B00;font-size:15px;line-height:1.45;white-space:pre-wrap;margin-bottom:14px}
+.notes b{display:block;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px;color:var(--amber)}
+.prog{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.prog .bar{flex:1;height:12px;margin:0}
+.prog span{font-weight:800;font-size:14px;color:var(--ink2);white-space:nowrap}
+
+/* Piece rows: big and easy to tap */
+.pc{display:flex;align-items:center;gap:16px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 18px;margin-bottom:10px;min-height:78px;color:var(--ink)}
+.pc .tick{width:42px;height:42px;border-radius:50%;border:2.5px solid #CFC6B2;flex:0 0 auto;display:flex;align-items:center;justify-content:center;color:transparent}
+.pc-info{min-width:0;flex:1}
+.pc-n{font-weight:800;font-size:17.5px}
+.pc-w{font-size:13px;color:var(--ink2);margin-top:2px}
+.pc-by{font-size:12.5px;color:var(--green);font-weight:700;margin-top:4px}
+.pc-size{font-family:var(--serif);font-weight:700;font-size:22px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.pc-q{font-weight:800;font-size:18px;min-width:58px;text-align:right;color:var(--clay);white-space:nowrap}
+.pc.done{background:#F4F9F4;border-color:#CFE3D3}
+.pc.done .tick{background:var(--green);border-color:var(--green);color:#fff}
+.pc.done .pc-n,.pc.done .pc-size,.pc.done .pc-q{color:var(--ink2)}
+.selecting .pc:not(.done) .tick{border-radius:10px}
+.pc.picked{border-color:var(--clay);box-shadow:0 0 0 2px var(--clay-soft)}
+.pc.picked .tick{background:var(--clay);border-color:var(--clay);color:#fff}
+.selecting .pc.done{opacity:.55}
+
+.selbar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--slate);padding:12px 20px;display:flex;gap:10px;align-items:center;transform:translateY(110%);transition:transform .2s}
+.selbar.show{transform:none}
+.selbar span{color:#EDE9DD;font-weight:700;font-size:15px;margin-right:auto}
+.selbar .abtn{height:50px}
+.selbar .abtn.ghost{background:#211F18;border-color:#34322A;color:#D8D2C2}
+
+/* "Who cut this?" sheet */
+.sheet-bg{position:fixed;inset:0;z-index:500;background:rgba(23,22,15,.5);display:none;align-items:center;justify-content:center;padding:16px}
+.sheet-bg.open{display:flex}
+.sheet{background:var(--ivory);border:1px solid var(--border);border-radius:18px;padding:24px;width:100%;max-width:600px;max-height:90dvh;overflow-y:auto}
+.sheet h3{font-family:var(--serif);font-weight:700;font-size:22px;line-height:1.2}
+.sheet p{color:var(--ink2);font-size:14px;margin-top:6px}
+.names{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:18px 0}
+.name-btn{min-height:66px;border-radius:14px;border:1px solid var(--border);background:var(--surface);font-weight:800;font-size:17px;color:var(--ink);padding:8px}
+.name-btn:active{background:var(--clay-soft);border-color:var(--clay)}
+.name-btn.go{background:var(--green);border-color:var(--green);color:#fff}
+.name-btn.no{background:var(--red-soft);border-color:#EBC3BA;color:var(--red)}
+
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--slate);color:#FAF9F5;padding:12px 22px;border-radius:12px;font-size:14px;font-weight:600;opacity:0;transition:all .3s;z-index:1000;white-space:nowrap;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Narrow / portrait: one pane at a time */
+@media (max-width:859px){
+  .wrap{display:block;height:auto}
+  .side{border:none;overflow:visible}
+  .main{display:none;overflow:visible;padding:16px 16px 120px}
+  body.detail .side{display:none}
+  body.detail .main{display:block}
+  .back{display:flex}
+  .topbar{padding:0 12px;gap:10px}
+  .topbar .brand-sub{display:none}
+  .topbar .brand-name{white-space:nowrap}
+  .pc{flex-wrap:wrap;gap:10px 14px}
+  .pc-info{flex:1 1 calc(100% - 60px)}
+  .pc-size{margin-left:58px;font-size:19px}
+  .pc-q{margin-left:auto}
+}
+@media (max-width:519px){ .tb-sum{visibility:hidden} }
+</style>
+</head>
+<body>
+
+<div id="loading-screen" class="loading-screen">
+  <div class="brand-row">
+    <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Cutting List</div></div>
+  </div>
+  <div class="spinner"></div>
+</div>
+
+<div id="auth-screen">
+  <div class="brand-row">
+    <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Cutting List · v3.60.0</div></div>
+  </div>
+  <div class="auth-card">
+    <h2>Workshop Sign In</h2>
+    <div class="field"><label>Email</label><input type="email" id="auth-email" autocomplete="username"></div>
+    <div class="field"><label>Password</label><input type="password" id="auth-pass" autocomplete="current-password" onkeydown="if(event.key==='Enter')signIn()"></div>
+    <button class="btn btn-primary" onclick="signIn()">Sign In</button>
+    <div id="auth-error"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <button class="tb-btn back" aria-label="Back to projects" onclick="closeList()"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 8 12l7 7"/></svg></button>
+    <div class="brand-row">
+      <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
+      <div><div class="brand-name">Cutting List</div><div class="brand-sub">Amar Furniture · Woodwork</div></div>
+    </div>
+    <div class="tb-sum" id="tb-sum"></div>
+    <button class="tb-btn" aria-label="Sign out" title="Sign out" onclick="askSignOut()"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4.5H6A1.5 1.5 0 0 0 4.5 6v12A1.5 1.5 0 0 0 6 19.5h4"/><path d="M14.5 8 19 12l-4.5 4M19 12H9.5"/></svg></button>
+  </div>
+  <div class="wrap">
+    <div class="side" id="side"></div>
+    <div class="main" id="main"></div>
+  </div>
+  <div class="selbar" id="selbar">
+    <span id="sel-count">0 selected</span>
+    <button class="abtn ghost" onclick="stopSelecting()">Cancel</button>
+    <button class="abtn go" onclick="markPicked()">Mark as cut</button>
+  </div>
+</div>
+
+<div class="sheet-bg" id="sheet" onclick="if(event.target===this)closeSheet(null)">
+  <div class="sheet">
+    <h3 id="sheet-title"></h3>
+    <p id="sheet-sub"></p>
+    <div class="names" id="sheet-btns"></div>
+    <button class="btn btn-ghost" onclick="closeSheet(null)">Cancel</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, doc, onSnapshot, updateDoc, runTransaction, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// Same Firebase project as the orders app. This page only reads cutlists + workshop/config.
+const firebaseConfig = {
+  apiKey:            "AIzaSyAKr07M-nZWl04JGkvmppt1pmUFBLrWiMg",
+  authDomain:        "amar-furniture-orders.firebaseapp.com",
+  projectId:         "amar-furniture-orders",
+  storageBucket:     "amar-furniture-orders.firebasestorage.app",
+  messagingSenderId: "460562943530",
+  appId:             "1:460562943530:web:d89b913ec8e6ecd85e7d53"
+};
+const CUT_VERSION = 'v3.60.0';
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+let lists = [];          // open cut lists (not hidden, with pieces)
+let names = [];          // carpenter names from Settings
+let selId = null;        // project shown on the right
+let selecting = false;   // "Select" mode: tap several pieces, then mark them together
+const picked = new Set();
+let showAllDone = false;
+let unsubs = [];
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const fmtDay = d => d.getDate() + ' ' + MONTHS[d.getMonth()];
+const fmtStamp = iso => { const d = new Date(iso); return fmtDay(d) + ', ' + d.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' }); };
+// 63" x 3" x 3"
+const sizeOf = p => [p.l, p.w, p.t].filter(v => v !== '' && v != null).map(v => v + '"').join(' x ');
+const doneOf = c => c.pieces.filter(p => p.done).length;
+const isDone = c => doneOf(c) === c.pieces.length;
+const daysLeft = d => { const t = new Date(); t.setHours(0,0,0,0); return Math.round((new Date(d + 'T00:00:00') - t) / 86400000); };
+const byDue = (a, b) => (a.deadline || '9999') .localeCompare(b.deadline || '9999') || (a.orderNo || 0) - (b.orderNo || 0);
+const lastCut = c => Math.max(0, ...c.pieces.map(p => Date.parse(p.doneAt) || 0));
+const wide = () => matchMedia('(min-width:860px)').matches;
+const svgTick = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg>';
+const svgPin  = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6l-1 5 3 3v2H7v-2l3-3-1-5Z"/><path d="M12 14v6"/></svg>';
+
+function toast(msg) {
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function dueChip(c) {
+  if (!c.deadline) return '';
+  const n = daysLeft(c.deadline);
+  const txt = n < 0 ? (-n) + 'd late' : n === 0 ? 'Due today' : 'Due ' + fmtDay(new Date(c.deadline + 'T00:00:00'));
+  return `<span class="due ${n < 0 ? 'late' : n <= 3 ? 'soon' : ''}">${txt}</span>`;
+}
+
+// ── Sign in / out ──
+window.signIn = async () => {
+  const email = $('auth-email').value.trim(), pass = $('auth-pass').value;
+  $('auth-error').textContent = '';
+  if (!email || !pass) { $('auth-error').textContent = 'Please enter email and password.'; return; }
+  try { await signInWithEmailAndPassword(auth, email, pass); }
+  catch (e) { $('auth-error').textContent = e.code === 'auth/invalid-credential' ? 'Invalid email or password.' : e.message; }
+};
+window.askSignOut = async () => {
+  const ok = await sheet('Sign out of the tablet?', 'You will need the workshop password to sign in again.', [{ label: 'Sign out', value: true, cls: 'no' }]);
+  if (ok) signOut(auth);
+};
+
+onAuthStateChanged(auth, user => {
+  $('loading-screen').style.display = 'none';
+  unsubs.forEach(f => f()); unsubs = [];
+  $('auth-screen').style.display = user ? 'none' : 'flex';
+  $('app').style.display = user ? 'block' : 'none';
+  if (!user) return;
+  unsubs.push(onSnapshot(collection(db, 'cutlists'), snap => {
+    lists = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(c => !c.hidden && (c.pieces || []).length);
+    render();
+  }, err => { console.error(err); toast('Cannot load cut lists: ' + (err.code || err.message)); }));
+  unsubs.push(onSnapshot(doc(db, 'workshop', 'config'), s => { names = (s.exists() && s.data().carpenters) || []; }, err => console.warn(err)));
+  keepAwake();
+});
+
+// ── Project list (left) ──
+function tile(c) {
+  const n = c.pieces.length, d = doneOf(c);
+  return `<button class="pj ${c.active && d < n ? 'pinned' : ''} ${c.id === selId ? 'sel' : ''}" onclick="openList('${c.id}')">
+    <div class="pj-top"><div>
+      <div class="pj-name">${c.orderNo ? `<span class="ono">#${c.orderNo}</span>` : ''}${esc(c.client)}</div>
+      <div class="pj-desc">${esc(c.title) || '&nbsp;'}</div>
+    </div>${d < n ? dueChip(c) : ''}</div>
+    <div class="bar ${d === n ? 'full' : ''}"><i style="width:${Math.round(d / n * 100)}%"></i></div>
+    <div class="pj-cnt">${d} of ${n} cut</div>
+  </button>`;
+}
+function render() {
+  const open   = lists.filter(c => !isDone(c));
+  const pinned = open.filter(c => c.active).sort(byDue);
+  const todo   = open.filter(c => !c.active).sort(byDue);
+  const done   = lists.filter(isDone).sort((a, b) => lastCut(b) - lastCut(a));
+  if (selId && !lists.some(c => c.id === selId)) { selId = null; stopSelecting(); document.body.classList.remove('detail'); }
+  if (!selId && wide()) selId = (pinned[0] || todo[0] || done[0])?.id || null;
+
+  const sec = (title, arr) => arr.length ? `<div class="sec-h">${title} <b>${arr.length}</b></div>` + arr.map(tile).join('') : '';
+  const doneShown = showAllDone ? done : done.slice(0, 5);
+  $('side').innerHTML = !lists.length
+    ? '<div class="empty">No cut lists yet.<br>They appear here as soon as the office adds one.</div>'
+    : sec('Cutting now', pinned) + sec('To cut', todo) + sec('Done', doneShown)
+      + (done.length > doneShown.length ? `<button class="more" onclick="moreDone()">Show all ${done.length} done</button>` : '');
+  const left = open.reduce((s, c) => s + c.pieces.length - doneOf(c), 0);
+  $('tb-sum').textContent = left ? `${left} piece${left === 1 ? '' : 's'} to cut · ${open.length} project${open.length === 1 ? '' : 's'}` : 'All cut';
+  renderDetail();
+}
+window.moreDone = () => { showAllDone = true; render(); };
+window.openList = id => {
+  if (id !== selId) stopSelecting(true);
+  selId = id; document.body.classList.add('detail'); render();
+  $('main').scrollTop = 0; if (!wide()) scrollTo(0, 0);
+};
+window.closeList = () => { stopSelecting(true); document.body.classList.remove('detail'); if (!wide()) selId = null; render(); };
+
+// ── Pieces (right) ──
+function renderDetail() {
+  const c = lists.find(x => x.id === selId);
+  if (!c) { $('main').innerHTML = lists.length ? '<div class="empty">Pick a project on the left.</div>' : ''; return; }
+  const n = c.pieces.length, d = doneOf(c);
+  const acts = d < n ? `
+      <button class="abtn ${c.active ? 'on' : ''}" onclick="togglePin()">${svgPin} ${c.active ? 'Cutting now' : 'Start cutting'}</button>
+      <button class="abtn ${selecting ? 'on' : ''}" onclick="${selecting ? 'stopSelecting()' : 'startSelecting()'}">Select</button>
+      <button class="abtn go" onclick="markAll()">${svgTick} Mark all done</button>` : '';
+  $('main').innerHTML = `
+    <div class="dh">
+      <div>
+        <div class="dh-title">${c.orderNo ? `<span class="ono">#${c.orderNo}</span>` : ''}${esc(c.client)}</div>
+        <div class="dh-sub">${c.title ? `<span>${esc(c.title)}</span>` : ''}${d < n ? dueChip(c) : ''}</div>
+      </div>
+      <div class="dh-acts">${acts}</div>
+    </div>
+    ${c.notes ? `<div class="notes"><b>Notes</b>${esc(c.notes)}</div>` : ''}
+    <div class="prog"><div class="bar ${d === n ? 'full' : ''}"><i style="width:${Math.round(d / n * 100)}%"></i></div><span>${d} of ${n} cut</span></div>
+    <div class="${selecting ? 'selecting' : ''}">${c.pieces.map(p => `
+      <button class="pc ${p.done ? 'done' : ''} ${picked.has(p.id) ? 'picked' : ''}" onclick="tapPiece('${p.id}')">
+        <span class="tick">${svgTick}</span>
+        <span class="pc-info">
+          <div class="pc-n">${esc(p.name) || 'Piece'}</div>
+          ${p.wood ? `<div class="pc-w">${esc(p.wood)}</div>` : ''}
+          ${p.done ? `<div class="pc-by">Cut${p.doneBy ? ' by ' + esc(p.doneBy) : ''}${p.doneAt ? ' · ' + fmtStamp(p.doneAt) : ''}</div>` : ''}
+        </span>
+        <span class="pc-size">${esc(sizeOf(p))}</span>
+        <span class="pc-q">× ${esc(p.qty || '1')}</span>
+      </button>`).join('')}
+    </div>`;
+  $('sel-count').textContent = picked.size + ' selected';
+}
+
+window.tapPiece = async pid => {
+  const c = lists.find(x => x.id === selId); const p = c?.pieces.find(x => x.id === pid);
+  if (!p) return;
+  if (selecting) {
+    if (p.done) return;
+    picked.has(pid) ? picked.delete(pid) : picked.add(pid);
+    renderDetail(); return;
+  }
+  if (p.done) {
+    const ok = await sheet(`Mark “${p.name || 'Piece'}” as not cut?`, `It was marked cut${p.doneBy ? ' by ' + p.doneBy : ''}.`, [{ label: 'Yes, not cut', value: true, cls: 'no' }]);
+    if (ok) setCut([pid], false);
+    return;
+  }
+  const by = await askName(`Who cut “${p.name || 'Piece'}”?`, `${sizeOf(p)}${sizeOf(p) ? ' · ' : ''}× ${p.qty || 1}`);
+  if (by != null) setCut([pid], true, by);
+};
+window.startSelecting = () => { selecting = true; picked.clear(); $('selbar').classList.add('show'); renderDetail(); };
+window.stopSelecting = quiet => { selecting = false; picked.clear(); $('selbar').classList.remove('show'); if (quiet !== true) renderDetail(); };
+window.markPicked = async () => {
+  if (!picked.size) { toast('Tap the pieces that are cut'); return; }
+  const by = await askName(`Who cut these ${picked.size} piece${picked.size === 1 ? '' : 's'}?`, '');
+  if (by == null) return;
+  const ids = [...picked]; stopSelecting();
+  setCut(ids, true, by);
+};
+window.markAll = async () => {
+  const c = lists.find(x => x.id === selId); if (!c) return;
+  const ids = c.pieces.filter(p => !p.done).map(p => p.id);
+  const by = await askName(`Mark all ${ids.length} remaining piece${ids.length === 1 ? '' : 's'} as cut?`, `${c.client}${c.title ? ' · ' + c.title : ''}`);
+  if (by == null) return;
+  stopSelecting(true);
+  setCut(ids, true, by);
+};
+window.togglePin = async () => {
+  const c = lists.find(x => x.id === selId); if (!c) return;
+  try { await updateDoc(doc(db, 'cutlists', c.id), { active: !c.active, updatedAt: serverTimestamp() }); }
+  catch (err) { toast('Could not save: ' + (err.code || err.message)); }
+};
+
+// Marks pieces cut (with name + time) or not cut. A transaction, so two taps never overwrite each other.
+// When everything is cut the project leaves "Cutting now" and moves to Done.
+async function setCut(ids, done, by = '') {
+  const id = selId;
+  try {
+    await runTransaction(db, async tx => {
+      const ref = doc(db, 'cutlists', id);
+      const snap = await tx.get(ref);
+      if (!snap.exists()) throw new Error('This cut list was removed');
+      const now = new Date().toISOString();
+      const pieces = (snap.data().pieces || []).map(p => !ids.includes(p.id) || !!p.done === done ? p
+        : done ? { ...p, done: true, doneBy: by, doneAt: now } : { ...p, done: false, doneBy: '', doneAt: '' });
+      const patch = { pieces, updatedAt: serverTimestamp() };
+      if (pieces.every(p => p.done)) patch.active = false;
+      tx.update(ref, patch);
+    });
+    toast(done ? `✓ ${ids.length} piece${ids.length === 1 ? '' : 's'} marked cut` : 'Marked as not cut');
+  } catch (err) {
+    console.error(err);
+    toast(navigator.onLine ? 'Could not save: ' + (err.code || err.message) : 'No internet — try again');
+  }
+}
+
+// ── Sheet: big buttons, resolves with the chosen value (null = cancelled) ──
+let sheetResolve = null;
+function sheet(title, sub, btns) {
+  $('sheet-title').textContent = title;
+  $('sheet-sub').textContent = sub || '';
+  $('sheet-btns').innerHTML = btns.map((b, i) => `<button class="name-btn ${b.cls || ''}" onclick="pickSheet(${i})">${esc(b.label)}</button>`).join('');
+  $('sheet').classList.add('open');
+  return new Promise(res => { sheetResolve = v => res(v); sheet._btns = btns; });
+}
+window.pickSheet = i => closeSheet(sheet._btns[i].value);
+window.closeSheet = v => { $('sheet').classList.remove('open'); const r = sheetResolve; sheetResolve = null; r?.(v); };
+// Carpenter names come from Settings in the orders app.
+function askName(title, sub) {
+  if (!names.length) return sheet(title, 'No carpenter names yet — the office can add them in Settings.', [{ label: 'Mark as cut', value: '', cls: 'go' }]);
+  return sheet(title, sub, names.map(n => ({ label: n, value: n })));
+}
+
+// ── Keep the screen on while this page is open ──
+let wakeLock = null;
+async function keepAwake() {
+  try { if ('wakeLock' in navigator && !document.hidden && !wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); } } catch {}
+}
+
+// ── Self-update: reload when a newer version is live (never in the middle of a choice) ──
+async function checkForUpdate() {
+  try {
+    if (document.hidden) return;
+    const r = await fetch('/cut/index.html?v=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) return;
+    const m = (await r.text()).match(/const CUT_VERSION = '([^']+)'/);
+    if (!m || m[1] === CUT_VERSION || sessionStorage.getItem('af-cut-updated-to') === m[1]) return;
+    if ($('sheet').classList.contains('open') || selecting) return;
+    sessionStorage.setItem('af-cut-updated-to', m[1]);
+    location.reload();
+  } catch {}
+}
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).catch(e => console.warn('SW:', e));
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { keepAwake(); checkForUpdate(); } });
+setInterval(checkForUpdate, 5 * 60 * 1000);
+// Due dates move on at midnight; refresh the list every 10 minutes.
+setInterval(() => { if (lists.length) render(); }, 10 * 60 * 1000);
+addEventListener('resize', () => { if (wide() && !selId) render(); });
+</script>
+</body>
+</html>

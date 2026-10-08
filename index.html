@@ -11,7 +11,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.59.0 — Reports section (Payments reports); UI is Concept A ── */
+/* ── v3.60.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -362,6 +362,19 @@ button.chip{border:none;font-family:inherit}
 .add-item-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 14px;border-radius:10px;border:1.5px dashed var(--border);background:transparent;color:var(--clay);font-size:13px;font-weight:700;width:100%}
 .add-item-btn:hover{background:var(--clay-soft)}
 
+/* Cut list (woodwork) — edited here, ticked off on the workshop tablet at /cut/ */
+.chip.cut{background:var(--clay-soft);color:var(--clay)}
+.chip.cut.full{background:var(--green-soft);color:var(--green)}
+.cut-done{font-size:11.5px;font-weight:700;color:var(--green);margin-top:8px}
+#cut-modal .items-list-edit:empty::before{content:'No pieces yet — use “Add Piece” below';display:block;padding:14px 4px;font-size:12.5px;color:var(--ink3)}
+.cp-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.cp-list:empty::before{content:'No names yet';font-size:12.5px;color:var(--ink3)}
+.cp-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 5px 5px 12px;border-radius:20px;background:var(--surface);border:1px solid var(--border);font-size:13px;font-weight:600}
+.cp-chip button{width:22px;height:22px;border-radius:50%;border:none;background:var(--ivory);color:var(--ink2);display:flex;align-items:center;justify-content:center}
+.cp-chip button:hover{background:var(--red-soft);color:var(--red)}
+.cp-add{display:flex;gap:6px}
+.cp-add .btn{width:auto;padding:0 18px}
+
 .status-selector{display:flex;flex-direction:column;gap:6px;margin-top:6px}
 .status-opt{padding:10px 13px;border-radius:10px;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:13px;font-weight:600;color:var(--ink2);display:flex;align-items:center;gap:9px;transition:all .15s}
 .status-opt .dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
@@ -415,6 +428,7 @@ button.chip{border:none;font-family:inherit}
   .modal-title{font-size:1.45rem}
   .type-grid{grid-template-columns:repeat(5,1fr)}
   #stats-sheet-backdrop .modal{max-width:760px}
+  #cut-modal .modal{max-width:640px}
 
   /* New / Edit order — real two-column desktop panel. DOM order is preserved
      inside each column so Tab moves left-to-right, top-to-bottom. */
@@ -452,7 +466,7 @@ button.chip{border:none;font-family:inherit}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.59.0</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.60.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -688,8 +702,32 @@ button.chip{border:none;font-family:inherit}
       </div>
       <div class="toggle-switch"></div>
     </div>
+    <div class="field" style="margin-top:18px">
+      <label>Carpenters (workshop tablet)</label>
+      <div class="cp-list" id="cp-list"></div>
+      <div class="cp-add"><input type="text" id="cp-input" placeholder="Add a name" autocomplete="off" onkeydown="if(event.key==='Enter')addCarpenter()"><button class="btn btn-ghost" onclick="addCarpenter()">Add</button></div>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeSettingsModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- CUT LIST (woodwork) — the workshop tablet shows it at /cut/ -->
+<div class="modal-backdrop" id="cut-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="cut-title">Cut List</div>
+    <div class="modal-sub" id="cut-sub"></div>
+    <div class="field">
+      <label>Pieces to cut (inches)</label>
+      <div class="items-list-edit" id="cut-list-edit"></div>
+      <button class="add-item-btn" onclick="addCutRow()">＋ Add Piece</button>
+    </div>
+    <div class="field"><label>Notes for the workshop</label><textarea id="cut-notes" placeholder="Grain direction, joints, which pieces first…"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="saveCutList()">Save Cut List</button>
+      <button class="btn btn-ghost" onclick="closeCutModal()">Cancel</button>
     </div>
   </div>
 </div>
@@ -734,6 +772,8 @@ const ADMIN_EMAILS = [
 const MANAGER_EMAILS = [
   "manager@amarfurniture.in"
 ];
+// The workshop tablet's login: it only ever sees the cutting list at /cut/, never this app.
+const WORKSHOP_EMAIL = "workshop@amarfurniture.in";
 
 const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -745,6 +785,25 @@ Object.assign(window, {
   _collection:collection, _addDoc:addDoc, _updateDoc:updateDoc, _setDoc:setDoc,
   _deleteDoc:deleteDoc, _doc:doc, _onSnapshot:onSnapshot,
   _query:query, _orderBy:orderBy, _serverTimestamp:serverTimestamp
+});
+
+// ── CUT LISTS (woodwork) ──
+// One cutlists/{orderId} doc per order: name, number, deadline and pieces only (no phone or money),
+// because the workshop tablet (/cut/) can read this collection and nothing else.
+// Saved in a transaction so pieces the workshop ticked meanwhile keep their done / by / when.
+window._saveCutList = (id, meta, notes, edited) => runTransaction(db, async tx => {
+  const ref = doc(db, 'cutlists', id);
+  const snap = await tx.get(ref);
+  const cur = snap.exists() ? snap.data() : null;
+  const old = Object.fromEntries((cur?.pieces || []).map(x => [x.id, x]));
+  const now = new Date().toISOString();
+  const pieces = edited.map(e => {
+    const o = old[e.id] || {};
+    return { ...e, done: !!o.done, doneBy: o.doneBy || '', doneAt: o.doneAt || '', createdAt: o.createdAt || now };
+  });
+  const data = { ...meta, dept: 'wood', notes, pieces, updatedAt: serverTimestamp() };
+  if (cur) tx.update(ref, data);
+  else tx.set(ref, { ...data, active: false, createdAt: serverTimestamp(), createdBy: auth.currentUser?.email || '' });
 });
 
 // ── ORDER NUMBERS ──
@@ -786,6 +845,7 @@ onAuthStateChanged(auth, user => {
   document.getElementById('loading-screen').style.display = 'none';
   if (user) {
     const email    = user.email?.toLowerCase();
+    if (email === WORKSHOP_EMAIL) { location.replace('/cut/'); return; }
     const isAdmin  = ADMIN_EMAILS.includes(email);
     const isMgr    = MANAGER_EMAILS.includes(email);
     window._currentUser = user;
@@ -804,6 +864,7 @@ onAuthStateChanged(auth, user => {
     document.getElementById('money-btn').style.display = isAdmin ? 'flex' : 'none';
     applyLanguage();
     startListening();
+    listenCutLists();
     requestNotificationPermission();
   } else {
     window._currentUser = null; window._isAdmin = false;
@@ -820,6 +881,7 @@ function startListening() {
     window._projects = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderProjects(); updateStats();
     backfillOrderNos();
+    syncCutLists();
     // Opened from a link / new tab on #reports: show Reports once the orders have loaded.
     if (!window._hashHandled) { window._hashHandled = true; if (location.hash === '#reports' && window._isAdmin) openReports(); }
   });
@@ -834,6 +896,19 @@ function startListening() {
     console.error('settings listener failed:', err);
     showToast('Settings unavailable: ' + (err?.code || err?.message || 'unknown error'));
   });
+}
+
+// Cut lists + carpenter names (read by the workshop tablet too). If the Firestore rules
+// don't cover them yet, the app just works without them.
+function listenCutLists() {
+  _onSnapshot(_collection(_db, 'cutlists'), snap => {
+    window._cutlists = Object.fromEntries(snap.docs.map(d => [d.id, { id: d.id, ...d.data() }]));
+    renderProjects(); syncCutLists();
+  }, err => console.warn('cutlists listener failed:', err));
+  _onSnapshot(_doc(_db, 'workshop', 'config'), snap => {
+    window._carpenters = (snap.exists() && snap.data().carpenters) || [];
+    if (typeof updateSettingsModalUI === 'function') updateSettingsModalUI();
+  }, err => console.warn('workshop config listener failed:', err));
 }
 
 window.signIn = async function() {
@@ -858,7 +933,7 @@ window.saveProject = async function() {
   const type      = window._editType || 'woodwork';
   const items = [];
   {
-    document.querySelectorAll('.item-edit-row').forEach(row => {
+    document.querySelectorAll('#items-edit-list .item-edit-row').forEach(row => {
       const name = row.querySelector('.item-name-inp').value.trim();
       const l    = row.querySelector('.item-l-inp').value.trim();
       const b    = row.querySelector('.item-b-inp').value.trim();
@@ -925,6 +1000,7 @@ window.saveProject = async function() {
 window.deleteProject = async function() {
   if (!confirm('Permanently delete this order? This cannot be undone.')) return;
   await _deleteDoc(_doc(_db, 'projects', window._editId));
+  if (window._cutlists?.[window._editId]) _deleteDoc(_doc(_db, 'cutlists', window._editId)).catch(err => console.warn('Cut list not deleted:', err));
   showToast('Deleted forever'); closeModal();
 };
 
@@ -968,7 +1044,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.59.0';
+const APP_VERSION = 'v3.60.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -1232,6 +1308,7 @@ const IC = {
   clock:   '<path d="M12 6v6l4 2"/><circle cx="12" cy="12" r="9"/>',
   ruler:   '<rect x="3" y="7.5" width="18" height="9" rx="1.6"/><path d="M7 7.5v3M11 7.5v4.5M15 7.5v3"/>',
   close:   '<path d="M6 6l12 12M18 6 6 18"/>',
+  saw:     '<path d="M3.5 15 14 4.5h5.5V10L9 20.5H3.5Z"/><path d="M6.5 15.5l1.5 1.5M9 13l1.5 1.5M11.5 10.5 13 12M14 8l1.5 1.5"/>',
 };
 function svgi(name, size, sw) {
   return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="${sw || 1.8}" stroke-linecap="round" stroke-linejoin="round">${IC[name]}</svg>`;
@@ -1268,6 +1345,8 @@ window._statusUpdateId = null;
 window._updateStatusVal= null;
 window._showHold       = false;
 window._expandedCards  = new Set();
+window._cutlists       = {};
+window._carpenters     = [];
 
 const isDelivered = p => (p.status ?? 0) >= 4;
 const isArchived  = p => !!p.archived;
@@ -1347,6 +1426,10 @@ function buildCard(p) {
       : `<div class="chip warn">${svgi('clock', 11, 2)} Folder pending</div>`;
   }
   const archChip = p.archived ? `<div class="chip plain">Archived</div>` : '';
+  // Cut list progress (pieces ticked off on the workshop tablet)
+  const cutPcs = window._cutlists[p.id]?.pieces || [];
+  const cutDone = cutPcs.filter(x => x.done).length;
+  const cutChip = cutPcs.length ? `<div class="chip cut${cutDone === cutPcs.length ? ' full' : ''}">${svgi('saw', 11, 2)} Cut ${cutDone}/${cutPcs.length}</div>` : '';
 
   // Chips row: due date + money
   let money = '';
@@ -1372,6 +1455,10 @@ function buildCard(p) {
   } else {
     if (!window._isManager) acts.push(`<button class="icon-btn" aria-label="${T('updateStatus')}" title="${T('updateStatus')}" onclick="openStatusModal('${p.id}')">${svgi('refresh', 15)}</button>`);
     if (window._isAdmin)    acts.push(`<button class="icon-btn" aria-label="${T('edit')}" title="${T('edit')}" onclick="openEditModal('${p.id}')">${svgi('edit', 15)}</button>`);
+    if (window._isAdmin && p.projectType === 'woodwork') {
+      const all = cutPcs.length && cutDone === cutPcs.length;
+      acts.push(`<button class="icon-btn${all ? ' has' : ''}" aria-label="Cut list" title="${cutPcs.length ? `Cut list \u2014 ${cutDone} of ${cutPcs.length} cut` : 'Make a cut list for the workshop'}" onclick="openCutModal('${p.id}')">${svgi('saw', 15)}</button>`);
+    }
   }
   acts.push(`<button class="icon-btn ${window._expandedCards.has(p.id) ? 'on' : ''}" aria-label="Details" title="Items, specs &amp; note history" onclick="toggleCard('${p.id}')">${svgi('list', 15)}</button>`);
   if (p.phone) acts.push(`<a class="icon-btn" href="tel:${escHtml(p.phone)}" aria-label="${T('call')}" title="${T('call')}">${svgi('phone', 15)}</a>`);
@@ -1410,7 +1497,7 @@ function buildCard(p) {
       <div class="oc-days"><div class="oc-days-n">${daysText}</div><div class="oc-days-l">${daysLbl}</div></div>
     </div>
     <div class="oc-stage">${lead}<div class="chip s${stageIdx}">${stage.label}</div>${holdChip}${folderChip}${archChip}</div>
-    <div class="oc-chips"><div class="chip plain">Due ${date}</div>${money}</div>
+    <div class="oc-chips"><div class="chip plain">Due ${date}</div>${cutChip}${money}</div>
     <div class="note-block">
       <div class="note-row">${svgi('note', 13)}<div class="note-text ${latest ? 'has' : ''}">${latest || T('noActivity')}</div></div>
       <div class="note-add-row">
@@ -2229,8 +2316,9 @@ function addItemRow(name='', l='', b='', w='', qty='', unit='Nos') {
 }
 
 function removeItemRow(btn) {
+  const list = btn.closest('.items-list-edit');
   btn.closest('.item-edit-row').remove();
-  document.querySelectorAll('.item-sr-badge').forEach((el, i) => el.textContent = i + 1);
+  list.querySelectorAll('.item-sr-badge').forEach((el, i) => el.textContent = i + 1);
 }
 
 function openModal(id) {
@@ -2256,11 +2344,11 @@ document.addEventListener('keydown', e => {
   else if (open('settings-modal'))       closeSettingsModal();
   else if (open('stats-sheet-backdrop')) closeStats();
 });
-// Cmd/Ctrl+S saves the order form (and stops Safari's "Save page" dialog).
+// Cmd/Ctrl+S saves the order form or the cut list (and stops Safari's "Save page" dialog).
 document.addEventListener('keydown', e => {
   if (!(e.metaKey || e.ctrlKey) || e.altKey || e.shiftKey || e.key.toLowerCase() !== 's') return;
-  const m = document.getElementById('project-modal');
-  if (!m || !m.classList.contains('open')) return;
+  const m = document.querySelector('#project-modal.open, #cut-modal.open');
+  if (!m) return;
   e.preventDefault();
   if (e.repeat) return;
   m.querySelector('.modal-actions .btn-primary')?.click();
@@ -2311,6 +2399,75 @@ document.addEventListener('keydown', e => {
   e.preventDefault();
   goHome();
 });
+// ── Cut lists (woodwork) ──
+// What the tablet may see of an order. Delivered or archived orders drop off the tablet.
+const cutMeta = p => ({ orderNo: p.orderNo || 0, client: p.client || '', title: p.item || '', deadline: p.deadline || '', hidden: !!p.archived || (p.status ?? 0) >= 4 });
+// Keeps each cut list's name / number / deadline in step with its order (writes only when something changed).
+function syncCutLists() {
+  for (const c of Object.values(window._cutlists || {})) {
+    const p = (window._projects || []).find(x => x.id === c.id);
+    if (!p) continue;
+    const m = cutMeta(p);
+    if (Object.keys(m).every(k => c[k] === m[k])) continue;
+    Object.assign(c, m);
+    _updateDoc(_doc(_db, 'cutlists', c.id), { ...m, updatedAt: _serverTimestamp() }).catch(err => console.warn('Cut list sync failed:', err));
+  }
+}
+
+function openCutModal(id) {
+  if (!window._isAdmin) return;
+  const p = (window._projects || []).find(x => x.id === id); if (!p) return;
+  window._cutId = id;
+  const c = window._cutlists[id];
+  document.getElementById('cut-title').textContent = 'Cut List' + (p.orderNo ? ' · #' + p.orderNo : '') + ' · ' + p.client;
+  document.getElementById('cut-sub').textContent = (p.item || typeLabelOf(p)) + ' — the workshop tablet shows this list';
+  document.getElementById('cut-list-edit').innerHTML = '';
+  (c?.pieces || []).forEach(pc => addCutRow(pc));
+  document.getElementById('cut-notes').value = c?.notes || '';
+  openModal('cut-modal');
+  if (!c?.pieces?.length) addCutRow();
+}
+function closeCutModal() { document.getElementById('cut-modal').classList.remove('open'); }
+
+// One piece row: Part, then L / W / T in inches, Qty and Wood. Ticked pieces show who cut them and when.
+function addCutRow(pc = {}) {
+  const list = document.getElementById('cut-list-edit');
+  const row  = document.createElement('div');
+  row.className = 'item-edit-row';
+  row.dataset.id = pc.id || Math.random().toString(36).slice(2, 10);
+  const dim = (lbl, cls, v, ph) => `<div class="item-dim-wrap"><div class="item-dim-label">${lbl}</div><input class="item-dim-inp ${cls}" type="text" inputmode="decimal" placeholder="${ph}" value="${escHtml(v || '')}"></div>`;
+  row.innerHTML = `
+    <div class="item-edit-row-top">
+      <span class="item-sr-badge">${list.children.length + 1}</span>
+      <input class="item-name-inp cut-name" type="text" placeholder="Part e.g. Table leg" value="${escHtml(pc.name || '')}">
+      <button class="item-del-btn" aria-label="Remove piece" onclick="removeItemRow(this)">${svgi('close', 13, 2)}</button>
+    </div>
+    <div class="item-edit-row-dims">
+      ${dim('L (in)', 'cut-l', pc.l, '—')}${dim('W (in)', 'cut-w', pc.w, '—')}${dim('T (in)', 'cut-t', pc.t, '—')}${dim('Qty', 'cut-q', pc.qty, '1')}
+      <div class="item-dim-wrap"><div class="item-dim-label">Wood</div><input class="item-dim-inp cut-wood" type="text" placeholder="e.g. Teak" value="${escHtml(pc.wood || '')}"></div>
+    </div>
+    ${pc.done ? `<div class="cut-done">\u2713 Cut${pc.doneBy ? ' by ' + escHtml(pc.doneBy) : ''}${pc.doneAt ? ' · ' + fmtStamp(pc.doneAt) : ''}</div>` : ''}`;
+  list.appendChild(row);
+  if (!pc.id) row.querySelector('.cut-name').focus();
+}
+
+async function saveCutList() {
+  const id = window._cutId;
+  const p = (window._projects || []).find(x => x.id === id); if (!p) return;
+  const val = (row, cls) => row.querySelector('.' + cls).value.trim().replace(/["\u201D]+$/, '').trim();
+  const pieces = [...document.querySelectorAll('#cut-list-edit .item-edit-row')]
+    .map(row => ({ id: row.dataset.id, name: val(row, 'cut-name'), l: val(row, 'cut-l'), w: val(row, 'cut-w'), t: val(row, 'cut-t'), qty: val(row, 'cut-q') || '1', wood: val(row, 'cut-wood') }))
+    .filter(x => x.name || x.l || x.w || x.t);
+  try {
+    await window._saveCutList(id, cutMeta(p), document.getElementById('cut-notes').value.trim(), pieces);
+    showToast('Cut list saved');
+    closeCutModal();
+  } catch (err) {
+    console.error('saveCutList failed:', err);
+    showToast('Could not save cut list: ' + (err?.code || err?.message || 'error'));
+  }
+}
+
 function closeModal()       { document.getElementById('project-modal').classList.remove('open'); }
 function closeStatusModal() { document.getElementById('status-modal').classList.remove('open'); }
 
@@ -2322,6 +2479,30 @@ window.closeSettingsModal = function() { document.getElementById('settings-modal
 
 function updateSettingsModalUI() {
   document.getElementById('drive-automation-toggle')?.classList.toggle('active', isDriveAutomationOn());
+  const cp = document.getElementById('cp-list');
+  if (cp) cp.innerHTML = (window._carpenters || []).map((n, i) =>
+    `<span class="cp-chip">${escHtml(n)}<button aria-label="Remove ${escHtml(n)}" onclick="removeCarpenter(${i})">${svgi('close', 11, 2)}</button></span>`).join('');
+}
+
+// Carpenter names: the workshop tablet asks "who cut this?" from this list.
+async function saveCarpenters(list) {
+  try { await _setDoc(_doc(_db, 'workshop', 'config'), { carpenters: list }, { merge: true }); }
+  catch (err) { console.error('saveCarpenters failed:', err); showToast('Could not save names: ' + (err?.code || err?.message || 'error')); }
+}
+function addCarpenter() {
+  const inp = document.getElementById('cp-input');
+  const name = inp.value.trim().replace(/\s+/g, ' ');
+  if (!name) return;
+  const list = window._carpenters || [];
+  if (list.some(n => n.toLowerCase() === name.toLowerCase())) { showToast(name + ' is already on the list'); return; }
+  inp.value = '';
+  saveCarpenters([...list, name]);
+}
+function removeCarpenter(i) {
+  const list = [...(window._carpenters || [])];
+  if (!list[i] || !confirm('Remove ' + list[i] + ' from the carpenters list?')) return;
+  list.splice(i, 1);
+  saveCarpenters(list);
 }
 
 window.toggleDriveAutomation = async function() {

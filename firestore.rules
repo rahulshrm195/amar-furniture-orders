@@ -1,0 +1,40 @@
+rules_version = '2';
+// Copy of the rules pasted into Firebase console → Firestore Database → Rules.
+// Keep this file in step with what is live.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn()   { return request.auth != null; }
+    // The workshop tablet's login: cut lists only, never orders or settings.
+    function isWorkshop() { return signedIn() && request.auth.token.email == "workshop@amarfurniture.in"; }
+    function isStaff()    { return signedIn() && !isWorkshop(); }
+    function isAdmin()    { return signedIn() && request.auth.token.email in [
+      "rahulshrm195@gmail.com"
+    ]; }
+
+    match /projects/{projectId} {
+      allow read: if isStaff();
+      allow create, delete: if isAdmin();
+      allow update: if isStaff();
+    }
+
+    match /settings/{docId} {
+      allow read: if isStaff();
+      allow write: if isAdmin();
+    }
+
+    // Cut lists: no phone numbers or money in here.
+    // The workshop may only tick pieces and pin a project ("Cutting now").
+    match /cutlists/{orderId} {
+      allow read: if signedIn();
+      allow create, delete: if isAdmin();
+      allow update: if isStaff() ||
+        (isWorkshop() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pieces', 'active', 'updatedAt']));
+    }
+
+    // Carpenter names for the tablet's "Who cut this?" buttons.
+    match /workshop/{docId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+  }
+}
