@@ -25,7 +25,7 @@ A single-page PWA for tracking furniture orders. It is hosted on GitHub Pages (s
 
 ## Data and features
 - **Firestore**
-  - `projects` holds one document per order. Fields include `client`, `phone`, `item`, `projectType`, `status` (0–4, where 4 means delivered), `items[]`, `amount`, `advance`, `payments`, `activityLog` (newest first), `archived`, `orderNo`, `createdAt` and `driveFolderUrl`.
+  - `projects` holds one document per order. Fields include `client`, `phone`, `item`, `notes`, `internalNotes` (admin-only on screen), `projectType`, `status` (0–4, where 4 means delivered), `items[]`, `amount`, `advance`, `payments`, `activityLog` (newest first), `archived`, `orderNo`, `createdAt` and `driveFolderUrl`.
   - `settings/app` holds app settings and `lastOrderNo`.
 - **Order numbers** (v3.59.0): orders are numbered #1001 and up. `_nextOrderNo()` hands out each number inside a transaction, and numbers are never reused. Older orders without a number are backfilled oldest-first the first time an admin loads the app (`backfillOrderNos`).
 - **Cut lists** (v3.60.0):
