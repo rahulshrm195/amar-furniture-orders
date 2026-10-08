@@ -11,7 +11,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.62.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
+/* ── v3.63.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -26,6 +26,9 @@ body{background:var(--ivory);color:var(--ink);font-family:var(--sans);min-height
 a{color:var(--clay);text-decoration:none}
 button{font-family:inherit;cursor:pointer}
 input,select,textarea{font-family:inherit}
+/* No up/down arrows on number boxes */
+input[type=number]{-moz-appearance:textfield;appearance:textfield}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 ::-webkit-scrollbar{width:8px;height:8px} ::-webkit-scrollbar-thumb{background:#DAD3C2;border-radius:8px}
 
 /* ── Loading + sign-in ── */
@@ -466,7 +469,7 @@ button.chip{border:none;font-family:inherit}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.62.0</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.63.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -1045,7 +1048,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.62.0';
+const APP_VERSION = 'v3.63.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -2306,10 +2309,10 @@ function addItemRow(name='', l='', b='', w='', qty='', unit='Nos') {
       <button class="item-del-btn" aria-label="Remove item" onclick="removeItemRow(this)">${svgi('close', 13, 2)}</button>
     </div>
     <div class="item-edit-row-dims">
-      <div class="item-dim-wrap"><div class="item-dim-label">L (in)</div><input class="item-dim-inp item-l-inp" type="number" step="0.01" placeholder="—" value="${escHtml(l)}"></div>
-      <div class="item-dim-wrap"><div class="item-dim-label">B (in)</div><input class="item-dim-inp item-b-inp" type="number" step="0.01" placeholder="—" value="${escHtml(b)}"></div>
-      <div class="item-dim-wrap"><div class="item-dim-label">W (in)</div><input class="item-dim-inp item-w-inp" type="number" step="0.01" placeholder="—" value="${escHtml(w)}"></div>
-      <div class="item-dim-wrap"><div class="item-dim-label">Qty</div><input class="item-dim-inp item-qty-inp" type="number" step="0.01" min="0.01" placeholder="1" value="${escHtml(qty)}"></div>
+      <div class="item-dim-wrap"><div class="item-dim-label">L (in)</div><input class="item-dim-inp item-l-inp" type="text" autocomplete="off" placeholder="—" value="${escHtml(l)}"></div>
+      <div class="item-dim-wrap"><div class="item-dim-label">B (in)</div><input class="item-dim-inp item-b-inp" type="text" autocomplete="off" placeholder="—" value="${escHtml(b)}"></div>
+      <div class="item-dim-wrap"><div class="item-dim-label">W (in)</div><input class="item-dim-inp item-w-inp" type="text" autocomplete="off" placeholder="—" value="${escHtml(w)}"></div>
+      <div class="item-dim-wrap"><div class="item-dim-label">Qty</div><input class="item-dim-inp item-qty-inp" type="text" inputmode="decimal" autocomplete="off" placeholder="1" value="${escHtml(qty)}"></div>
       <div class="item-dim-wrap"><div class="item-dim-label">Unit</div><select class="item-unit-sel">${unitOpts}</select></div>
     </div>`;
   list.appendChild(row);
@@ -2459,7 +2462,8 @@ function addCutRow(pc = {}) {
   const row  = document.createElement('div');
   row.className = 'item-edit-row';
   row.dataset.id = pc.id || Math.random().toString(36).slice(2, 10);
-  const dim = (lbl, cls, v, ph) => `<div class="item-dim-wrap"><div class="item-dim-label">${lbl}</div><input class="item-dim-inp ${cls}" type="text" inputmode="decimal" placeholder="${ph}" value="${escHtml(v || '')}"></div>`;
+  // Sizes are plain text so fractions like 1 1/8 can be typed; Qty gets the number pad.
+  const dim = (lbl, cls, v, ph) => `<div class="item-dim-wrap"><div class="item-dim-label">${lbl}</div><input class="item-dim-inp ${cls}" type="text" ${cls === 'cut-q' ? 'inputmode="decimal" ' : ''}autocomplete="off" placeholder="${ph}" value="${escHtml(v || '')}"></div>`;
   row.innerHTML = `
     <div class="item-edit-row-top">
       <span class="item-sr-badge">${list.children.length + 1}</span>
