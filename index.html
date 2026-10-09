@@ -11,7 +11,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.66.1 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
+/* ── v3.67.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -304,6 +304,7 @@ button.chip{border:none;font-family:inherit}
 .icon-btn.on{border-color:var(--clay);color:var(--clay);background:var(--clay-soft)}
 .icon-btn.has{border-color:#B9D9C2;color:var(--green);background:var(--green-soft)}
 .icon-btn.has svg{fill:currentColor;fill-opacity:.22}
+.icon-btn.prep{border-color:#E8CFA0;color:var(--amber);background:var(--amber-soft)}
 .pill-btn{font-size:11.5px;font-weight:700;color:var(--clay);background:var(--clay-soft);border:none;padding:6px 12px;border-radius:20px}
 
 .oc-details{display:none;border-top:1px dashed var(--border);padding-top:10px;flex-direction:column;gap:12px}
@@ -469,7 +470,7 @@ button.chip{border:none;font-family:inherit}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.66.1</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.67.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -806,7 +807,8 @@ window._saveCutList = (id, meta, notes, edited) => runTransaction(db, async tx =
   const now = new Date().toISOString();
   const pieces = edited.map(e => {
     const o = old[e.id] || {};
-    return { ...e, done: !!o.done, doneBy: o.doneBy || '', doneAt: o.doneAt || '', createdAt: o.createdAt || now };
+    return { ...e, done: !!o.done, doneBy: o.doneBy || '', doneAt: o.doneAt || '',
+      turned: !!o.turned, turnedBy: o.turnedBy || '', turnedAt: o.turnedAt || '', createdAt: o.createdAt || now };
   });
   const data = { dept: 'wood', ...meta, notes, pieces, updatedAt: serverTimestamp() };
   if (cur) tx.update(ref, data);
@@ -1052,7 +1054,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.66.1';
+const APP_VERSION = 'v3.67.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -1438,7 +1440,11 @@ function buildCard(p) {
   const cutPcs = window._cutlists[p.id]?.pieces || [];
   const cutDone = cutPcs.filter(x => x.done).length;
   const isLathe = p.projectType === 'lathe';
-  const cutChip = cutPcs.length ? `<div class="chip cut${cutDone === cutPcs.length ? ' full' : ''}">${svgi('saw', 11, 2)} ${isLathe ? 'Turned' : 'Cut'} ${cutDone}/${cutPcs.length}</div>` : '';
+  // Lathe orders are cut first (Woodwork tab), then turned (Lathe tab): two chips.
+  const turnDone = cutPcs.filter(x => x.turned).length;
+  const chipOf = (lbl, d) => `<div class="chip cut${d === cutPcs.length ? ' full' : ''}">${svgi('saw', 11, 2)} ${lbl} ${d}/${cutPcs.length}</div>`;
+  const cutChip = cutPcs.length ? chipOf('Cut', cutDone) + (isLathe ? chipOf('Turned', turnDone) : '') : '';
+  const cutAll = cutPcs.length > 0 && cutDone === cutPcs.length && (!isLathe || turnDone === cutPcs.length);
 
   // Chips row: due date + money
   let money = '';
@@ -1465,8 +1471,10 @@ function buildCard(p) {
     if (!window._isManager) acts.push(`<button class="icon-btn" aria-label="${T('updateStatus')}" title="${T('updateStatus')}" onclick="openStatusModal('${p.id}')">${svgi('refresh', 15)}</button>`);
     if (window._isAdmin)    acts.push(`<button class="icon-btn" aria-label="${T('edit')}" title="${T('edit')}" onclick="openEditModal('${p.id}')">${svgi('edit', 15)}</button>`);
     if (window._isAdmin && (p.projectType === 'woodwork' || isLathe)) {
-      const all = cutPcs.length && cutDone === cutPcs.length;
-      acts.push(`<button class="icon-btn${all ? ' has' : ''}" aria-label="Cut list" title="${cutPcs.length ? `${isLathe ? 'Lathe' : 'Cut'} list \u2014 ${cutDone} of ${cutPcs.length} ${isLathe ? 'turned' : 'cut'}` : `Make a ${isLathe ? 'lathe' : 'cut'} list for the workshop`}" onclick="openCutModal('${p.id}')">${svgi('saw', 15)}</button>`);
+      // Plain = no list yet, orange = list made, green = everything cut (and turned)
+      const ttl = !cutPcs.length ? `Make a ${isLathe ? 'lathe' : 'cut'} list for the workshop`
+        : `${isLathe ? 'Lathe' : 'Cut'} list \u2014 ${cutDone} of ${cutPcs.length} cut${isLathe ? `, ${turnDone} turned` : ''}`;
+      acts.push(`<button class="icon-btn${cutAll ? ' has' : cutPcs.length ? ' prep' : ''}" aria-label="Cut list" title="${ttl}" onclick="openCutModal('${p.id}')">${svgi('saw', 15)}</button>`);
     }
   }
   acts.push(`<button class="icon-btn ${window._expandedCards.has(p.id) ? 'on' : ''}" aria-label="Details" title="Items, specs &amp; note history" onclick="toggleCard('${p.id}')">${svgi('list', 15)}</button>`);
@@ -2483,7 +2491,8 @@ function addCutRow(pc = {}) {
       ${dim('L (in)', 'cut-l', pc.l, '—')}${dim('W (in)', 'cut-w', pc.w, '—')}${dim('T (in)', 'cut-t', pc.t, '—')}${dim('Qty', 'cut-q', pc.qty, '1')}
       <div class="item-dim-wrap"><div class="item-dim-label">Wood</div><input class="item-dim-inp cut-wood" type="text" placeholder="e.g. Teak" value="${escHtml(pc.wood || '')}"></div>
     </div>
-    ${pc.done ? `<div class="cut-done">\u2713 Cut${pc.doneBy ? ' by ' + escHtml(pc.doneBy) : ''}${pc.doneAt ? ' · ' + fmtStamp(pc.doneAt) : ''}</div>` : ''}`;
+    ${pc.done ? `<div class="cut-done">\u2713 Cut${pc.doneBy ? ' by ' + escHtml(pc.doneBy) : ''}${pc.doneAt ? ' · ' + fmtStamp(pc.doneAt) : ''}</div>` : ''}
+    ${pc.turned ? `<div class="cut-done">\u2713 Turned${pc.turnedBy ? ' by ' + escHtml(pc.turnedBy) : ''}${pc.turnedAt ? ' · ' + fmtStamp(pc.turnedAt) : ''}</div>` : ''}`;
   list.appendChild(row);
   if (!pc.id) row.querySelector('.cut-name').focus();
 }

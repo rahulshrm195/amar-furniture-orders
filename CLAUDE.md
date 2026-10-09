@@ -37,7 +37,13 @@ A single-page PWA for tracking furniture orders. It is hosted on GitHub Pages (s
   - Carpenters: names live in `workshop/config.carpenters` and are edited in Settings.
   - Tablet: it can mark one piece, a selected group, or every remaining piece as cut, and it records who did it and when. Sizes show as `63" x 3" x 3"`. "Start cutting" pins a project to the "Cutting now" section.
   - Print (v3.65.0): the tablet's Print button fills `#slip` and calls `window.print()`. Print CSS lays it out for a 58 mm (2-inch) roll at `@page size:58mm`. The shop's printer is an "EZO" 2-inch Bluetooth roll printer, reached through Android's Print screen with the RawBT print service app.
-  - Lathe (v3.66.0): Lathe Work orders get the same list (same saw icon, "Lathe List") with `dept: 'lathe'`; `cutMeta` sets `dept` from the order's type. The tablet has Woodwork / Lathe tabs and remembers the last one (localStorage `af-cut-dept`). On Lathe it says "turned" instead of "cut". Lists without `dept` count as woodwork.
+  - Lathe (v3.67.0): Lathe Work orders get the same list with `dept: 'lathe'`; `cutMeta` sets `dept` from the order's type. A lathe order is tracked twice:
+    - Its pieces are cut on the tablet's Woodwork tab, which uses `done`/`doneBy`/`doneAt` and the `active` pin.
+    - They are then turned on the Lathe tab, which uses `turned`/`turnedBy`/`turnedAt` and the `activeLathe` pin.
+    - The Woodwork tab shows every list. The Lathe tab shows only lathe orders and says "turned" instead of "cut".
+    - Lathe cards show both "Cut x/n" and "Turned y/n".
+    - The tablet remembers its tab in localStorage (`af-cut-dept`). Lists without `dept` count as woodwork.
+  - Card icon: the saw icon is plain when there is no list, orange (`.prep`) once a list exists, and green (`.has`) when everything is cut (and, for lathe orders, turned).
 - **Drive folders**: `createDriveFolder` POSTs the order to an Apps Script webhook with `client`, `projectType`, `orderNo` and `otherLabel`. The script then writes the folder URL back to the order document.
 - **Keyboard shortcuts**:
   - `N` opens a new order (admins only).

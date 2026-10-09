@@ -8,7 +8,7 @@
 <title>Amar Furniture — Cutting List</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.66.1 — Workshop cutting list (tablet); UI is Concept A ── */
+/* ── v3.67.0 — Workshop cutting list (tablet); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -96,6 +96,8 @@ input{font-family:inherit}
 .pc-info{min-width:0;flex:1}
 .pc-n{font-weight:800;font-size:17.5px}
 .pc-w{font-size:13px;color:var(--ink2);margin-top:2px}
+.pc-wait{font-size:12.5px;color:var(--amber);font-weight:700;margin-top:4px}
+.tag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:1px 7px;border-radius:20px;background:#E3EDE6;color:#5C8A6B;margin-right:6px}
 .pc-by{font-size:12.5px;color:var(--green);font-weight:700;margin-top:4px}
 .pc-size{font-family:var(--serif);font-weight:700;font-size:22px;white-space:nowrap;font-variant-numeric:tabular-nums}
 .pc-q{font-weight:800;font-size:18px;min-width:58px;text-align:right;color:var(--clay);white-space:nowrap}
@@ -189,7 +191,7 @@ input{font-family:inherit}
 <div id="auth-screen">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Cutting List · v3.66.1</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Cutting List · v3.67.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Workshop Sign In</h2>
@@ -249,7 +251,7 @@ const firebaseConfig = {
   messagingSenderId: "460562943530",
   appId:             "1:460562943530:web:d89b913ec8e6ecd85e7d53"
 };
-const CUT_VERSION = 'v3.66.1';
+const CUT_VERSION = 'v3.67.0';
 
 const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -267,6 +269,15 @@ const WORDS = {
 };
 const W = () => WORDS[dept];
 const deptOf = c => c.dept === 'lathe' ? 'lathe' : 'wood';
+// Lathe orders go through both tabs: Woodwork cuts the blanks (done / doneBy / doneAt / active),
+// then Lathe turns them (turned / turnedBy / turnedAt / activeLathe).
+const KEYS = {
+  wood:  { f: 'done',   by: 'doneBy',   at: 'doneAt',   pin: 'active' },
+  lathe: { f: 'turned', by: 'turnedBy', at: 'turnedAt', pin: 'activeLathe' },
+};
+const K = () => KEYS[dept];
+const inTab = (c, d) => d === 'wood' || deptOf(c) === 'lathe';   // Woodwork shows every list; Lathe only lathe orders
+const isP = p => !!p[K().f];
 let names = [];          // carpenter names from Settings
 let selId = null;        // project shown on the right
 let selecting = false;   // "Select" mode: tap several pieces, then mark them together
@@ -281,11 +292,11 @@ const fmtDay = d => d.getDate() + ' ' + MONTHS[d.getMonth()];
 const fmtStamp = iso => { const d = new Date(iso); return fmtDay(d) + ', ' + d.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' }); };
 // 63" x 3" x 3"
 const sizeOf = p => [p.l, p.w, p.t].filter(v => v !== '' && v != null).map(v => v + '"').join(' x ');
-const doneOf = c => c.pieces.filter(p => p.done).length;
+const doneOf = c => c.pieces.filter(isP).length;
 const isDone = c => doneOf(c) === c.pieces.length;
 const daysLeft = d => { const t = new Date(); t.setHours(0,0,0,0); return Math.round((new Date(d + 'T00:00:00') - t) / 86400000); };
 const byDue = (a, b) => (a.deadline || '9999') .localeCompare(b.deadline || '9999') || (a.orderNo || 0) - (b.orderNo || 0);
-const lastCut = c => Math.max(0, ...c.pieces.map(p => Date.parse(p.doneAt) || 0));
+const lastCut = c => Math.max(0, ...c.pieces.map(p => Date.parse(p[K().at]) || 0));
 const wide = () => matchMedia('(min-width:860px)').matches;
 const svgTick = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg>';
 const svgPrint = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9V4h10v5"/><rect x="4" y="9" width="16" height="7" rx="1.5"/><path d="M7 14h10v6H7Z"/></svg>';
@@ -335,10 +346,10 @@ onAuthStateChanged(auth, user => {
 // ── Project list (left) ──
 function tile(c) {
   const n = c.pieces.length, d = doneOf(c);
-  return `<button class="pj ${c.active && d < n ? 'pinned' : ''} ${c.id === selId ? 'sel' : ''}" onclick="openList('${c.id}')">
+  return `<button class="pj ${c[K().pin] && d < n ? 'pinned' : ''} ${c.id === selId ? 'sel' : ''}" onclick="openList('${c.id}')">
     <div class="pj-top"><div>
       <div class="pj-name">${c.orderNo ? `<span class="ono">#${c.orderNo}</span>` : ''}${esc(c.client)}</div>
-      <div class="pj-desc">${esc(c.title) || '&nbsp;'}</div>
+      <div class="pj-desc">${dept === 'wood' && deptOf(c) === 'lathe' ? '<span class="tag">Lathe</span>' : ''}${esc(c.title) || '&nbsp;'}</div>
     </div>${d < n ? dueChip(c) : ''}</div>
     <div class="bar ${d === n ? 'full' : ''}"><i style="width:${Math.round(d / n * 100)}%"></i></div>
     <div class="pj-cnt">${d} of ${n} ${W().cut}</div>
@@ -351,17 +362,17 @@ window.setDept = d => {
   stopSelecting(true); document.body.classList.remove('detail'); render();
 };
 function render() {
-  lists = all.filter(c => deptOf(c) === dept);
+  lists = all.filter(c => inTab(c, dept));
   const open   = lists.filter(c => !isDone(c));
-  const pinned = open.filter(c => c.active).sort(byDue);
-  const todo   = open.filter(c => !c.active).sort(byDue);
+  const pinned = open.filter(c => c[K().pin]).sort(byDue);
+  const todo   = open.filter(c => !c[K().pin]).sort(byDue);
   const done   = lists.filter(isDone).sort((a, b) => lastCut(b) - lastCut(a));
   if (selId && !lists.some(c => c.id === selId)) { selId = null; stopSelecting(); document.body.classList.remove('detail'); }
   if (!selId && wide()) selId = (pinned[0] || todo[0] || done[0])?.id || null;
 
   const sec = (title, arr) => arr.length ? `<div class="sec-h">${title} <b>${arr.length}</b></div>` + arr.map(tile).join('') : '';
   const doneShown = showAllDone ? done : done.slice(0, 5);
-  const tab = d => { const k = all.filter(c => deptOf(c) === d && !isDone(c)).length;
+  const tab = d => { const k = all.filter(c => inTab(c, d) && c.pieces.some(p => !p[KEYS[d].f])).length;
     return `<button class="tab ${d === dept ? 'on' : ''}" onclick="setDept('${d}')">${WORDS[d].label}${k ? ` <b>${k}</b>` : ''}</button>`; };
   $('side').innerHTML = `<div class="tabs">${tab('wood')}${tab('lathe')}</div>` + (!lists.length
     ? `<div class="empty">No ${W().label.toLowerCase()} lists yet.<br>They appear here as soon as the office adds one.</div>`
@@ -387,7 +398,7 @@ function renderDetail() {
   if (!c) { $('main').innerHTML = lists.length ? '<div class="empty">Pick a project on the left.</div>' : ''; return; }
   const n = c.pieces.length, d = doneOf(c);
   const acts = `<button class="abtn" onclick="printSlip()">${svgPrint} Print</button>` + (d < n ? `
-      <button class="abtn ${c.active ? 'on' : ''}" onclick="togglePin()">${svgPin} ${c.active ? W().now : W().start}</button>
+      <button class="abtn ${c[K().pin] ? 'on' : ''}" onclick="togglePin()">${svgPin} ${c[K().pin] ? W().now : W().start}</button>
       <button class="abtn ${selecting ? 'on' : ''}" onclick="${selecting ? 'stopSelecting()' : 'startSelecting()'}">Select</button>
       <button class="abtn go" onclick="markAll()">${svgTick} Mark all done</button>` : '');
   $('main').innerHTML = `
@@ -401,12 +412,13 @@ function renderDetail() {
     ${c.notes ? `<div class="notes"><b>Notes</b>${esc(c.notes)}</div>` : ''}
     <div class="prog"><div class="bar ${d === n ? 'full' : ''}"><i style="width:${Math.round(d / n * 100)}%"></i></div><span>${d} of ${n} ${W().cut}</span></div>
     <div class="${selecting ? 'selecting' : ''}">${c.pieces.map(p => `
-      <button class="pc ${p.done ? 'done' : ''} ${picked.has(p.id) ? 'picked' : ''}" onclick="tapPiece('${p.id}')">
+      <button class="pc ${isP(p) ? 'done' : ''} ${picked.has(p.id) ? 'picked' : ''}" onclick="tapPiece('${p.id}')">
         <span class="tick">${svgTick}</span>
         <span class="pc-info">
           <div class="pc-n">${esc(p.name) || 'Piece'}</div>
           ${p.wood ? `<div class="pc-w">${esc(p.wood)}</div>` : ''}
-          ${p.done ? `<div class="pc-by">${W().Cut}${p.doneBy ? ' by ' + esc(p.doneBy) : ''}${p.doneAt ? ' · ' + fmtStamp(p.doneAt) : ''}</div>` : ''}
+          ${isP(p) ? `<div class="pc-by">${W().Cut}${p[K().by] ? ' by ' + esc(p[K().by]) : ''}${p[K().at] ? ' · ' + fmtStamp(p[K().at]) : ''}</div>`
+            : dept === 'lathe' && !p.done ? '<div class="pc-wait">Not cut yet</div>' : ''}
         </span>
         <span class="pc-size">${esc(sizeOf(p))}</span>
         <span class="pc-q">× ${esc(p.qty || '1')}</span>
@@ -419,12 +431,12 @@ window.tapPiece = async pid => {
   const c = lists.find(x => x.id === selId); const p = c?.pieces.find(x => x.id === pid);
   if (!p) return;
   if (selecting) {
-    if (p.done) return;
+    if (isP(p)) return;
     picked.has(pid) ? picked.delete(pid) : picked.add(pid);
     renderDetail(); return;
   }
-  if (p.done) {
-    const ok = await sheet(`Mark “${p.name || 'Piece'}” as not ${W().cut}?`, `It was marked ${W().cut}${p.doneBy ? ' by ' + p.doneBy : ''}.`, [{ label: 'Yes, not ' + W().cut, value: true, cls: 'no' }]);
+  if (isP(p)) {
+    const ok = await sheet(`Mark “${p.name || 'Piece'}” as not ${W().cut}?`, `It was marked ${W().cut}${p[K().by] ? ' by ' + p[K().by] : ''}.`, [{ label: 'Yes, not ' + W().cut, value: true, cls: 'no' }]);
     if (ok) setCut([pid], false);
     return;
   }
@@ -442,7 +454,7 @@ window.markPicked = async () => {
 };
 window.markAll = async () => {
   const c = lists.find(x => x.id === selId); if (!c) return;
-  const ids = c.pieces.filter(p => !p.done).map(p => p.id);
+  const ids = c.pieces.filter(p => !isP(p)).map(p => p.id);
   const by = await askName(`Mark all ${ids.length} remaining piece${ids.length === 1 ? '' : 's'} as ${W().cut}?`, `${c.client}${c.title ? ' · ' + c.title : ''}`);
   if (by == null) return;
   stopSelecting(true);
@@ -450,7 +462,7 @@ window.markAll = async () => {
 };
 window.togglePin = async () => {
   const c = lists.find(x => x.id === selId); if (!c) return;
-  try { await updateDoc(doc(db, 'cutlists', c.id), { active: !c.active, updatedAt: serverTimestamp() }); }
+  try { await updateDoc(doc(db, 'cutlists', c.id), { [K().pin]: !c[K().pin], updatedAt: serverTimestamp() }); }
   catch (err) { toast('Could not save: ' + (err.code || err.message)); }
 };
 
@@ -464,10 +476,11 @@ async function setCut(ids, done, by = '') {
       const snap = await tx.get(ref);
       if (!snap.exists()) throw new Error('This cut list was removed');
       const now = new Date().toISOString();
-      const pieces = (snap.data().pieces || []).map(p => !ids.includes(p.id) || !!p.done === done ? p
-        : done ? { ...p, done: true, doneBy: by, doneAt: now } : { ...p, done: false, doneBy: '', doneAt: '' });
+      const k = K();
+      const pieces = (snap.data().pieces || []).map(p => !ids.includes(p.id) || !!p[k.f] === done ? p
+        : { ...p, [k.f]: done, [k.by]: done ? by : '', [k.at]: done ? now : '' });
       const patch = { pieces, updatedAt: serverTimestamp() };
-      if (pieces.every(p => p.done)) patch.active = false;
+      if (pieces.every(p => p[k.f])) patch[k.pin] = false;
       tx.update(ref, patch);
     });
     toast(done ? `✓ ${ids.length} piece${ids.length === 1 ? '' : 's'} marked ${W().cut}` : 'Marked as not ' + W().cut);
@@ -489,7 +502,7 @@ window.printSlip = () => {
     ${c.deadline ? `<div class="s-c s-sub">Due ${fmtDay(new Date(c.deadline + 'T00:00:00'))}</div>` : ''}
     <div class="s-rule"></div>
     ${c.notes ? `<div class="s-notes"><b>Notes:</b> ${esc(c.notes)}</div><div class="s-rule"></div>` : ''}
-    ${c.pieces.map(p => `<div class="s-pc"><div class="s-box">${p.done ? '✓' : ''}</div><div>
+    ${c.pieces.map(p => `<div class="s-pc"><div class="s-box">${isP(p) ? '✓' : ''}</div><div>
       <div class="s-n">${esc(p.name) || 'Piece'}</div>
       <div class="s-sz">${esc(sizeOf(p))}${sizeOf(p) ? ' ' : ''}× ${esc(p.qty || '1')}</div>
       ${p.wood ? `<div class="s-w">${esc(p.wood)}</div>` : ''}

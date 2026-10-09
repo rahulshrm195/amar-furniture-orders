@@ -23,12 +23,12 @@ service cloud.firestore {
     }
 
     // Cut lists: no phone numbers or money in here.
-    // The workshop may only tick pieces and pin a project ("Cutting now").
+    // The workshop may only tick pieces and pin a project ("Cutting now" / "Turning now").
     match /cutlists/{orderId} {
       allow read: if signedIn();
       allow create, delete: if isAdmin();
       allow update: if isStaff() ||
-        (isWorkshop() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pieces', 'active', 'updatedAt']));
+        (isWorkshop() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pieces', 'active', 'activeLathe', 'updatedAt']));
     }
 
     // Carpenter names for the tablet's "Who cut this?" buttons.
