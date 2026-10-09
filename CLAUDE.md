@@ -37,7 +37,7 @@ A single-page PWA for tracking furniture orders. It is hosted on GitHub Pages (s
   - Carpenters: names live in `workshop/config.carpenters` and are edited in Settings.
   - Tablet: it can mark one piece, a selected group, or every remaining piece as cut, and it records who did it and when. Sizes show as `63" x 3" x 3"`. "Start cutting" pins a project to the "Cutting now" section.
   - Print (v3.65.0): the tablet's Print button fills `#slip` and calls `window.print()`. Print CSS lays it out for a 58 mm (2-inch) roll at `@page size:58mm`. The shop's printer is an "EZO" 2-inch Bluetooth roll printer, reached through Android's Print screen with the RawBT print service app.
-  - Lathe (v3.66.0): Lathe Work orders get the same list (lathe icon, "Lathe List") with `dept: 'lathe'`; `cutMeta` sets `dept` from the order's type. The tablet has Woodwork / Lathe tabs and remembers the last one (localStorage `af-cut-dept`). On Lathe it says "turned" instead of "cut". Lists without `dept` count as woodwork.
+  - Lathe (v3.66.0): Lathe Work orders get the same list (same saw icon, "Lathe List") with `dept: 'lathe'`; `cutMeta` sets `dept` from the order's type. The tablet has Woodwork / Lathe tabs and remembers the last one (localStorage `af-cut-dept`). On Lathe it says "turned" instead of "cut". Lists without `dept` count as woodwork.
 - **Drive folders**: `createDriveFolder` POSTs the order to an Apps Script webhook with `client`, `projectType`, `orderNo` and `otherLabel`. The script then writes the folder URL back to the order document.
 - **Keyboard shortcuts**:
   - `N` opens a new order (admins only).

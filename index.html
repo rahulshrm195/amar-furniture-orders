@@ -11,7 +11,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.66.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
+/* ── v3.66.1 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -469,7 +469,7 @@ button.chip{border:none;font-family:inherit}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.66.0</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.66.1</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -1052,7 +1052,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.66.0';
+const APP_VERSION = 'v3.66.1';
 
 // -- LANGUAGE --
 const LANG = {
@@ -1438,7 +1438,7 @@ function buildCard(p) {
   const cutPcs = window._cutlists[p.id]?.pieces || [];
   const cutDone = cutPcs.filter(x => x.done).length;
   const isLathe = p.projectType === 'lathe';
-  const cutChip = cutPcs.length ? `<div class="chip cut${cutDone === cutPcs.length ? ' full' : ''}">${svgi(isLathe ? 'lathe' : 'saw', 11, 2)} ${isLathe ? 'Turned' : 'Cut'} ${cutDone}/${cutPcs.length}</div>` : '';
+  const cutChip = cutPcs.length ? `<div class="chip cut${cutDone === cutPcs.length ? ' full' : ''}">${svgi('saw', 11, 2)} ${isLathe ? 'Turned' : 'Cut'} ${cutDone}/${cutPcs.length}</div>` : '';
 
   // Chips row: due date + money
   let money = '';
@@ -1466,7 +1466,7 @@ function buildCard(p) {
     if (window._isAdmin)    acts.push(`<button class="icon-btn" aria-label="${T('edit')}" title="${T('edit')}" onclick="openEditModal('${p.id}')">${svgi('edit', 15)}</button>`);
     if (window._isAdmin && (p.projectType === 'woodwork' || isLathe)) {
       const all = cutPcs.length && cutDone === cutPcs.length;
-      acts.push(`<button class="icon-btn${all ? ' has' : ''}" aria-label="Cut list" title="${cutPcs.length ? `${isLathe ? 'Lathe' : 'Cut'} list \u2014 ${cutDone} of ${cutPcs.length} ${isLathe ? 'turned' : 'cut'}` : `Make a ${isLathe ? 'lathe' : 'cut'} list for the workshop`}" onclick="openCutModal('${p.id}')">${svgi(isLathe ? 'lathe' : 'saw', 15)}</button>`);
+      acts.push(`<button class="icon-btn${all ? ' has' : ''}" aria-label="Cut list" title="${cutPcs.length ? `${isLathe ? 'Lathe' : 'Cut'} list \u2014 ${cutDone} of ${cutPcs.length} ${isLathe ? 'turned' : 'cut'}` : `Make a ${isLathe ? 'lathe' : 'cut'} list for the workshop`}" onclick="openCutModal('${p.id}')">${svgi('saw', 15)}</button>`);
     }
   }
   acts.push(`<button class="icon-btn ${window._expandedCards.has(p.id) ? 'on' : ''}" aria-label="Details" title="Items, specs &amp; note history" onclick="toggleCard('${p.id}')">${svgi('list', 15)}</button>`);
