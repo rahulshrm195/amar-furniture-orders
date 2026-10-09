@@ -11,7 +11,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.65.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
+/* ── v3.66.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -469,7 +469,7 @@ button.chip{border:none;font-family:inherit}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.65.0</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.66.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -726,14 +726,14 @@ button.chip{border:none;font-family:inherit}
     <div class="modal-title" id="cut-title">Cut List</div>
     <div class="modal-sub" id="cut-sub"></div>
     <div class="field">
-      <label>Pieces to cut (inches)</label>
+      <label>Pieces (inches)</label>
       <div class="items-list-edit" id="cut-list-edit"></div>
       <button class="add-item-btn" onclick="addCutRow()">＋ Add Piece</button>
       <button class="add-item-btn" id="cut-copy-btn" style="margin-top:8px" onclick="copyItemsToCut()">Copy sizes from order items</button>
     </div>
     <div class="field"><label>Notes for the workshop</label><textarea id="cut-notes" placeholder="Grain direction, joints, which pieces first…"></textarea></div>
     <div class="modal-actions">
-      <button class="btn btn-primary" onclick="saveCutList()">Save Cut List</button>
+      <button class="btn btn-primary" onclick="saveCutList()">Save List</button>
       <button class="btn btn-ghost" onclick="closeCutModal()">Cancel</button>
     </div>
   </div>
@@ -808,7 +808,7 @@ window._saveCutList = (id, meta, notes, edited) => runTransaction(db, async tx =
     const o = old[e.id] || {};
     return { ...e, done: !!o.done, doneBy: o.doneBy || '', doneAt: o.doneAt || '', createdAt: o.createdAt || now };
   });
-  const data = { ...meta, dept: 'wood', notes, pieces, updatedAt: serverTimestamp() };
+  const data = { dept: 'wood', ...meta, notes, pieces, updatedAt: serverTimestamp() };
   if (cur) tx.update(ref, data);
   else tx.set(ref, { ...data, active: false, createdAt: serverTimestamp(), createdBy: auth.currentUser?.email || '' });
 });
@@ -1052,7 +1052,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.65.0';
+const APP_VERSION = 'v3.66.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -1437,7 +1437,8 @@ function buildCard(p) {
   // Cut list progress (pieces ticked off on the workshop tablet)
   const cutPcs = window._cutlists[p.id]?.pieces || [];
   const cutDone = cutPcs.filter(x => x.done).length;
-  const cutChip = cutPcs.length ? `<div class="chip cut${cutDone === cutPcs.length ? ' full' : ''}">${svgi('saw', 11, 2)} Cut ${cutDone}/${cutPcs.length}</div>` : '';
+  const isLathe = p.projectType === 'lathe';
+  const cutChip = cutPcs.length ? `<div class="chip cut${cutDone === cutPcs.length ? ' full' : ''}">${svgi(isLathe ? 'lathe' : 'saw', 11, 2)} ${isLathe ? 'Turned' : 'Cut'} ${cutDone}/${cutPcs.length}</div>` : '';
 
   // Chips row: due date + money
   let money = '';
@@ -1463,9 +1464,9 @@ function buildCard(p) {
   } else {
     if (!window._isManager) acts.push(`<button class="icon-btn" aria-label="${T('updateStatus')}" title="${T('updateStatus')}" onclick="openStatusModal('${p.id}')">${svgi('refresh', 15)}</button>`);
     if (window._isAdmin)    acts.push(`<button class="icon-btn" aria-label="${T('edit')}" title="${T('edit')}" onclick="openEditModal('${p.id}')">${svgi('edit', 15)}</button>`);
-    if (window._isAdmin && p.projectType === 'woodwork') {
+    if (window._isAdmin && (p.projectType === 'woodwork' || isLathe)) {
       const all = cutPcs.length && cutDone === cutPcs.length;
-      acts.push(`<button class="icon-btn${all ? ' has' : ''}" aria-label="Cut list" title="${cutPcs.length ? `Cut list \u2014 ${cutDone} of ${cutPcs.length} cut` : 'Make a cut list for the workshop'}" onclick="openCutModal('${p.id}')">${svgi('saw', 15)}</button>`);
+      acts.push(`<button class="icon-btn${all ? ' has' : ''}" aria-label="Cut list" title="${cutPcs.length ? `${isLathe ? 'Lathe' : 'Cut'} list \u2014 ${cutDone} of ${cutPcs.length} ${isLathe ? 'turned' : 'cut'}` : `Make a ${isLathe ? 'lathe' : 'cut'} list for the workshop`}" onclick="openCutModal('${p.id}')">${svgi(isLathe ? 'lathe' : 'saw', 15)}</button>`);
     }
   }
   acts.push(`<button class="icon-btn ${window._expandedCards.has(p.id) ? 'on' : ''}" aria-label="Details" title="Items, specs &amp; note history" onclick="toggleCard('${p.id}')">${svgi('list', 15)}</button>`);
@@ -2413,7 +2414,7 @@ document.addEventListener('keydown', e => {
 });
 // ── Cut lists (woodwork) ──
 // What the tablet may see of an order. Delivered or archived orders drop off the tablet.
-const cutMeta = p => ({ orderNo: p.orderNo || 0, client: p.client || '', title: p.item || '', deadline: p.deadline || '', hidden: !!p.archived || (p.status ?? 0) >= 4 });
+const cutMeta = p => ({ dept: p.projectType === 'lathe' ? 'lathe' : 'wood', orderNo: p.orderNo || 0, client: p.client || '', title: p.item || '', deadline: p.deadline || '', hidden: !!p.archived || (p.status ?? 0) >= 4 });
 // Keeps each cut list's name / number / deadline in step with its order (writes only when something changed).
 function syncCutLists() {
   for (const c of Object.values(window._cutlists || {})) {
@@ -2431,8 +2432,8 @@ function openCutModal(id) {
   const p = (window._projects || []).find(x => x.id === id); if (!p) return;
   window._cutId = id;
   const c = window._cutlists[id];
-  document.getElementById('cut-title').textContent = 'Cut List' + (p.orderNo ? ' · #' + p.orderNo : '') + ' · ' + p.client;
-  document.getElementById('cut-sub').textContent = (p.item || typeLabelOf(p)) + ' — the workshop tablet shows this list';
+  document.getElementById('cut-title').textContent = (p.projectType === 'lathe' ? 'Lathe List' : 'Cut List') + (p.orderNo ? ' · #' + p.orderNo : '') + ' · ' + p.client;
+  document.getElementById('cut-sub').textContent = (p.item || typeLabelOf(p)) + (p.projectType === 'lathe' ? ' — shown under Lathe on the workshop tablet' : ' — shown under Woodwork on the workshop tablet');
   document.getElementById('cut-list-edit').innerHTML = '';
   (c?.pieces || []).forEach(pc => addCutRow(pc));
   document.getElementById('cut-copy-btn').style.display = p.items?.length ? 'flex' : 'none';

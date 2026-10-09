@@ -8,7 +8,7 @@
 <title>Amar Furniture — Cutting List</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.65.0 — Workshop cutting list (tablet); UI is Concept A ── */
+/* ── v3.66.0 — Workshop cutting list (tablet); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -150,6 +150,13 @@ input{font-family:inherit}
   #slip .s-foot{font-size:8pt;margin-top:2mm}
 }
 
+/* Woodwork / Lathe switch */
+.tabs{display:flex;gap:6px;background:#EFEADF;border-radius:12px;padding:4px;margin:14px 0 4px}
+.tab{flex:1;height:44px;border-radius:9px;border:none;background:transparent;color:var(--ink2);font-weight:800;font-size:14.5px;display:flex;align-items:center;justify-content:center;gap:7px}
+.tab.on{background:var(--surface);color:var(--clay);box-shadow:0 1px 3px rgba(26,24,18,.12)}
+.tab b{font-size:11.5px;min-width:22px;padding:2px 7px;border-radius:20px;background:var(--clay-soft);color:var(--clay)}
+.tab:not(.on) b{background:#E2DCCD;color:var(--ink2)}
+
 /* Narrow / portrait: one pane at a time */
 @media (max-width:859px){
   .wrap{display:block;height:auto}
@@ -182,7 +189,7 @@ input{font-family:inherit}
 <div id="auth-screen">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Cutting List · v3.65.0</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Cutting List · v3.66.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Workshop Sign In</h2>
@@ -198,7 +205,7 @@ input{font-family:inherit}
     <button class="tb-btn back" aria-label="Back to projects" onclick="closeList()"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 8 12l7 7"/></svg></button>
     <div class="brand-row">
       <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-      <div><div class="brand-name">Cutting List</div><div class="brand-sub">Amar Furniture · Woodwork</div></div>
+      <div><div class="brand-name">Cutting List</div><div class="brand-sub" id="tb-dept">Amar Furniture · Woodwork</div></div>
     </div>
     <div class="tb-sum" id="tb-sum"></div>
     <a class="tb-btn" id="home-btn" href="/" aria-label="Orders" title="Back to Orders" style="display:none"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10.5V20h12v-9.5"/></svg></a>
@@ -211,7 +218,7 @@ input{font-family:inherit}
   <div class="selbar" id="selbar">
     <span id="sel-count">0 selected</span>
     <button class="abtn ghost" onclick="stopSelecting()">Cancel</button>
-    <button class="abtn go" onclick="markPicked()">Mark as cut</button>
+    <button class="abtn go" id="sel-go" onclick="markPicked()">Mark as cut</button>
   </div>
 </div>
 
@@ -242,13 +249,24 @@ const firebaseConfig = {
   messagingSenderId: "460562943530",
   appId:             "1:460562943530:web:d89b913ec8e6ecd85e7d53"
 };
-const CUT_VERSION = 'v3.65.0';
+const CUT_VERSION = 'v3.66.0';
 
 const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
-let lists = [];          // open cut lists (not hidden, with pieces)
+let all = [];            // every open list (not hidden, with pieces)
+let lists = [];          // the ones for the department on screen
+// Woodwork or Lathe: the tablet remembers which one it was showing.
+let dept = 'wood';
+try { if (localStorage.getItem('af-cut-dept') === 'lathe') dept = 'lathe'; } catch {}
+// Words that change with the department.
+const WORDS = {
+  wood:  { label: 'Woodwork', cut: 'cut',    Cut: 'Cut',    now: 'Cutting now', start: 'Start cutting', todo: 'To cut',  list: 'Cut List',   who: 'Who cut' },
+  lathe: { label: 'Lathe',    cut: 'turned', Cut: 'Turned', now: 'Turning now', start: 'Start turning', todo: 'To turn', list: 'Lathe List', who: 'Who turned' },
+};
+const W = () => WORDS[dept];
+const deptOf = c => c.dept === 'lathe' ? 'lathe' : 'wood';
 let names = [];          // carpenter names from Settings
 let selId = null;        // project shown on the right
 let selecting = false;   // "Select" mode: tap several pieces, then mark them together
@@ -307,7 +325,7 @@ onAuthStateChanged(auth, user => {
   // Office logins get a Home button back to the orders app; the workshop tablet never does.
   $('home-btn').style.display = user.email?.toLowerCase() === 'workshop@amarfurniture.in' ? 'none' : 'flex';
   unsubs.push(onSnapshot(collection(db, 'cutlists'), snap => {
-    lists = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(c => !c.hidden && (c.pieces || []).length);
+    all = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(c => !c.hidden && (c.pieces || []).length);
     render();
   }, err => { console.error(err); toast('Cannot load cut lists: ' + (err.code || err.message)); }));
   unsubs.push(onSnapshot(doc(db, 'workshop', 'config'), s => { names = (s.exists() && s.data().carpenters) || []; }, err => console.warn(err)));
@@ -323,10 +341,17 @@ function tile(c) {
       <div class="pj-desc">${esc(c.title) || '&nbsp;'}</div>
     </div>${d < n ? dueChip(c) : ''}</div>
     <div class="bar ${d === n ? 'full' : ''}"><i style="width:${Math.round(d / n * 100)}%"></i></div>
-    <div class="pj-cnt">${d} of ${n} cut</div>
+    <div class="pj-cnt">${d} of ${n} ${W().cut}</div>
   </button>`;
 }
+window.setDept = d => {
+  if (d === dept) return;
+  dept = d; selId = null; showAllDone = false;
+  try { localStorage.setItem('af-cut-dept', d); } catch {}
+  stopSelecting(true); document.body.classList.remove('detail'); render();
+};
 function render() {
+  lists = all.filter(c => deptOf(c) === dept);
   const open   = lists.filter(c => !isDone(c));
   const pinned = open.filter(c => c.active).sort(byDue);
   const todo   = open.filter(c => !c.active).sort(byDue);
@@ -336,12 +361,16 @@ function render() {
 
   const sec = (title, arr) => arr.length ? `<div class="sec-h">${title} <b>${arr.length}</b></div>` + arr.map(tile).join('') : '';
   const doneShown = showAllDone ? done : done.slice(0, 5);
-  $('side').innerHTML = !lists.length
-    ? '<div class="empty">No cut lists yet.<br>They appear here as soon as the office adds one.</div>'
-    : sec('Cutting now', pinned) + sec('To cut', todo) + sec('Done', doneShown)
+  const tab = d => { const k = all.filter(c => deptOf(c) === d && !isDone(c)).length;
+    return `<button class="tab ${d === dept ? 'on' : ''}" onclick="setDept('${d}')">${WORDS[d].label}${k ? ` <b>${k}</b>` : ''}</button>`; };
+  $('side').innerHTML = `<div class="tabs">${tab('wood')}${tab('lathe')}</div>` + (!lists.length
+    ? `<div class="empty">No ${W().label.toLowerCase()} lists yet.<br>They appear here as soon as the office adds one.</div>`
+    : sec(W().now, pinned) + sec(W().todo, todo) + sec('Done', doneShown))
       + (done.length > doneShown.length ? `<button class="more" onclick="moreDone()">Show all ${done.length} done</button>` : '');
   const left = open.reduce((s, c) => s + c.pieces.length - doneOf(c), 0);
-  $('tb-sum').textContent = left ? `${left} piece${left === 1 ? '' : 's'} to cut · ${open.length} project${open.length === 1 ? '' : 's'}` : 'All cut';
+  $('tb-sum').textContent = left ? `${left} piece${left === 1 ? '' : 's'} to ${dept === 'lathe' ? 'turn' : 'cut'} · ${open.length} project${open.length === 1 ? '' : 's'}` : `All ${W().cut}`;
+  $('tb-dept').textContent = 'Amar Furniture · ' + W().label;
+  $('sel-go').textContent = 'Mark as ' + W().cut;
   renderDetail();
 }
 window.moreDone = () => { showAllDone = true; render(); };
@@ -358,7 +387,7 @@ function renderDetail() {
   if (!c) { $('main').innerHTML = lists.length ? '<div class="empty">Pick a project on the left.</div>' : ''; return; }
   const n = c.pieces.length, d = doneOf(c);
   const acts = `<button class="abtn" onclick="printSlip()">${svgPrint} Print</button>` + (d < n ? `
-      <button class="abtn ${c.active ? 'on' : ''}" onclick="togglePin()">${svgPin} ${c.active ? 'Cutting now' : 'Start cutting'}</button>
+      <button class="abtn ${c.active ? 'on' : ''}" onclick="togglePin()">${svgPin} ${c.active ? W().now : W().start}</button>
       <button class="abtn ${selecting ? 'on' : ''}" onclick="${selecting ? 'stopSelecting()' : 'startSelecting()'}">Select</button>
       <button class="abtn go" onclick="markAll()">${svgTick} Mark all done</button>` : '');
   $('main').innerHTML = `
@@ -370,14 +399,14 @@ function renderDetail() {
       <div class="dh-acts">${acts}</div>
     </div>
     ${c.notes ? `<div class="notes"><b>Notes</b>${esc(c.notes)}</div>` : ''}
-    <div class="prog"><div class="bar ${d === n ? 'full' : ''}"><i style="width:${Math.round(d / n * 100)}%"></i></div><span>${d} of ${n} cut</span></div>
+    <div class="prog"><div class="bar ${d === n ? 'full' : ''}"><i style="width:${Math.round(d / n * 100)}%"></i></div><span>${d} of ${n} ${W().cut}</span></div>
     <div class="${selecting ? 'selecting' : ''}">${c.pieces.map(p => `
       <button class="pc ${p.done ? 'done' : ''} ${picked.has(p.id) ? 'picked' : ''}" onclick="tapPiece('${p.id}')">
         <span class="tick">${svgTick}</span>
         <span class="pc-info">
           <div class="pc-n">${esc(p.name) || 'Piece'}</div>
           ${p.wood ? `<div class="pc-w">${esc(p.wood)}</div>` : ''}
-          ${p.done ? `<div class="pc-by">Cut${p.doneBy ? ' by ' + esc(p.doneBy) : ''}${p.doneAt ? ' · ' + fmtStamp(p.doneAt) : ''}</div>` : ''}
+          ${p.done ? `<div class="pc-by">${W().Cut}${p.doneBy ? ' by ' + esc(p.doneBy) : ''}${p.doneAt ? ' · ' + fmtStamp(p.doneAt) : ''}</div>` : ''}
         </span>
         <span class="pc-size">${esc(sizeOf(p))}</span>
         <span class="pc-q">× ${esc(p.qty || '1')}</span>
@@ -395,18 +424,18 @@ window.tapPiece = async pid => {
     renderDetail(); return;
   }
   if (p.done) {
-    const ok = await sheet(`Mark “${p.name || 'Piece'}” as not cut?`, `It was marked cut${p.doneBy ? ' by ' + p.doneBy : ''}.`, [{ label: 'Yes, not cut', value: true, cls: 'no' }]);
+    const ok = await sheet(`Mark “${p.name || 'Piece'}” as not ${W().cut}?`, `It was marked ${W().cut}${p.doneBy ? ' by ' + p.doneBy : ''}.`, [{ label: 'Yes, not ' + W().cut, value: true, cls: 'no' }]);
     if (ok) setCut([pid], false);
     return;
   }
-  const by = await askName(`Who cut “${p.name || 'Piece'}”?`, `${sizeOf(p)}${sizeOf(p) ? ' · ' : ''}× ${p.qty || 1}`);
+  const by = await askName(`${W().who} “${p.name || 'Piece'}”?`, `${sizeOf(p)}${sizeOf(p) ? ' · ' : ''}× ${p.qty || 1}`);
   if (by != null) setCut([pid], true, by);
 };
 window.startSelecting = () => { selecting = true; picked.clear(); $('selbar').classList.add('show'); renderDetail(); };
 window.stopSelecting = quiet => { selecting = false; picked.clear(); $('selbar').classList.remove('show'); if (quiet !== true) renderDetail(); };
 window.markPicked = async () => {
-  if (!picked.size) { toast('Tap the pieces that are cut'); return; }
-  const by = await askName(`Who cut these ${picked.size} piece${picked.size === 1 ? '' : 's'}?`, '');
+  if (!picked.size) { toast('Tap the pieces that are ' + W().cut); return; }
+  const by = await askName(`${W().who} these ${picked.size} piece${picked.size === 1 ? '' : 's'}?`, '');
   if (by == null) return;
   const ids = [...picked]; stopSelecting();
   setCut(ids, true, by);
@@ -414,7 +443,7 @@ window.markPicked = async () => {
 window.markAll = async () => {
   const c = lists.find(x => x.id === selId); if (!c) return;
   const ids = c.pieces.filter(p => !p.done).map(p => p.id);
-  const by = await askName(`Mark all ${ids.length} remaining piece${ids.length === 1 ? '' : 's'} as cut?`, `${c.client}${c.title ? ' · ' + c.title : ''}`);
+  const by = await askName(`Mark all ${ids.length} remaining piece${ids.length === 1 ? '' : 's'} as ${W().cut}?`, `${c.client}${c.title ? ' · ' + c.title : ''}`);
   if (by == null) return;
   stopSelecting(true);
   setCut(ids, true, by);
@@ -441,7 +470,7 @@ async function setCut(ids, done, by = '') {
       if (pieces.every(p => p.done)) patch.active = false;
       tx.update(ref, patch);
     });
-    toast(done ? `✓ ${ids.length} piece${ids.length === 1 ? '' : 's'} marked cut` : 'Marked as not cut');
+    toast(done ? `✓ ${ids.length} piece${ids.length === 1 ? '' : 's'} marked ${W().cut}` : 'Marked as not ' + W().cut);
   } catch (err) {
     console.error(err);
     toast(navigator.onLine ? 'Could not save: ' + (err.code || err.message) : 'No internet — try again');
@@ -454,7 +483,7 @@ window.printSlip = () => {
   const c = lists.find(x => x.id === selId); if (!c) return;
   const now = new Date().toISOString();
   $('slip').innerHTML = `
-    <div class="s-c s-h">Amar Furniture · Cut List</div>
+    <div class="s-c s-h">Amar Furniture · ${W().list}</div>
     <div class="s-c s-name">${c.orderNo ? '#' + c.orderNo + ' ' : ''}${esc(c.client)}</div>
     ${c.title ? `<div class="s-c s-sub">${esc(c.title)}</div>` : ''}
     ${c.deadline ? `<div class="s-c s-sub">Due ${fmtDay(new Date(c.deadline + 'T00:00:00'))}</div>` : ''}
@@ -465,7 +494,7 @@ window.printSlip = () => {
       <div class="s-sz">${esc(sizeOf(p))}${sizeOf(p) ? ' ' : ''}× ${esc(p.qty || '1')}</div>
       ${p.wood ? `<div class="s-w">${esc(p.wood)}</div>` : ''}
     </div></div>`).join('')}
-    <div class="s-foot">${doneOf(c)} of ${c.pieces.length} cut · Printed ${fmtStamp(now)}</div>`;
+    <div class="s-foot">${doneOf(c)} of ${c.pieces.length} ${W().cut} · Printed ${fmtStamp(now)}</div>`;
   window.print();
 };
 
@@ -482,7 +511,7 @@ window.pickSheet = i => closeSheet(sheet._btns[i].value);
 window.closeSheet = v => { $('sheet').classList.remove('open'); const r = sheetResolve; sheetResolve = null; r?.(v); };
 // Carpenter names come from Settings in the orders app.
 function askName(title, sub) {
-  if (!names.length) return sheet(title, 'No carpenter names yet — the office can add them in Settings.', [{ label: 'Mark as cut', value: '', cls: 'go' }]);
+  if (!names.length) return sheet(title, 'No carpenter names yet — the office can add them in Settings.', [{ label: 'Mark as ' + W().cut, value: '', cls: 'go' }]);
   return sheet(title, sub, names.map(n => ({ label: n, value: n })));
 }
 
