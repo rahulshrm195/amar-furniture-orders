@@ -36,6 +36,7 @@ A single-page PWA for tracking furniture orders. It is hosted on GitHub Pages (s
   - Copy from items (v3.62.0): a new cut list starts from the order's items, mapping L → L, B → W, W → T and keeping the qty. "Copy sizes from order items" adds any items that aren't on the list yet.
   - Carpenters: names live in `workshop/config.carpenters` and are edited in Settings.
   - Tablet: it can mark one piece, a selected group, or every remaining piece as cut, and it records who did it and when. Sizes show as `63" x 3" x 3"`. "Start cutting" pins a project to the "Cutting now" section.
+  - Back button (v3.67.2): opening a project (narrow screens), Select mode or the name picker each register a layer (`openLayer`/`closeLayer`) with one extra history entry, so Android's Back closes the top layer instead of exiting the installed app.
   - Print (v3.65.0): the tablet's Print button fills `#slip` and calls `window.print()`. Print CSS lays it out for a 58 mm (2-inch) roll at `@page size:58mm`. The shop's printer is an "EZO" 2-inch Bluetooth roll printer, reached through Android's Print screen with the RawBT print service app.
   - Lathe (v3.67.0): Lathe Work orders get the same list with `dept: 'lathe'`; `cutMeta` sets `dept` from the order's type. A lathe order is tracked twice:
     - Its pieces are cut on the tablet's Woodwork tab, which uses `done`/`doneBy`/`doneAt` and the `active` pin.

@@ -8,7 +8,7 @@
 <title>Amar Furniture — Cutting List</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.67.1 — Workshop cutting list (tablet); UI is Concept A ── */
+/* ── v3.67.2 — Workshop cutting list (tablet); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -192,7 +192,7 @@ input{font-family:inherit}
 <div id="auth-screen">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Cutting List · v3.67.1</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Cutting List · v3.67.2</div></div>
   </div>
   <div class="auth-card">
     <h2>Workshop Sign In</h2>
@@ -252,7 +252,7 @@ const firebaseConfig = {
   messagingSenderId: "460562943530",
   appId:             "1:460562943530:web:d89b913ec8e6ecd85e7d53"
 };
-const CUT_VERSION = 'v3.67.1';
+const CUT_VERSION = 'v3.67.2';
 
 const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -360,7 +360,7 @@ window.setDept = d => {
   if (d === dept) return;
   dept = d; selId = null; showAllDone = false;
   try { localStorage.setItem('af-cut-dept', d); } catch {}
-  stopSelecting(true); document.body.classList.remove('detail'); render();
+  stopSelecting(true); document.body.classList.remove('detail'); closeLayer('detail'); render();
 };
 function render() {
   lists = all.filter(c => inTab(c, dept));
@@ -368,7 +368,7 @@ function render() {
   const pinned = open.filter(c => c[K().pin]).sort(byDue);
   const todo   = open.filter(c => !c[K().pin]).sort(byDue);
   const done   = lists.filter(isDone).sort((a, b) => lastCut(b) - lastCut(a));
-  if (selId && !lists.some(c => c.id === selId)) { selId = null; stopSelecting(); document.body.classList.remove('detail'); }
+  if (selId && !lists.some(c => c.id === selId)) { selId = null; stopSelecting(); document.body.classList.remove('detail'); closeLayer('detail'); }
   if (!selId && wide()) selId = (pinned[0] || todo[0] || done[0])?.id || null;
 
   const sec = (title, arr) => arr.length ? `<div class="sec-h">${title} <b>${arr.length}</b></div>` + arr.map(tile).join('') : '';
@@ -388,10 +388,32 @@ function render() {
 window.moreDone = () => { showAllDone = true; render(); };
 window.openList = id => {
   if (id !== selId) stopSelecting(true);
+  if (!wide() && !document.body.classList.contains('detail')) openLayer('detail');
   selId = id; document.body.classList.add('detail'); render();
   $('main').scrollTop = 0; if (!wide()) scrollTo(0, 0);
 };
-window.closeList = () => { stopSelecting(true); document.body.classList.remove('detail'); if (!wide()) selId = null; render(); };
+window.closeList = fromBack => { if (!fromBack) closeLayer('detail'); stopSelecting(true); document.body.classList.remove('detail'); if (!wide()) selId = null; render(); };
+
+// ── Android Back button: it closes the top screen (picker → Select mode → open project) instead of
+// leaving the app. While anything is open there is one extra history entry; Back pops it.
+const layers = [];
+let skipPop = false;
+function openLayer(name) { if (!layers.length) history.pushState({ af: 1 }, ''); layers.push(name); }
+// Closed from an on-screen button: drop it (and anything above it); the last one out removes the history entry.
+function closeLayer(name) {
+  const i = layers.lastIndexOf(name); if (i < 0) return;
+  layers.splice(i);
+  if (!layers.length) { skipPop = true; history.back(); }
+}
+addEventListener('popstate', () => {
+  if (skipPop) { skipPop = false; return; }
+  const top = layers.pop();
+  if (!top) return;
+  if (layers.length) history.pushState({ af: 1 }, '');
+  if (top === 'sheet') closeSheet(null, true);
+  else if (top === 'select') stopSelecting(false, true);
+  else if (top === 'detail') closeList(true);
+});
 
 // ── Pieces (right) ──
 function renderDetail() {
@@ -444,8 +466,8 @@ window.tapPiece = async pid => {
   const by = await askName(`${W().who} “${p.name || 'Piece'}”?`, `${sizeOf(p)}${sizeOf(p) ? ' · ' : ''}× ${p.qty || 1} Nos`);
   if (by != null) setCut([pid], true, by);
 };
-window.startSelecting = () => { selecting = true; picked.clear(); $('selbar').classList.add('show'); renderDetail(); };
-window.stopSelecting = quiet => { selecting = false; picked.clear(); $('selbar').classList.remove('show'); if (quiet !== true) renderDetail(); };
+window.startSelecting = () => { if (!selecting) openLayer('select'); selecting = true; picked.clear(); $('selbar').classList.add('show'); renderDetail(); };
+window.stopSelecting = (quiet, fromBack) => { if (!fromBack) closeLayer('select'); selecting = false; picked.clear(); $('selbar').classList.remove('show'); if (quiet !== true) renderDetail(); };
 window.markPicked = async () => {
   if (!picked.size) { toast('Tap the pieces that are ' + W().cut); return; }
   const by = await askName(`${W().who} these ${picked.size} piece${picked.size === 1 ? '' : 's'}?`, '');
@@ -519,10 +541,11 @@ function sheet(title, sub, btns) {
   $('sheet-sub').textContent = sub || '';
   $('sheet-btns').innerHTML = btns.map((b, i) => `<button class="name-btn ${b.cls || ''}" onclick="pickSheet(${i})">${esc(b.label)}</button>`).join('');
   $('sheet').classList.add('open');
+  openLayer('sheet');
   return new Promise(res => { sheetResolve = v => res(v); sheet._btns = btns; });
 }
 window.pickSheet = i => closeSheet(sheet._btns[i].value);
-window.closeSheet = v => { $('sheet').classList.remove('open'); const r = sheetResolve; sheetResolve = null; r?.(v); };
+window.closeSheet = (v, fromBack) => { if (!fromBack) closeLayer('sheet'); $('sheet').classList.remove('open'); const r = sheetResolve; sheetResolve = null; r?.(v); };
 // Carpenter names come from Settings in the orders app.
 function askName(title, sub) {
   if (!names.length) return sheet(title, 'No carpenter names yet — the office can add them in Settings.', [{ label: 'Mark as ' + W().cut, value: '', cls: 'go' }]);
