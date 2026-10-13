@@ -56,3 +56,16 @@ A single-page PWA for tracking furniture orders. It is hosted on GitHub Pages (s
   - Esc closes the small dialogs, but never the order form.
   - Tab stays inside the open dialog.
   - None of the plain-letter shortcuts fire while typing or while a dialog is open.
+
+## Backlog (noted by the owner, not started)
+1. **Project priority.** A newly added urgent project currently lands below older ones. The owner wants:
+   - a priority set on each project, with the highest priority always at the top, including on the workshop tablet;
+   - a sort switch for priority, order date or delivery date.
+2. **Cut size vs regular size on pieces.**
+   - On handwritten lists the owner double-underlines a size to mean "a cut size is acceptable". For example, a piece written as 82" x 4" x 4" can come from 82" x 3¾" x 3¾" stock.
+   - The cut list needs a per-piece (or per-dimension) "cut size OK" mark that shows clearly on the tablet and the printed slip.
+3. **Drive folder script.** Put `orderNo` in the folder names. The owner will paste the Apps Script.
+4. **"Paste items" box.** Fill an order's item rows from a pasted list.
+5. **Order numbers.** Confirm the existing orders were numbered from #1001.
+6. **Cut-list workflow change.** The owner will explain it later.
+7. **Firestore rules.** `isAdmin()` lists only rahulshrm195@gmail.com. Add rahul@ and father@amarfurniture.in if they should create orders.
