@@ -8,7 +8,7 @@
 <title>Amar Furniture — Cutting List</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.68.0 — Workshop cutting list (tablet); UI is Concept A ── */
+/* ── v3.69.0 — Workshop cutting list (tablet); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -50,6 +50,7 @@ input{font-family:inherit}
 #app{display:none}
 .topbar{position:sticky;top:0;z-index:50;background:var(--slate);display:flex;align-items:center;gap:12px;padding:0 20px;height:64px}
 .tb-sum{margin-left:auto;color:#CFC8B6;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-lang{width:auto!important;min-width:46px;padding:0 10px;font-weight:800;font-size:14px}
 .tb-btn{width:40px;height:40px;border-radius:10px;border:1px solid #34322A;background:#211F18;color:#D8D2C2;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
 
 /* ── Two panes: projects on the left, the selected project's pieces on the right ── */
@@ -194,7 +195,7 @@ input{font-family:inherit}
 <div id="auth-screen">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Cutting List · v3.68.0</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Cutting List · v3.69.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Workshop Sign In</h2>
@@ -210,9 +211,10 @@ input{font-family:inherit}
     <button class="tb-btn back" aria-label="Back to projects" onclick="closeList()"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 8 12l7 7"/></svg></button>
     <div class="brand-row">
       <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-      <div><div class="brand-name">Cutting List</div><div class="brand-sub"><span id="tb-dept">Amar Furniture · Woodwork</span><span class="brand-ver" id="tb-ver"></span></div></div>
+      <div><div class="brand-name" id="tb-title">Cutting List</div><div class="brand-sub"><span id="tb-dept">Amar Furniture · Woodwork</span><span class="brand-ver" id="tb-ver"></span></div></div>
     </div>
     <div class="tb-sum" id="tb-sum"></div>
+    <button class="tb-btn tb-lang" id="tb-lang" aria-label="Language / भाषा" title="Language / भाषा" onclick="toggleLang()">EN</button>
     <a class="tb-btn" id="home-btn" href="/" aria-label="Orders" title="Back to Orders" style="display:none"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10.5V20h12v-9.5"/></svg></a>
     <button class="tb-btn" aria-label="Sign out" title="Sign out" onclick="askSignOut()"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4.5H6A1.5 1.5 0 0 0 4.5 6v12A1.5 1.5 0 0 0 6 19.5h4"/><path d="M14.5 8 19 12l-4.5 4M19 12H9.5"/></svg></button>
   </div>
@@ -222,7 +224,7 @@ input{font-family:inherit}
   </div>
   <div class="selbar" id="selbar">
     <span id="sel-count">0 selected</span>
-    <button class="abtn ghost" onclick="stopSelecting()">Cancel</button>
+    <button class="abtn ghost" id="sel-cancel" onclick="stopSelecting()">Cancel</button>
     <button class="abtn go" id="sel-go" onclick="markPicked()">Mark as cut</button>
   </div>
 </div>
@@ -232,7 +234,7 @@ input{font-family:inherit}
     <h3 id="sheet-title"></h3>
     <p id="sheet-sub"></p>
     <div class="names" id="sheet-btns"></div>
-    <button class="btn btn-ghost" onclick="closeSheet(null)">Cancel</button>
+    <button class="btn btn-ghost" id="sheet-cancel" onclick="closeSheet(null)">Cancel</button>
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -254,7 +256,7 @@ const firebaseConfig = {
   messagingSenderId: "460562943530",
   appId:             "1:460562943530:web:d89b913ec8e6ecd85e7d53"
 };
-const CUT_VERSION = 'v3.68.0';
+const CUT_VERSION = 'v3.69.0';
 
 document.getElementById('tb-ver').textContent = CUT_VERSION;
 const app  = initializeApp(firebaseConfig);
@@ -266,12 +268,82 @@ let lists = [];          // the ones for the department on screen
 // Woodwork or Lathe: the tablet remembers which one it was showing.
 let dept = 'wood';
 try { if (localStorage.getItem('af-cut-dept') === 'lathe') dept = 'lathe'; } catch {}
-// Words that change with the department.
+// Hindi (default on the tablet) or English: the हिं / EN button switches, and the tablet remembers it.
+let lang = 'hi';
+try { if (localStorage.getItem('af-cut-lang') === 'en') lang = 'en'; } catch {}
+// Words that change with the department (and language).
 const WORDS = {
-  wood:  { label: 'Woodwork', cut: 'cut',    Cut: 'Cut',    now: 'Cutting now', start: 'Start cutting', todo: 'To cut',  list: 'Cut List',   who: 'Who cut' },
-  lathe: { label: 'Lathe',    cut: 'turned', Cut: 'Turned', now: 'Turning now', start: 'Start turning', todo: 'To turn', list: 'Lathe List', who: 'Who turned' },
+  en: {
+    wood:  { label: 'Woodwork', cut: 'cut',    Cut: 'Cut',    now: 'Cutting now', start: 'Start cutting', todo: 'To cut',  list: 'Cut List',   who: 'Who cut' },
+    lathe: { label: 'Lathe',    cut: 'turned', Cut: 'Turned', now: 'Turning now', start: 'Start turning', todo: 'To turn', list: 'Lathe List', who: 'Who turned' },
+  },
+  hi: {
+    wood:  { label: 'लकड़ी', cut: 'कटा',     Cut: 'कटा',     now: 'अभी कट रहा', start: 'कटाई शुरू', todo: 'कटना बाकी', list: 'कटिंग लिस्ट', who: 'किसने काटा' },
+    lathe: { label: 'लेथ',   cut: 'लेथ हुआ', Cut: 'लेथ हुआ', now: 'अभी लेथ पर', start: 'लेथ शुरू',  todo: 'लेथ बाकी',  list: 'लेथ लिस्ट',   who: 'किसने लेथ किया' },
+  },
 };
-const W = () => WORDS[dept];
+const W = (d = dept) => WORDS[lang][d];
+// Every other piece of text on the tablet.
+const TX = {
+  en: {
+    title: 'Cutting List', done: 'Done', piece: 'Piece', notes: 'Notes', print: 'Print', select: 'Select',
+    markAll: 'Mark all done', cancel: 'Cancel', pick: 'Pick a project on the left.', exit: 'Press back again to exit',
+    notYet: 'Not cut yet', today: 'Due today', printed: 'Printed', saveErr: 'Could not save: ', offline: 'No internet — try again',
+    outQ: 'Sign out of the tablet?', outSub: 'You will need the workshop password to sign in again.', out: 'Sign out',
+    noNames: 'No carpenter names yet — the office can add them in Settings.', loadErr: 'Cannot load cut lists: ',
+    ofCut: (d, n, w) => `${d} of ${n} ${w.cut}`,
+    empty: w => `No ${w.label.toLowerCase()} lists yet.<br>They appear here as soon as the office adds one.`,
+    showAll: n => `Show all ${n} done`,
+    left: (n, p) => `${n} piece${n === 1 ? '' : 's'} to ${dept === 'lathe' ? 'turn' : 'cut'} · ${p} project${p === 1 ? '' : 's'}`,
+    allDone: w => `All ${w.cut}`,
+    markAs: w => `Mark as ${w.cut}`,
+    selected: n => `${n} selected`,
+    by: (w, who) => `${w.Cut}${who ? ' by ' + who : ''}`,
+    undoQ: (name, w) => `Mark “${name}” as not ${w.cut}?`,
+    undoSub: (w, who) => `It was marked ${w.cut}${who ? ' by ' + who : ''}.`,
+    undoYes: w => `Yes, not ${w.cut}`,
+    whoOne: (name, w) => `${w.who} “${name}”?`,
+    tapHint: w => `Tap the pieces that are ${w.cut}`,
+    whoMany: (n, w) => `${w.who} these ${n} piece${n === 1 ? '' : 's'}?`,
+    allQ: (n, w) => `Mark all ${n} remaining piece${n === 1 ? '' : 's'} as ${w.cut}?`,
+    marked: (n, w) => `✓ ${n} piece${n === 1 ? '' : 's'} marked ${w.cut}`,
+    unmarked: w => `Marked as not ${w.cut}`,
+    late: n => `${n}d late`,
+    due: d => `Due ${d}`,
+  },
+  hi: {
+    title: 'कटिंग लिस्ट', done: 'पूरा हुआ', piece: 'पीस', notes: 'नोट्स', print: 'प्रिंट', select: 'चुनें',
+    markAll: 'सब पूरा', cancel: 'रद्द करें', pick: 'बाईं ओर से प्रोजेक्ट चुनें।', exit: 'बाहर जाने के लिए फिर से Back दबाएँ',
+    notYet: 'अभी कटा नहीं', today: 'आज देना है', printed: 'प्रिंट', saveErr: 'सेव नहीं हुआ: ', offline: 'इंटरनेट नहीं है — फिर से कोशिश करें',
+    outQ: 'टैबलेट से साइन आउट करें?', outSub: 'दोबारा साइन इन करने के लिए वर्कशॉप पासवर्ड चाहिए।', out: 'साइन आउट',
+    noNames: 'कारीगरों के नाम अभी नहीं जुड़े — ऑफिस सेटिंग्स में जोड़ सकता है।', loadErr: 'लिस्ट लोड नहीं हुई: ',
+    ofCut: (d, n, w) => `${n} में से ${d} ${w.cut}`,
+    empty: w => `अभी कोई ${w.label} लिस्ट नहीं है।<br>ऑफिस से लिस्ट जुड़ते ही यहाँ दिखेगी।`,
+    showAll: n => `सभी ${n} पूरे देखें`,
+    left: (n, p) => `${n} पीस ${dept === 'lathe' ? 'लेथ' : 'कटना'} बाकी · ${p} प्रोजेक्ट`,
+    allDone: w => `सब ${w.cut}`,
+    markAs: w => `${w.cut} मार्क करें`,
+    selected: n => `${n} चुने`,
+    by: (w, who) => `${w.Cut}${who ? ' — ' + who : ''}`,
+    undoQ: (name, w) => `“${name}” से “${w.cut}” हटाएँ?`,
+    undoSub: (w, who) => `${who ? who + ' ने ' : ''}${w.cut} मार्क किया था।`,
+    undoYes: () => 'हाँ, हटाएँ',
+    whoOne: (name, w) => `“${name}” ${w.who}?`,
+    tapHint: w => `जो पीस ${w.cut}, उन पर टैप करें`,
+    whoMany: (n, w) => `ये ${n} पीस ${w.who}?`,
+    allQ: (n, w) => `बाकी सभी ${n} पीस ${w.cut} मार्क करें?`,
+    marked: (n, w) => `✓ ${n} पीस ${w.cut} मार्क ${n === 1 ? 'हुआ' : 'हुए'}`,
+    unmarked: w => `${w.cut} हटाया`,
+    late: n => `${n} दिन लेट`,
+    due: d => `${d} तक`,
+  },
+};
+const L = () => TX[lang];
+window.toggleLang = () => {
+  lang = lang === 'hi' ? 'en' : 'hi';
+  try { localStorage.setItem('af-cut-lang', lang); } catch {}
+  render();
+};
 const deptOf = c => c.dept === 'lathe' ? 'lathe' : 'wood';
 // Lathe orders go through both tabs: Woodwork cuts the blanks (done / doneBy / doneAt / active),
 // then Lathe turns them (turned / turnedBy / turnedAt / activeLathe).
@@ -314,7 +386,7 @@ function toast(msg) {
 function dueChip(c) {
   if (!c.deadline) return '';
   const n = daysLeft(c.deadline);
-  const txt = n < 0 ? (-n) + 'd late' : n === 0 ? 'Due today' : 'Due ' + fmtDay(new Date(c.deadline + 'T00:00:00'));
+  const txt = n < 0 ? L().late(-n) : n === 0 ? L().today : L().due(fmtDay(new Date(c.deadline + 'T00:00:00')));
   return `<span class="due ${n < 0 ? 'late' : n <= 3 ? 'soon' : ''}">${txt}</span>`;
 }
 
@@ -327,7 +399,7 @@ window.signIn = async () => {
   catch (e) { $('auth-error').textContent = e.code === 'auth/invalid-credential' ? 'Invalid email or password.' : e.message; }
 };
 window.askSignOut = async () => {
-  const ok = await sheet('Sign out of the tablet?', 'You will need the workshop password to sign in again.', [{ label: 'Sign out', value: true, cls: 'no' }]);
+  const ok = await sheet(L().outQ, L().outSub, [{ label: L().out, value: true, cls: 'no' }]);
   if (ok) signOut(auth);
 };
 
@@ -342,7 +414,7 @@ onAuthStateChanged(auth, user => {
   unsubs.push(onSnapshot(collection(db, 'cutlists'), snap => {
     all = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(c => !c.hidden && (c.pieces || []).length);
     render();
-  }, err => { console.error(err); toast('Cannot load cut lists: ' + (err.code || err.message)); }));
+  }, err => { console.error(err); toast(L().loadErr + (err.code || err.message)); }));
   unsubs.push(onSnapshot(doc(db, 'workshop', 'config'), s => { names = (s.exists() && s.data().carpenters) || []; }, err => console.warn(err)));
   keepAwake();
 });
@@ -353,10 +425,10 @@ function tile(c) {
   return `<button class="pj ${c[K().pin] && d < n ? 'pinned' : ''} ${c.id === selId ? 'sel' : ''}" onclick="openList('${c.id}')">
     <div class="pj-top"><div>
       <div class="pj-name">${c.orderNo ? `<span class="ono">#${c.orderNo}</span>` : ''}${esc(c.client)}</div>
-      <div class="pj-desc">${dept === 'wood' && deptOf(c) === 'lathe' ? '<span class="tag">Lathe</span>' : ''}${esc(c.title) || '&nbsp;'}</div>
+      <div class="pj-desc">${dept === 'wood' && deptOf(c) === 'lathe' ? `<span class="tag">${W('lathe').label}</span>` : ''}${esc(c.title) || '&nbsp;'}</div>
     </div>${d < n ? dueChip(c) : ''}</div>
     <div class="bar ${d === n ? 'full' : ''}"><i style="width:${Math.round(d / n * 100)}%"></i></div>
-    <div class="pj-cnt">${d} of ${n} ${W().cut}</div>
+    <div class="pj-cnt">${L().ofCut(d, n, W())}</div>
   </button>`;
 }
 window.setDept = d => {
@@ -377,15 +449,19 @@ function render() {
   const sec = (title, arr) => arr.length ? `<div class="sec-h">${title} <b>${arr.length}</b></div>` + arr.map(tile).join('') : '';
   const doneShown = showAllDone ? done : done.slice(0, 5);
   const tab = d => { const k = all.filter(c => inTab(c, d) && c.pieces.some(p => !p[KEYS[d].f])).length;
-    return `<button class="tab ${d === dept ? 'on' : ''}" onclick="setDept('${d}')">${WORDS[d].label}${k ? ` <b>${k}</b>` : ''}</button>`; };
+    return `<button class="tab ${d === dept ? 'on' : ''}" onclick="setDept('${d}')">${W(d).label}${k ? ` <b>${k}</b>` : ''}</button>`; };
   $('side').innerHTML = `<div class="tabs">${tab('wood')}${tab('lathe')}</div>` + (!lists.length
-    ? `<div class="empty">No ${W().label.toLowerCase()} lists yet.<br>They appear here as soon as the office adds one.</div>`
-    : sec(W().now, pinned) + sec(W().todo, todo) + sec('Done', doneShown))
-      + (done.length > doneShown.length ? `<button class="more" onclick="moreDone()">Show all ${done.length} done</button>` : '');
+    ? `<div class="empty">${L().empty(W())}</div>`
+    : sec(W().now, pinned) + sec(W().todo, todo) + sec(L().done, doneShown))
+      + (done.length > doneShown.length ? `<button class="more" onclick="moreDone()">${L().showAll(done.length)}</button>` : '');
   const left = open.reduce((s, c) => s + c.pieces.length - doneOf(c), 0);
-  $('tb-sum').textContent = left ? `${left} piece${left === 1 ? '' : 's'} to ${dept === 'lathe' ? 'turn' : 'cut'} · ${open.length} project${open.length === 1 ? '' : 's'}` : `All ${W().cut}`;
+  $('tb-sum').textContent = left ? L().left(left, open.length) : L().allDone(W());
   $('tb-dept').textContent = 'Amar Furniture · ' + W().label;
-  $('sel-go').textContent = 'Mark as ' + W().cut;
+  $('tb-title').textContent = L().title;
+  $('tb-lang').textContent = lang === 'hi' ? 'EN' : 'हिं';
+  $('sel-go').textContent = L().markAs(W());
+  $('sel-cancel').textContent = $('sheet-cancel').textContent = L().cancel;
+  document.documentElement.lang = lang;
   renderDetail();
 }
 window.moreDone = () => { showAllDone = true; render(); };
@@ -417,7 +493,7 @@ addEventListener('popstate', () => {
     return;
   }
   // Nothing open: leave the guard off for 2 seconds, so a second Back closes the app.
-  toast('Press back again to exit');
+  toast(L().exit);
   clearTimeout(exitTimer); exitTimer = setTimeout(guard, 2000);
 });
 guard();
@@ -425,12 +501,12 @@ guard();
 // ── Pieces (right) ──
 function renderDetail() {
   const c = lists.find(x => x.id === selId);
-  if (!c) { $('main').innerHTML = lists.length ? '<div class="empty">Pick a project on the left.</div>' : ''; return; }
+  if (!c) { $('main').innerHTML = lists.length ? `<div class="empty">${L().pick}</div>` : ''; return; }
   const n = c.pieces.length, d = doneOf(c);
-  const acts = `<button class="abtn" onclick="printSlip()">${svgPrint} Print</button>` + (d < n ? `
+  const acts = `<button class="abtn" onclick="printSlip()">${svgPrint} ${L().print}</button>` + (d < n ? `
       <button class="abtn ${c[K().pin] ? 'on' : ''}" onclick="togglePin()">${svgPin} ${c[K().pin] ? W().now : W().start}</button>
-      <button class="abtn ${selecting ? 'on' : ''}" onclick="${selecting ? 'stopSelecting()' : 'startSelecting()'}">Select</button>
-      <button class="abtn go" onclick="markAll()">${svgTick} Mark all done</button>` : '');
+      <button class="abtn ${selecting ? 'on' : ''}" onclick="${selecting ? 'stopSelecting()' : 'startSelecting()'}">${L().select}</button>
+      <button class="abtn go" onclick="markAll()">${svgTick} ${L().markAll}</button>` : '');
   $('main').innerHTML = `
     <div class="dh">
       <div>
@@ -439,22 +515,22 @@ function renderDetail() {
       </div>
       <div class="dh-acts">${acts}</div>
     </div>
-    ${c.notes ? `<div class="notes"><b>Notes</b>${esc(c.notes)}</div>` : ''}
-    <div class="prog"><div class="bar ${d === n ? 'full' : ''}"><i style="width:${Math.round(d / n * 100)}%"></i></div><span>${d} of ${n} ${W().cut}</span></div>
+    ${c.notes ? `<div class="notes"><b>${L().notes}</b>${esc(c.notes)}</div>` : ''}
+    <div class="prog"><div class="bar ${d === n ? 'full' : ''}"><i style="width:${Math.round(d / n * 100)}%"></i></div><span>${L().ofCut(d, n, W())}</span></div>
     <div class="${selecting ? 'selecting' : ''}">${c.pieces.map(p => `
       <button class="pc ${isP(p) ? 'done' : ''} ${picked.has(p.id) ? 'picked' : ''}" onclick="tapPiece('${p.id}')">
         <span class="tick">${svgTick}</span>
         <span class="pc-info">
-          <div class="pc-n">${esc(p.name) || 'Piece'}</div>
+          <div class="pc-n">${esc(p.name) || L().piece}</div>
           ${p.wood ? `<div class="pc-w">${esc(p.wood)}</div>` : ''}
-          ${isP(p) ? `<div class="pc-by">${W().Cut}${p[K().by] ? ' by ' + esc(p[K().by]) : ''}${p[K().at] ? ' · ' + fmtStamp(p[K().at]) : ''}</div>`
-            : dept === 'lathe' && !p.done ? '<div class="pc-wait">Not cut yet</div>' : ''}
+          ${isP(p) ? `<div class="pc-by">${esc(L().by(W(), p[K().by]))}${p[K().at] ? ' · ' + fmtStamp(p[K().at]) : ''}</div>`
+            : dept === 'lathe' && !p.done ? `<div class="pc-wait">${L().notYet}</div>` : ''}
         </span>
         <span class="pc-size">${esc(sizeOf(p))}</span>
         <span class="pc-q">× ${esc(p.qty || '1')} Nos</span>
       </button>`).join('')}
     </div>`;
-  $('sel-count').textContent = picked.size + ' selected';
+  $('sel-count').textContent = L().selected(picked.size);
 }
 
 window.tapPiece = async pid => {
@@ -466,18 +542,18 @@ window.tapPiece = async pid => {
     renderDetail(); return;
   }
   if (isP(p)) {
-    const ok = await sheet(`Mark “${p.name || 'Piece'}” as not ${W().cut}?`, `It was marked ${W().cut}${p[K().by] ? ' by ' + p[K().by] : ''}.`, [{ label: 'Yes, not ' + W().cut, value: true, cls: 'no' }]);
+    const ok = await sheet(L().undoQ(p.name || L().piece, W()), L().undoSub(W(), p[K().by]), [{ label: L().undoYes(W()), value: true, cls: 'no' }]);
     if (ok) setCut([pid], false);
     return;
   }
-  const by = await askName(`${W().who} “${p.name || 'Piece'}”?`, `${sizeOf(p)}${sizeOf(p) ? ' · ' : ''}× ${p.qty || 1} Nos`);
+  const by = await askName(L().whoOne(p.name || L().piece, W()), `${sizeOf(p)}${sizeOf(p) ? ' · ' : ''}× ${p.qty || 1} Nos`);
   if (by != null) setCut([pid], true, by);
 };
 window.startSelecting = () => { if (!selecting) openLayer('select'); selecting = true; picked.clear(); $('selbar').classList.add('show'); renderDetail(); };
 window.stopSelecting = (quiet, fromBack) => { if (!fromBack) closeLayer('select'); selecting = false; picked.clear(); $('selbar').classList.remove('show'); if (quiet !== true) renderDetail(); };
 window.markPicked = async () => {
-  if (!picked.size) { toast('Tap the pieces that are ' + W().cut); return; }
-  const by = await askName(`${W().who} these ${picked.size} piece${picked.size === 1 ? '' : 's'}?`, '');
+  if (!picked.size) { toast(L().tapHint(W())); return; }
+  const by = await askName(L().whoMany(picked.size, W()), '');
   if (by == null) return;
   const ids = [...picked]; stopSelecting();
   setCut(ids, true, by);
@@ -485,7 +561,7 @@ window.markPicked = async () => {
 window.markAll = async () => {
   const c = lists.find(x => x.id === selId); if (!c) return;
   const ids = c.pieces.filter(p => !isP(p)).map(p => p.id);
-  const by = await askName(`Mark all ${ids.length} remaining piece${ids.length === 1 ? '' : 's'} as ${W().cut}?`, `${c.client}${c.title ? ' · ' + c.title : ''}`);
+  const by = await askName(L().allQ(ids.length, W()), `${c.client}${c.title ? ' · ' + c.title : ''}`);
   if (by == null) return;
   stopSelecting(true);
   setCut(ids, true, by);
@@ -493,7 +569,7 @@ window.markAll = async () => {
 window.togglePin = async () => {
   const c = lists.find(x => x.id === selId); if (!c) return;
   try { await updateDoc(doc(db, 'cutlists', c.id), { [K().pin]: !c[K().pin], updatedAt: serverTimestamp() }); }
-  catch (err) { toast('Could not save: ' + (err.code || err.message)); }
+  catch (err) { toast(L().saveErr + (err.code || err.message)); }
 };
 
 // Marks pieces cut (with name + time) or not cut. A transaction, so two taps never overwrite each other.
@@ -513,10 +589,10 @@ async function setCut(ids, done, by = '') {
       if (pieces.every(p => p[k.f])) patch[k.pin] = false;
       tx.update(ref, patch);
     });
-    toast(done ? `✓ ${ids.length} piece${ids.length === 1 ? '' : 's'} marked ${W().cut}` : 'Marked as not ' + W().cut);
+    toast(done ? L().marked(ids.length, W()) : L().unmarked(W()));
   } catch (err) {
     console.error(err);
-    toast(navigator.onLine ? 'Could not save: ' + (err.code || err.message) : 'No internet — try again');
+    toast(navigator.onLine ? L().saveErr + (err.code || err.message) : L().offline);
   }
 }
 
@@ -529,15 +605,15 @@ window.printSlip = () => {
     <div class="s-c s-h">Amar Furniture · ${W().list}</div>
     <div class="s-c s-name">${c.orderNo ? '#' + c.orderNo + ' ' : ''}${esc(c.client)}</div>
     ${c.title ? `<div class="s-c s-sub">${esc(c.title)}</div>` : ''}
-    ${c.deadline ? `<div class="s-c s-sub">Due ${fmtDay(new Date(c.deadline + 'T00:00:00'))}</div>` : ''}
+    ${c.deadline ? `<div class="s-c s-sub">${L().due(fmtDay(new Date(c.deadline + 'T00:00:00')))}</div>` : ''}
     <div class="s-rule"></div>
-    ${c.notes ? `<div class="s-notes"><b>Notes:</b> ${esc(c.notes)}</div><div class="s-rule"></div>` : ''}
+    ${c.notes ? `<div class="s-notes"><b>${L().notes}:</b> ${esc(c.notes)}</div><div class="s-rule"></div>` : ''}
     ${c.pieces.map(p => `<div class="s-pc"><div class="s-box">${isP(p) ? '✓' : ''}</div><div>
-      <div class="s-n">${esc(p.name) || 'Piece'}</div>
+      <div class="s-n">${esc(p.name) || L().piece}</div>
       <div class="s-sz">${esc(sizeOf(p))}${sizeOf(p) ? ' ' : ''}<span class="s-q">× ${esc(p.qty || '1')} Nos</span></div>
       ${p.wood ? `<div class="s-w">${esc(p.wood)}</div>` : ''}
     </div></div>`).join('')}
-    <div class="s-foot">${doneOf(c)} of ${c.pieces.length} ${W().cut} · Printed ${fmtStamp(now)}</div>`;
+    <div class="s-foot">${L().ofCut(doneOf(c), c.pieces.length, W())} · ${L().printed} ${fmtStamp(now)}</div>`;
   window.print();
 };
 
@@ -555,7 +631,7 @@ window.pickSheet = i => closeSheet(sheet._btns[i].value);
 window.closeSheet = (v, fromBack) => { if (!fromBack) closeLayer('sheet'); $('sheet').classList.remove('open'); const r = sheetResolve; sheetResolve = null; r?.(v); };
 // Carpenter names come from Settings in the orders app.
 function askName(title, sub) {
-  if (!names.length) return sheet(title, 'No carpenter names yet — the office can add them in Settings.', [{ label: 'Mark as ' + W().cut, value: '', cls: 'go' }]);
+  if (!names.length) return sheet(title, L().noNames, [{ label: L().markAs(W()), value: '', cls: 'go' }]);
   return sheet(title, sub, names.map(n => ({ label: n, value: n })));
 }
 
