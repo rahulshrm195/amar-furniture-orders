@@ -8,7 +8,7 @@
 <title>Amar Furniture — Cutting List</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.69.2 — Workshop cutting list (tablet); UI is Concept A ── */
+/* ── v3.70.0 — Workshop cutting list (tablet); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -104,6 +104,7 @@ input{font-family:inherit}
 .tag{display:inline-block;font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:1px 7px;border-radius:20px;background:#E3EDE6;color:#5C8A6B;margin-right:6px}
 .pc-by{font-size:16px;color:var(--green);font-weight:700;margin-top:4px}
 .pc-size{font-family:var(--serif);font-weight:700;font-size:27px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.cu{text-decoration:underline double;text-decoration-color:var(--clay);text-decoration-thickness:2px;text-underline-offset:6px}
 .pc-q{font-weight:800;font-size:23px;min-width:70px;text-align:right;color:var(--clay);white-space:nowrap}
 .pc.done{background:#F4F9F4;border-color:#CFE3D3}
 .pc.done .tick{background:var(--green);border-color:var(--green);color:#fff}
@@ -153,6 +154,8 @@ input{font-family:inherit}
   #slip .s-n{font-weight:800}
   #slip .s-sz{font-size:11pt;font-weight:800}
   #slip .s-q{white-space:nowrap}
+  #slip .s-sz{line-height:1.55}
+  #slip .cu{text-decoration-color:#000;text-decoration-thickness:1.5px;text-underline-offset:3px}
   #slip .s-w{font-size:8.5pt}
   #slip .s-tot{font-size:12pt;font-weight:800;margin-top:2mm}
   #slip .s-foot{font-size:8pt;margin-top:2mm}
@@ -201,7 +204,7 @@ input{font-family:inherit}
 <div id="auth-screen">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Cutting List · v3.69.2</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Cutting List · v3.70.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Workshop Sign In</h2>
@@ -262,7 +265,7 @@ const firebaseConfig = {
   messagingSenderId: "460562943530",
   appId:             "1:460562943530:web:d89b913ec8e6ecd85e7d53"
 };
-const CUT_VERSION = 'v3.69.2';
+const CUT_VERSION = 'v3.70.0';
 
 document.getElementById('tb-ver').textContent = CUT_VERSION;
 const app  = initializeApp(firebaseConfig);
@@ -374,6 +377,9 @@ const fmtDay = d => d.getDate() + ' ' + MONTHS[d.getMonth()];
 const fmtStamp = iso => { const d = new Date(iso); return fmtDay(d) + ', ' + d.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' }); };
 // 63" x 3" x 3"
 const sizeOf = p => [p.l, p.w, p.t].filter(v => v !== '' && v != null).map(v => v + '"').join(' x ');
+// Same, as HTML: sides where a cut size is OK (p.cs, e.g. ['w','t']) get a double underline, like on paper.
+const sizeHtml = p => ['l', 'w', 't'].filter(k => p[k] !== '' && p[k] != null)
+  .map(k => (p.cs || []).includes(k) ? `<span class="cu">${esc(p[k])}"</span>` : esc(p[k]) + '"').join(' x ');
 const doneOf = c => c.pieces.filter(isP).length;
 // Total quantity of all pieces (e.g. 1 + 2 + 2 = 5 Nos); a blank qty counts as 1.
 const totalQty = c => { const t = c.pieces.reduce((s, p) => s + (parseFloat(p.qty) || 1), 0); return Math.round(t * 100) / 100; };
@@ -534,7 +540,7 @@ function renderDetail() {
           ${isP(p) ? `<div class="pc-by">${esc(L().by(W(), p[K().by]))}${p[K().at] ? ' · ' + fmtStamp(p[K().at]) : ''}</div>`
             : dept === 'lathe' && !p.done ? `<div class="pc-wait">${L().notYet}</div>` : ''}
         </span>
-        <span class="pc-size">${esc(sizeOf(p))}</span>
+        <span class="pc-size">${sizeHtml(p)}</span>
         <span class="pc-q">× ${esc(p.qty || '1')} Nos</span>
       </button>`).join('')}
     </div>`;
@@ -618,7 +624,7 @@ window.printSlip = () => {
     ${c.notes ? `<div class="s-notes"><b>${L().notes}:</b> ${esc(c.notes)}</div><div class="s-rule"></div>` : ''}
     ${c.pieces.map(p => `<div class="s-pc"><div class="s-box">${isP(p) ? '✓' : ''}</div><div>
       <div class="s-n">${esc(p.name) || L().piece}</div>
-      <div class="s-sz">${esc(sizeOf(p))}${sizeOf(p) ? ' ' : ''}<span class="s-q">× ${esc(p.qty || '1')} Nos</span></div>
+      <div class="s-sz">${sizeHtml(p)}${sizeOf(p) ? ' ' : ''}<span class="s-q">× ${esc(p.qty || '1')} Nos</span></div>
       ${p.wood ? `<div class="s-w">${esc(p.wood)}</div>` : ''}
     </div></div>`).join('')}
     <div class="s-tot">${L().total}: ${totalQty(c)} Nos</div>

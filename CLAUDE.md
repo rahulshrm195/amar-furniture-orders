@@ -45,6 +45,7 @@ A single-page PWA for tracking furniture orders. It is hosted on GitHub Pages (s
     - The Woodwork tab shows every list. The Lathe tab shows only lathe orders and says "turned" instead of "cut".
     - Lathe cards show both "Cut x/n" and "Turned y/n".
     - The tablet remembers its tab in localStorage (`af-cut-dept`). Lists without `dept` count as woodwork.
+  - Cut size OK (v3.70.0): each piece has `cs`, a list of the sides (`'l'`, `'w'`, `'t'`) where a cut size is acceptable (the standard ¼" less, which the carpenters know). The editor toggles it with the "=" button under each size box. The tablet and slip show those numbers double-underlined (`sizeHtml`), with no extra text.
   - Card icon: the saw icon is plain when there is no list, orange (`.prep`) once a list exists, and green (`.has`) when everything is cut (and, for lathe orders, turned).
 - **Drive folders**: `createDriveFolder` POSTs the order to an Apps Script webhook with `client`, `projectType`, `orderNo` and `otherLabel`. The script then writes the folder URL back to the order document.
 - **Keyboard shortcuts**:
@@ -61,11 +62,8 @@ A single-page PWA for tracking furniture orders. It is hosted on GitHub Pages (s
 1. **Project priority.** A newly added urgent project currently lands below older ones. The owner wants:
    - a priority set on each project, with the highest priority always at the top, including on the workshop tablet;
    - a sort switch for priority, order date or delivery date.
-2. **Cut size vs regular size on pieces.**
-   - On handwritten lists the owner double-underlines a size to mean "a cut size is acceptable". For example, a piece written as 82" x 4" x 4" can come from 82" x 3¾" x 3¾" stock.
-   - The cut list needs a per-piece (or per-dimension) "cut size OK" mark that shows clearly on the tablet and the printed slip.
-3. **Drive folder script.** Put `orderNo` in the folder names. The owner will paste the Apps Script.
-4. **"Paste items" box.** Fill an order's item rows from a pasted list.
-5. **Order numbers.** Confirm the existing orders were numbered from #1001.
-6. **Cut-list workflow change.** The owner will explain it later.
-7. **Firestore rules.** `isAdmin()` lists only rahulshrm195@gmail.com. Add rahul@ and father@amarfurniture.in if they should create orders.
+2. **Drive folder script.** Put `orderNo` in the folder names. The owner will paste the Apps Script.
+3. **"Paste items" box.** Fill an order's item rows from a pasted list.
+4. **Order numbers.** Confirm the existing orders were numbered from #1001.
+5. **Cut-list workflow change.** The owner will explain it later.
+6. **Firestore rules.** `isAdmin()` lists only rahulshrm195@gmail.com. Add rahul@ and father@amarfurniture.in if they should create orders.

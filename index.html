@@ -11,7 +11,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.69.2 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
+/* ── v3.70.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -369,6 +369,9 @@ button.chip{border:none;font-family:inherit}
 /* Cut list (woodwork) — edited here, ticked off on the workshop tablet at /cut/ */
 .chip.cut{background:var(--clay-soft);color:var(--clay)}
 .chip.cut.full{background:var(--green-soft);color:var(--green)}
+.cs-tg{width:100%;height:24px;margin-top:4px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--ink3);font-weight:800;font-size:13px;line-height:1}
+.cs-tg.on{background:var(--clay);border-color:var(--clay);color:#FAF9F5}
+.item-dim-inp.cs-on{border-color:var(--clay);background:var(--clay-soft);text-decoration:underline double;text-underline-offset:3px}
 .cut-done{font-size:11.5px;font-weight:700;color:var(--green);margin-top:8px}
 #cut-modal .items-list-edit:empty::before{content:'No pieces yet — use “Add Piece” below';display:block;padding:14px 4px;font-size:12.5px;color:var(--ink3)}
 .cp-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
@@ -470,7 +473,7 @@ button.chip{border:none;font-family:inherit}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.69.2</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.70.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -1054,7 +1057,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.69.2';
+const APP_VERSION = 'v3.70.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -2480,7 +2483,9 @@ function addCutRow(pc = {}) {
   row.className = 'item-edit-row';
   row.dataset.id = pc.id || Math.random().toString(36).slice(2, 10);
   // Sizes are plain text so fractions like 1 1/8 can be typed; Qty gets the number pad.
-  const dim = (lbl, cls, v, ph) => `<div class="item-dim-wrap"><div class="item-dim-label">${lbl}</div><input class="item-dim-inp ${cls}" type="text" ${cls === 'cut-q' ? 'inputmode="decimal" ' : ''}autocomplete="off" placeholder="${ph}" value="${escHtml(v || '')}"></div>`;
+  // L / W / T each get an "=" toggle under them: on = a cut size is OK for that side (shown double-underlined).
+  const cs = pc.cs || [];
+  const dim = (lbl, cls, v, ph, k) => `<div class="item-dim-wrap"><div class="item-dim-label">${lbl}</div><input class="item-dim-inp ${cls}${k && cs.includes(k) ? ' cs-on' : ''}" type="text" ${cls === 'cut-q' ? 'inputmode="decimal" ' : ''}autocomplete="off" placeholder="${ph}" value="${escHtml(v || '')}">${k ? `<button type="button" class="cs-tg${cs.includes(k) ? ' on' : ''}" data-k="${k}" title="Cut size OK (double underline)" aria-label="Cut size OK" onclick="toggleCs(this)">=</button>` : ''}</div>`;
   row.innerHTML = `
     <div class="item-edit-row-top">
       <span class="item-sr-badge">${list.children.length + 1}</span>
@@ -2488,7 +2493,7 @@ function addCutRow(pc = {}) {
       <button class="item-del-btn" aria-label="Remove piece" onclick="removeItemRow(this)">${svgi('close', 13, 2)}</button>
     </div>
     <div class="item-edit-row-dims">
-      ${dim('L (in)', 'cut-l', pc.l, '—')}${dim('W (in)', 'cut-w', pc.w, '—')}${dim('T (in)', 'cut-t', pc.t, '—')}${dim('Qty', 'cut-q', pc.qty, '1')}
+      ${dim('L (in)', 'cut-l', pc.l, '—', 'l')}${dim('W (in)', 'cut-w', pc.w, '—', 'w')}${dim('T (in)', 'cut-t', pc.t, '—', 't')}${dim('Qty', 'cut-q', pc.qty, '1')}
       <div class="item-dim-wrap"><div class="item-dim-label">Wood</div><input class="item-dim-inp cut-wood" type="text" placeholder="e.g. Teak" value="${escHtml(pc.wood || '')}"></div>
     </div>
     ${pc.done ? `<div class="cut-done">\u2713 Cut${pc.doneBy ? ' by ' + escHtml(pc.doneBy) : ''}${pc.doneAt ? ' · ' + fmtStamp(pc.doneAt) : ''}</div>` : ''}
@@ -2497,12 +2502,18 @@ function addCutRow(pc = {}) {
   if (!pc.id) row.querySelector('.cut-name').focus();
 }
 
+function toggleCs(btn) {
+  btn.classList.toggle('on');
+  btn.previousElementSibling.classList.toggle('cs-on', btn.classList.contains('on'));
+}
+
 async function saveCutList() {
   const id = window._cutId;
   const p = (window._projects || []).find(x => x.id === id); if (!p) return;
   const val = (row, cls) => row.querySelector('.' + cls).value.trim().replace(/["\u201D]+$/, '').trim();
   const pieces = [...document.querySelectorAll('#cut-list-edit .item-edit-row')]
-    .map(row => ({ id: row.dataset.id, name: val(row, 'cut-name'), l: val(row, 'cut-l'), w: val(row, 'cut-w'), t: val(row, 'cut-t'), qty: val(row, 'cut-q') || '1', wood: val(row, 'cut-wood') }))
+    .map(row => ({ id: row.dataset.id, name: val(row, 'cut-name'), l: val(row, 'cut-l'), w: val(row, 'cut-w'), t: val(row, 'cut-t'), qty: val(row, 'cut-q') || '1', wood: val(row, 'cut-wood'),
+      cs: ['l', 'w', 't'].filter(k => val(row, 'cut-' + k) && row.querySelector(`.cs-tg[data-k="${k}"]`).classList.contains('on')) }))
     .filter(x => x.name || x.l || x.w || x.t);
   try {
     await window._saveCutList(id, cutMeta(p), document.getElementById('cut-notes').value.trim(), pieces);
