@@ -8,7 +8,7 @@
 <title>Amar Furniture — Cutting List</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.71.1 — Workshop cutting list (tablet); UI is Concept A ── */
+/* ── v3.72.0 — Workshop cutting list (tablet); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -100,6 +100,13 @@ input{font-family:inherit}
 .pc-info{min-width:0;flex:1}
 .pc-n{font-weight:800;font-size:21px}
 .pc-w{font-size:16px;color:var(--ink2);margin-top:2px}
+.pc.held{background:var(--amber-soft);border:1.5px dashed #D9B26A}
+.pc.held .tick{border:none;background:#E8CFA0;color:var(--amber)}
+.pc.held .pc-n,.pc.held .pc-size,.pc.held .pc-q{color:#9A8A6A}
+.pc-hold{font-size:16px;color:var(--amber);font-weight:800;margin-top:4px}
+.hold-h{font-size:19px;font-weight:800;color:var(--amber);margin:20px 4px 10px}
+.hcnt{color:var(--amber);font-weight:800;margin-left:10px}
+.prog .hcnt{margin:0;padding-left:14px;border-left:2px solid var(--border);font-size:20px;color:var(--amber)}
 .pc-wait{font-size:16px;color:var(--amber);font-weight:700;margin-top:4px}
 .tag{display:inline-block;font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:1px 7px;border-radius:20px;background:#E3EDE6;color:#5C8A6B;margin-right:6px}
 .pc-by{font-size:16px;color:var(--green);font-weight:700;margin-top:4px}
@@ -154,6 +161,8 @@ input{font-family:inherit}
   #slip .s-n{font-weight:800}
   #slip .s-sz{font-size:11pt;font-weight:800}
   #slip .s-q{white-space:nowrap}
+  #slip .s-held .s-box{border:none;width:auto;height:auto;font-size:8pt;line-height:1.3}
+  #slip .s-held .s-sz{text-decoration:line-through}
   #slip .s-sz{line-height:1.55}
   #slip .cu{text-decoration-color:#000;text-decoration-thickness:1.5px;text-underline-offset:3px}
   #slip .s-w{font-size:8.5pt}
@@ -204,7 +213,7 @@ input{font-family:inherit}
 <div id="auth-screen">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Cutting List · v3.71.1</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Cutting List · v3.72.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Workshop Sign In</h2>
@@ -265,7 +274,7 @@ const firebaseConfig = {
   messagingSenderId: "460562943530",
   appId:             "1:460562943530:web:d89b913ec8e6ecd85e7d53"
 };
-const CUT_VERSION = 'v3.71.1';
+const CUT_VERSION = 'v3.72.0';
 
 document.getElementById('tb-ver').textContent = CUT_VERSION;
 const app  = initializeApp(firebaseConfig);
@@ -318,6 +327,9 @@ const TX = {
     marked: (n, w) => `✓ ${n} piece${n === 1 ? '' : 's'} marked ${w.cut}`,
     unmarked: w => `Marked as not ${w.cut}`,
     late: n => `${n}d late`,
+    hold: 'On hold', holdTap: 'On hold by the office — do not cut yet',
+    heldN: n => `${n} on hold`,
+    holdSec: w => `On hold — do not ${w === WORDS.en.lathe ? 'turn' : 'cut'} yet`,
     due: d => `Due ${d}`,
   },
   hi: {
@@ -344,6 +356,9 @@ const TX = {
     marked: (n, w) => `✓ ${n} पीस ${w.cut} मार्क ${n === 1 ? 'हुआ' : 'हुए'}`,
     unmarked: w => `${w.cut} हटाया`,
     late: n => `${n} दिन लेट`,
+    hold: 'होल्ड', holdTap: 'ऑफिस ने होल्ड किया है — अभी नहीं',
+    heldN: n => `${n} होल्ड`,
+    holdSec: w => w === WORDS.hi.lathe ? 'होल्ड — अभी लेथ मत करो' : 'होल्ड — अभी मत काटो',
     due: d => `${d} तक`,
   },
 };
@@ -399,16 +414,22 @@ const sizeOf = p => [p.l, p.w, p.t].filter(v => v !== '' && v != null).map(v => 
 // Same, as HTML: sides where a cut size is OK (p.cs, e.g. ['w','t']) get a double underline, like on paper.
 const sizeHtml = p => ['l', 'w', 't'].filter(k => p[k] !== '' && p[k] != null)
   .map(k => (p.cs || []).includes(k) ? `<span class="cu">${esc(fmtSize(p[k]))}"</span>` : esc(fmtSize(p[k])) + '"').join(' x ');
+// Pieces the office put on hold (and not already done): never ticked, listed last, and they keep the
+// project out of Done until the hold is removed or the piece deleted.
+const isHeld = p => !!p.hold && !isP(p);
+const heldOf = c => c.pieces.filter(isHeld).length;
+const workOf = c => c.pieces.length - heldOf(c);   // pieces to cut now
 const doneOf = c => c.pieces.filter(isP).length;
 // Total quantity of all pieces (e.g. 1 + 2 + 2 = 5 Nos); a blank qty counts as 1.
 const totalQty = c => { const t = c.pieces.reduce((s, p) => s + (parseFloat(p.qty) || 1), 0); return Math.round(t * 100) / 100; };
-const isDone = c => doneOf(c) === c.pieces.length;
+const isDone = c => c.pieces.every(isP);
 const daysLeft = d => { const t = new Date(); t.setHours(0,0,0,0); return Math.round((new Date(d + 'T00:00:00') - t) / 86400000); };
 const byDue = (a, b) => (a.deadline || '9999') .localeCompare(b.deadline || '9999') || (a.orderNo || 0) - (b.orderNo || 0);
 const lastCut = c => Math.max(0, ...c.pieces.map(p => Date.parse(p[K().at]) || 0));
 const wide = () => matchMedia('(min-width:860px)').matches;
 const svgTick = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg>';
 const svgPrint = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9V4h10v5"/><rect x="4" y="9" width="16" height="7" rx="1.5"/><path d="M7 14h10v6H7Z"/></svg>';
+const svgPause = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><rect x="6.5" y="5" width="4" height="14" rx="1"/><rect x="13.5" y="5" width="4" height="14" rx="1"/></svg>';
 const svgPin  = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6l-1 5 3 3v2H7v-2l3-3-1-5Z"/><path d="M12 14v6"/></svg>';
 
 function toast(msg) {
@@ -454,14 +475,14 @@ onAuthStateChanged(auth, user => {
 
 // ── Project list (left) ──
 function tile(c) {
-  const n = c.pieces.length, d = doneOf(c);
-  return `<button class="pj ${c[K().pin] && d < n ? 'pinned' : ''} ${c.id === selId ? 'sel' : ''}" onclick="openList('${c.id}')">
+  const n = workOf(c), d = doneOf(c), h = heldOf(c), fin = isDone(c);
+  return `<button class="pj ${c[K().pin] && !fin ? 'pinned' : ''} ${c.id === selId ? 'sel' : ''}" onclick="openList('${c.id}')">
     <div class="pj-top"><div>
       <div class="pj-name">${c.orderNo ? `<span class="ono">#${c.orderNo}</span>` : ''}${esc(c.client)}</div>
       <div class="pj-desc">${dept === 'wood' && deptOf(c) === 'lathe' ? `<span class="tag">${W('lathe').label}</span>` : ''}${esc(c.title) || '&nbsp;'}</div>
-    </div>${d < n ? dueChip(c) : ''}</div>
-    <div class="bar ${d === n ? 'full' : ''}"><i style="width:${Math.round(d / n * 100)}%"></i></div>
-    <div class="pj-cnt">${L().ofCut(d, n, W())}</div>
+    </div>${!fin ? dueChip(c) : ''}</div>
+    <div class="bar ${fin ? 'full' : ''}"><i style="width:${n ? Math.round(d / n * 100) : 0}%"></i></div>
+    <div class="pj-cnt">${L().ofCut(d, n, W())}${h ? `<span class="hcnt">${L().heldN(h)}</span>` : ''}</div>
   </button>`;
 }
 window.setDept = d => {
@@ -487,8 +508,9 @@ function render() {
     ? `<div class="empty">${L().empty(W())}</div>`
     : sec(W().now, pinned) + sec(W().todo, todo) + sec(L().done, doneShown))
       + (done.length > doneShown.length ? `<button class="more" onclick="moreDone()">${L().showAll(done.length)}</button>` : '');
-  const left = open.reduce((s, c) => s + c.pieces.length - doneOf(c), 0);
-  $('tb-sum').textContent = left ? L().left(left, open.length) : L().allDone(W());
+  const left = open.reduce((s, c) => s + workOf(c) - doneOf(c), 0);
+  const heldAll = open.reduce((s, c) => s + heldOf(c), 0);
+  $('tb-sum').textContent = left ? L().left(left, open.length) + (heldAll ? ' · ' + L().heldN(heldAll) : '') : heldAll ? L().heldN(heldAll) : L().allDone(W());
   $('tb-dept').textContent = 'Amar Furniture · ' + W().label;
   $('tb-title').textContent = L().title;
   $('tb-lang').textContent = lang === 'hi' ? 'EN' : 'हिं';
@@ -535,7 +557,7 @@ guard();
 function renderDetail() {
   const c = lists.find(x => x.id === selId);
   if (!c) { $('main').innerHTML = lists.length ? `<div class="empty">${L().pick}</div>` : ''; return; }
-  const n = c.pieces.length, d = doneOf(c);
+  const n = workOf(c), d = doneOf(c), h = heldOf(c);
   const acts = `<button class="abtn" onclick="printSlip()">${svgPrint} ${L().print}</button>` + (d < n ? `
       <button class="abtn ${c[K().pin] ? 'on' : ''}" onclick="togglePin()">${svgPin} ${c[K().pin] ? W().now : W().start}</button>
       <button class="abtn ${selecting ? 'on' : ''}" onclick="${selecting ? 'stopSelecting()' : 'startSelecting()'}">${L().select}</button>
@@ -544,31 +566,38 @@ function renderDetail() {
     <div class="dh">
       <div>
         <div class="dh-title">${c.orderNo ? `<span class="ono">#${c.orderNo}</span>` : ''}${esc(c.client)}</div>
-        <div class="dh-sub">${c.title ? `<span>${esc(c.title)}</span>` : ''}${d < n ? dueChip(c) : ''}</div>
+        <div class="dh-sub">${c.title ? `<span>${esc(c.title)}</span>` : ''}${!isDone(c) ? dueChip(c) : ''}</div>
       </div>
       <div class="dh-acts">${acts}</div>
     </div>
     ${c.notes ? `<div class="notes"><b>${L().notes}</b>${esc(c.notes)}</div>` : ''}
-    <div class="prog"><div class="bar ${d === n ? 'full' : ''}"><i style="width:${Math.round(d / n * 100)}%"></i></div><span>${L().ofCut(d, n, W())}</span><span class="tot">${L().total}: ${totalQty(c)} Nos</span></div>
-    <div class="${selecting ? 'selecting' : ''}">${c.pieces.map(p => `
-      <button class="pc ${isP(p) ? 'done' : ''} ${picked.has(p.id) ? 'picked' : ''}" onclick="tapPiece('${p.id}')">
-        <span class="tick">${svgTick}</span>
+    <div class="prog"><div class="bar ${isDone(c) ? 'full' : ''}"><i style="width:${n ? Math.round(d / n * 100) : 0}%"></i></div><span>${L().ofCut(d, n, W())}</span>${h ? `<span class="hcnt">${L().heldN(h)}</span>` : ''}<span class="tot">${L().total}: ${totalQty(c)} Nos</span></div>
+    <div class="${selecting ? 'selecting' : ''}">${c.pieces.filter(p => !isHeld(p)).map(pieceRow).join('')}
+      ${h ? `<div class="hold-h">${L().holdSec(W())}</div>` + c.pieces.filter(isHeld).map(pieceRow).join('') : ''}
+    </div>`;
+  $('sel-count').textContent = L().selected(picked.size);
+}
+function pieceRow(p) {
+  const held = isHeld(p);
+  return `
+      <button class="pc ${isP(p) ? 'done' : ''} ${held ? 'held' : ''} ${picked.has(p.id) ? 'picked' : ''}" onclick="tapPiece('${p.id}')">
+        <span class="tick">${held ? svgPause : svgTick}</span>
         <span class="pc-info">
           <div class="pc-n">${esc(p.name) || L().piece}</div>
           ${p.wood ? `<div class="pc-w">${esc(p.wood)}</div>` : ''}
           ${isP(p) ? `<div class="pc-by">${esc(L().by(W(), p[K().by]))}${p[K().at] ? ' · ' + fmtStamp(p[K().at]) : ''}</div>`
+            : held ? `<div class="pc-hold">${L().hold}</div>`
             : dept === 'lathe' && !p.done ? `<div class="pc-wait">${L().notYet}</div>` : ''}
         </span>
         <span class="pc-size">${sizeHtml(p)}</span>
         <span class="pc-q">× ${esc(p.qty || '1')} Nos</span>
-      </button>`).join('')}
-    </div>`;
-  $('sel-count').textContent = L().selected(picked.size);
+      </button>`;
 }
 
 window.tapPiece = async pid => {
   const c = lists.find(x => x.id === selId); const p = c?.pieces.find(x => x.id === pid);
   if (!p) return;
+  if (isHeld(p)) { toast(L().holdTap); return; }
   if (selecting) {
     if (isP(p)) return;
     picked.has(pid) ? picked.delete(pid) : picked.add(pid);
@@ -593,7 +622,8 @@ window.markPicked = async () => {
 };
 window.markAll = async () => {
   const c = lists.find(x => x.id === selId); if (!c) return;
-  const ids = c.pieces.filter(p => !isP(p)).map(p => p.id);
+  const ids = c.pieces.filter(p => !isP(p) && !isHeld(p)).map(p => p.id);
+  if (!ids.length) return;
   const by = await askName(L().allQ(ids.length, W()), `${c.client}${c.title ? ' · ' + c.title : ''}`);
   if (by == null) return;
   stopSelecting(true);
@@ -641,13 +671,13 @@ window.printSlip = () => {
     ${c.deadline ? `<div class="s-c s-sub">${L().due(fmtDay(new Date(c.deadline + 'T00:00:00')))}</div>` : ''}
     <div class="s-rule"></div>
     ${c.notes ? `<div class="s-notes"><b>${L().notes}:</b> ${esc(c.notes)}</div><div class="s-rule"></div>` : ''}
-    ${c.pieces.map(p => `<div class="s-pc"><div class="s-box">${isP(p) ? '✓' : ''}</div><div>
+    ${[...c.pieces.filter(p => !isHeld(p)), ...c.pieces.filter(isHeld)].map(p => `<div class="s-pc ${isHeld(p) ? 's-held' : ''}"><div class="s-box">${isHeld(p) ? L().hold : isP(p) ? '✓' : ''}</div><div>
       <div class="s-n">${esc(p.name) || L().piece}</div>
       <div class="s-sz">${sizeHtml(p)}${sizeOf(p) ? ' ' : ''}<span class="s-q">× ${esc(p.qty || '1')} Nos</span></div>
       ${p.wood ? `<div class="s-w">${esc(p.wood)}</div>` : ''}
     </div></div>`).join('')}
     <div class="s-tot">${L().total}: ${totalQty(c)} Nos</div>
-    <div class="s-foot">${L().ofCut(doneOf(c), c.pieces.length, W())} · ${L().printed} ${fmtStamp(now)}</div>`;
+    <div class="s-foot">${L().ofCut(doneOf(c), workOf(c), W())}${heldOf(c) ? ' · ' + L().heldN(heldOf(c)) : ''} · ${L().printed} ${fmtStamp(now)}</div>`;
   window.print();
 };
 

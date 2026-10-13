@@ -47,6 +47,12 @@ A single-page PWA for tracking furniture orders. It is hosted on GitHub Pages (s
     - The tablet remembers its tab in localStorage (`af-cut-dept`). Lists without `dept` count as woodwork.
   - Cut size OK (v3.70.0): each piece has `cs`, a list of the sides (`'l'`, `'w'`, `'t'`) where a cut size is acceptable (the standard ¼" less, which the carpenters know). The editor toggles it with the "=" button under each size box. The tablet and slip show those numbers double-underlined (`sizeHtml`), with no extra text.
   - Fractions (v3.71.0): sizes are displayed with single-character fractions (`fmtSize`, which is in both `index.html` and `cut/index.html`). For example, "2 1/2", "2.5" and "5/2" all show as 2 ½ (non-breaking space after the whole number), "0.25" shows as ¼, and odd ones like 3/16 show as ³⁄₁₆. Decimals become fractions only when they land exactly on a 1/16. Stored values and form inputs stay exactly as typed.
+  - Hold pieces (v3.72.0): a piece with `hold: true` is set by the office with the "Hold" button in the editor.
+    - On the tablet it is listed last under "होल्ड — अभी मत काटो", shown amber with a pause sign, and can't be ticked.
+    - It is left out of "x of n" and shown as "2 होल्ड" instead.
+    - It keeps the project out of Done (`isDone` needs every piece done) until the hold is released or the piece deleted.
+    - The slip prints it last with "होल्ड" in place of the tick box and its size struck through.
+    - Order cards show an "N on hold" chip.
   - Card icon: the saw icon is plain when there is no list, orange (`.prep`) once a list exists, and green (`.has`) when everything is cut (and, for lathe orders, turned).
 - **Drive folders**: `createDriveFolder` POSTs the order to an Apps Script webhook with `client`, `projectType`, `orderNo` and `otherLabel`. The script then writes the folder URL back to the order document.
 - **Keyboard shortcuts**:
