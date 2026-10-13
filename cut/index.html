@@ -8,7 +8,7 @@
 <title>Amar Furniture — Cutting List</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.69.0 — Workshop cutting list (tablet); UI is Concept A ── */
+/* ── v3.69.1 — Workshop cutting list (tablet); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -48,17 +48,18 @@ input{font-family:inherit}
 
 /* ── Topbar ── */
 #app{display:none}
-.topbar{position:sticky;top:0;z-index:50;background:var(--slate);display:flex;align-items:center;gap:12px;padding:0 20px;height:64px}
-.tb-sum{margin-left:auto;color:#CFC8B6;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tb-lang{width:auto!important;min-width:46px;padding:0 10px;font-weight:800;font-size:14px}
-.tb-btn{width:40px;height:40px;border-radius:10px;border:1px solid #34322A;background:#211F18;color:#D8D2C2;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.topbar{position:sticky;top:0;z-index:50;background:var(--slate);display:flex;align-items:center;gap:12px;padding:0 20px;height:70px}
+.tb-sum{margin-left:auto;color:#EDE9DD;font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-lang{width:auto!important;min-width:52px;padding:0 12px;font-weight:800;font-size:17px}
+.tb-btn{width:46px;height:46px;border-radius:10px;border:1px solid #34322A;background:#211F18;color:#D8D2C2;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
 
 /* ── Two panes: projects on the left, the selected project's pieces on the right ── */
-.wrap{display:grid;grid-template-columns:minmax(300px,380px) minmax(0,1fr);height:calc(100dvh - 64px)}
+.wrap{display:grid;grid-template-columns:minmax(300px,380px) minmax(0,1fr);height:calc(100dvh - 70px)}
 .side{overflow-y:auto;border-right:1px solid var(--border);padding:6px 16px 24px}
 .main{overflow-y:auto;padding:22px 26px 120px}
 .back{display:none}
-.sec-h{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin:18px 4px 8px}
+.sec-h{display:flex;align-items:center;gap:10px;font-size:19px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;color:var(--ink2);margin:22px 4px 10px}
+.sec-h b{font-size:15px;min-width:28px;padding:2px 9px;border-radius:20px;background:#E2DCCD;text-align:center}
 .sec-h b{font-weight:800;color:var(--ink2)}
 .pj{display:block;width:100%;text-align:left;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 14px 12px;margin-bottom:10px;position:relative;overflow:hidden;color:var(--ink)}
 .pj.pinned::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--clay)}
@@ -68,41 +69,41 @@ input{font-family:inherit}
 .pj-name{font-weight:800;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ono{color:var(--ink3);font-weight:700;margin-right:6px;font-variant-numeric:tabular-nums}
 .pj-desc{font-size:12.5px;color:var(--ink2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.due{font-size:11.5px;font-weight:800;white-space:nowrap;padding:4px 9px;border-radius:20px;background:var(--ivory);color:var(--ink2);border:1px solid var(--border)}
+.due{font-size:15px;font-weight:800;white-space:nowrap;padding:5px 11px;border-radius:20px;background:var(--ivory);color:var(--ink2);border:1px solid var(--border)}
 .due.soon{background:var(--amber-soft);color:var(--amber);border-color:#E8CFA0}
 .due.late{background:var(--red-soft);color:var(--red);border-color:#EBC3BA}
-.bar{height:8px;border-radius:8px;background:#EFEADF;margin-top:12px;overflow:hidden}
+.bar{height:10px;border-radius:8px;background:#EFEADF;margin-top:12px;overflow:hidden}
 .bar i{display:block;height:100%;background:var(--clay);border-radius:8px}
 .bar.full i{background:var(--green)}
-.pj-cnt{font-size:12px;font-weight:700;color:var(--ink2);margin-top:6px}
-.more{width:100%;padding:12px;border-radius:12px;border:1px dashed var(--border);background:transparent;color:var(--ink2);font-weight:700;font-size:13px}
-.empty{text-align:center;color:var(--ink3);padding:70px 20px;font-size:15px;line-height:1.5}
+.pj-cnt{font-size:17px;font-weight:800;color:var(--ink);margin-top:8px}
+.more{width:100%;padding:12px;border-radius:12px;border:1px dashed var(--border);background:transparent;color:var(--ink2);font-weight:700;font-size:16px}
+.empty{text-align:center;color:var(--ink3);padding:70px 20px;font-size:18px;line-height:1.5}
 
 /* ── Selected project ── */
 .dh{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:14px}
 .dh-title{font-family:var(--serif);font-weight:700;font-size:27px;line-height:1.15}
-.dh-sub{color:var(--ink2);font-size:14px;margin-top:5px;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.dh-sub{color:var(--ink2);font-size:15px;margin-top:5px;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 .dh-acts{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
-.abtn{height:48px;padding:0 18px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--ink);font-weight:700;font-size:15px;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.abtn{height:54px;padding:0 20px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--ink);font-weight:800;font-size:18px;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
 .abtn.on{background:var(--clay-soft);border-color:var(--clay);color:var(--clay)}
 .abtn.go{background:var(--green);border-color:var(--green);color:#fff}
-.notes{background:var(--amber-soft);border:1px solid #E8CFA0;border-radius:12px;padding:12px 15px;color:#5E3B00;font-size:15px;line-height:1.45;white-space:pre-wrap;margin-bottom:14px}
-.notes b{display:block;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px;color:var(--amber)}
+.notes{background:var(--amber-soft);border:1px solid #E8CFA0;border-radius:12px;padding:12px 15px;color:#5E3B00;font-size:18px;line-height:1.45;white-space:pre-wrap;margin-bottom:14px}
+.notes b{display:block;font-size:14px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px;color:var(--amber)}
 .prog{display:flex;align-items:center;gap:14px;margin-bottom:16px}
-.prog .bar{flex:1;height:12px;margin:0}
-.prog span{font-weight:800;font-size:14px;color:var(--ink2);white-space:nowrap}
+.prog .bar{flex:1;height:14px;margin:0}
+.prog span{font-weight:800;font-size:20px;color:var(--ink);white-space:nowrap}
 
 /* Piece rows: big and easy to tap */
 .pc{display:flex;align-items:center;gap:16px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 18px;margin-bottom:10px;min-height:78px;color:var(--ink)}
-.pc .tick{width:42px;height:42px;border-radius:50%;border:2.5px solid #CFC6B2;flex:0 0 auto;display:flex;align-items:center;justify-content:center;color:transparent}
+.pc .tick{width:48px;height:48px;border-radius:50%;border:2.5px solid #CFC6B2;flex:0 0 auto;display:flex;align-items:center;justify-content:center;color:transparent}
 .pc-info{min-width:0;flex:1}
-.pc-n{font-weight:800;font-size:17.5px}
-.pc-w{font-size:13px;color:var(--ink2);margin-top:2px}
-.pc-wait{font-size:12.5px;color:var(--amber);font-weight:700;margin-top:4px}
-.tag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:1px 7px;border-radius:20px;background:#E3EDE6;color:#5C8A6B;margin-right:6px}
-.pc-by{font-size:12.5px;color:var(--green);font-weight:700;margin-top:4px}
-.pc-size{font-family:var(--serif);font-weight:700;font-size:22px;white-space:nowrap;font-variant-numeric:tabular-nums}
-.pc-q{font-weight:800;font-size:18px;min-width:58px;text-align:right;color:var(--clay);white-space:nowrap}
+.pc-n{font-weight:800;font-size:21px}
+.pc-w{font-size:16px;color:var(--ink2);margin-top:2px}
+.pc-wait{font-size:16px;color:var(--amber);font-weight:700;margin-top:4px}
+.tag{display:inline-block;font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:1px 7px;border-radius:20px;background:#E3EDE6;color:#5C8A6B;margin-right:6px}
+.pc-by{font-size:16px;color:var(--green);font-weight:700;margin-top:4px}
+.pc-size{font-family:var(--serif);font-weight:700;font-size:27px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.pc-q{font-weight:800;font-size:23px;min-width:70px;text-align:right;color:var(--clay);white-space:nowrap}
 .pc.done{background:#F4F9F4;border-color:#CFE3D3}
 .pc.done .tick{background:var(--green);border-color:var(--green);color:#fff}
 .pc.done .pc-n,.pc.done .pc-size,.pc.done .pc-q{color:var(--ink2)}
@@ -113,23 +114,23 @@ input{font-family:inherit}
 
 .selbar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--slate);padding:12px 20px;display:flex;gap:10px;align-items:center;transform:translateY(110%);transition:transform .2s}
 .selbar.show{transform:none}
-.selbar span{color:#EDE9DD;font-weight:700;font-size:15px;margin-right:auto}
-.selbar .abtn{height:50px}
+.selbar span{color:#EDE9DD;font-weight:800;font-size:19px;margin-right:auto}
+.selbar .abtn{height:56px}
 .selbar .abtn.ghost{background:#211F18;border-color:#34322A;color:#D8D2C2}
 
 /* "Who cut this?" sheet */
 .sheet-bg{position:fixed;inset:0;z-index:500;background:rgba(23,22,15,.5);display:none;align-items:center;justify-content:center;padding:16px}
 .sheet-bg.open{display:flex}
 .sheet{background:var(--ivory);border:1px solid var(--border);border-radius:18px;padding:24px;width:100%;max-width:600px;max-height:90dvh;overflow-y:auto}
-.sheet h3{font-family:var(--serif);font-weight:700;font-size:22px;line-height:1.2}
-.sheet p{color:var(--ink2);font-size:14px;margin-top:6px}
+.sheet h3{font-family:var(--serif);font-weight:700;font-size:26px;line-height:1.2}
+.sheet p{color:var(--ink2);font-size:17px;margin-top:6px}
 .names{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:18px 0}
-.name-btn{min-height:66px;border-radius:14px;border:1px solid var(--border);background:var(--surface);font-weight:800;font-size:17px;color:var(--ink);padding:8px}
+.name-btn{min-height:72px;border-radius:14px;border:1px solid var(--border);background:var(--surface);font-weight:800;font-size:20px;color:var(--ink);padding:8px}
 .name-btn:active{background:var(--clay-soft);border-color:var(--clay)}
 .name-btn.go{background:var(--green);border-color:var(--green);color:#fff}
 .name-btn.no{background:var(--red-soft);border-color:#EBC3BA;color:var(--red)}
 
-.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--slate);color:#FAF9F5;padding:12px 22px;border-radius:12px;font-size:14px;font-weight:600;opacity:0;transition:all .3s;z-index:1000;white-space:nowrap;pointer-events:none}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--slate);color:#FAF9F5;padding:14px 24px;border-radius:12px;font-size:18px;font-weight:700;opacity:0;transition:all .3s;z-index:1000;white-space:nowrap;pointer-events:none}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* Printed slip: 2-inch (58 mm) thermal roll, via Android's Print screen (RawBT print service) */
@@ -157,9 +158,9 @@ input{font-family:inherit}
 
 /* Woodwork / Lathe switch */
 .tabs{display:flex;gap:6px;background:#EFEADF;border-radius:12px;padding:4px;margin:14px 0 4px}
-.tab{flex:1;height:44px;border-radius:9px;border:none;background:transparent;color:var(--ink2);font-weight:800;font-size:14.5px;display:flex;align-items:center;justify-content:center;gap:7px}
+.tab{flex:1;height:56px;border-radius:9px;border:none;background:transparent;color:var(--ink2);font-weight:800;font-size:20px;display:flex;align-items:center;justify-content:center;gap:7px}
 .tab.on{background:var(--surface);color:var(--clay);box-shadow:0 1px 3px rgba(26,24,18,.12)}
-.tab b{font-size:11.5px;min-width:22px;padding:2px 7px;border-radius:20px;background:var(--clay-soft);color:var(--clay)}
+.tab b{font-size:15px;min-width:28px;padding:2px 9px;border-radius:20px;background:var(--clay-soft);color:var(--clay)}
 .tab:not(.on) b{background:#E2DCCD;color:var(--ink2)}
 
 /* Narrow / portrait: one pane at a time */
@@ -174,9 +175,12 @@ input{font-family:inherit}
   .topbar #tb-dept{display:none}
   .topbar .brand-ver{margin-left:0}
   .topbar .brand-name{white-space:nowrap}
+}
+/* Phones: the size and quantity drop under the piece name */
+@media (max-width:599px){
   .pc{flex-wrap:wrap;gap:10px 14px}
-  .pc-info{flex:1 1 calc(100% - 60px)}
-  .pc-size{margin-left:58px;font-size:19px}
+  .pc-info{flex:1 1 calc(100% - 64px)}
+  .pc-size{margin-left:62px;font-size:24px}
   .pc-q{margin-left:auto}
 }
 @media (max-width:519px){ .tb-sum{visibility:hidden} }
@@ -195,7 +199,7 @@ input{font-family:inherit}
 <div id="auth-screen">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Cutting List · v3.69.0</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Cutting List · v3.69.1</div></div>
   </div>
   <div class="auth-card">
     <h2>Workshop Sign In</h2>
@@ -256,7 +260,7 @@ const firebaseConfig = {
   messagingSenderId: "460562943530",
   appId:             "1:460562943530:web:d89b913ec8e6ecd85e7d53"
 };
-const CUT_VERSION = 'v3.69.0';
+const CUT_VERSION = 'v3.69.1';
 
 document.getElementById('tb-ver').textContent = CUT_VERSION;
 const app  = initializeApp(firebaseConfig);
