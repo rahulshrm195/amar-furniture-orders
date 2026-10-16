@@ -11,7 +11,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.74.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
+/* ── v3.74.1 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -312,6 +312,11 @@ button.chip{border:none;font-family:inherit}
 .note-send:hover{background:#A9521F}
 
 .oc-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+button.chip.cut{border:none;cursor:pointer;font-family:inherit}
+.cp-sts{display:flex;gap:4px;flex-shrink:0}
+.cp-st{font-size:10.5px;font-weight:800;padding:2px 7px;border-radius:20px;background:var(--ivory);color:var(--ink3);border:1px solid var(--border);white-space:nowrap}
+.cp-st.ok{background:var(--green-soft);color:var(--green);border-color:#B9D9C2}
+.cp-st.held{background:var(--amber-soft);color:var(--amber);border-color:#E8CFA0}
 .oc-prep{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
 .prep-btn{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 11px;border-radius:9px;border:1px solid var(--border);background:var(--ivory);color:var(--ink2);font-size:12px;font-weight:700;font-family:inherit;white-space:nowrap}
 .prep-btn.has{border-color:#B9D9C2;color:var(--green);background:var(--green-soft)}
@@ -494,7 +499,7 @@ button.chip{border:none;font-family:inherit}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.74.0</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.74.1</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -1098,7 +1103,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.74.0';
+const APP_VERSION = 'v3.74.1';
 
 // -- LANGUAGE --
 const LANG = {
@@ -1506,7 +1511,7 @@ function buildCard(p) {
   const isLathe = p.projectType === 'lathe';
   // Lathe orders are cut first (Woodwork tab), then turned (Lathe tab): two chips.
   const turnDone = cutPcs.filter(x => x.turned).length;
-  const chipOf = (lbl, d) => `<div class="chip cut${d === cutPcs.length ? ' full' : ''}">${svgi('saw', 11, 2)} ${lbl} ${d}/${cutPcs.length}</div>`;
+  const chipOf = (lbl, d) => `<button class="chip cut${d === cutPcs.length ? ' full' : ''}" title="See each piece" onclick="toggleCard('${p.id}')">${svgi('saw', 11, 2)} ${lbl} ${d}/${cutPcs.length}</button>`;
   const cutChip = cutPcs.length ? chipOf('Cut', cutDone) + (isLathe ? chipOf('Turned', turnDone) : '')
     + (cutPcs.some(x => x.hold && !(x.done && (!isLathe || x.turned))) ? `<div class="chip warn">${svgi('hold', 11, 2)} ${cutPcs.filter(x => x.hold && !(x.done && (!isLathe || x.turned))).length} on hold</div>` : '') : '';
   const cutHeld = cutPcs.filter(x => x.hold && !x.done).length;
@@ -1538,9 +1543,9 @@ function buildCard(p) {
     if (window._isAdmin)    acts.push(`<button class="icon-btn" aria-label="${T('edit')}" title="${T('edit')}" onclick="openEditModal('${p.id}')">${svgi('edit', 15)}</button>`);
     if (window._isAdmin && (p.projectType === 'woodwork' || isLathe)) {
       // Plain = no list yet, orange = list made, green = everything cut (and turned)
-      const ttl = !cutPcs.length ? `Make a ${isLathe ? 'lathe' : 'cut'} list for the workshop`
-        : `${isLathe ? 'Lathe' : 'Cut'} list \u2014 ${cutDone} of ${cutPcs.length} cut${isLathe ? `, ${turnDone} turned` : ''}${cutHeld ? `, ${cutHeld} on hold` : ''}`;
-      prep.push(`<button class="prep-btn${cutAll ? ' has' : cutPcs.length ? ' prep' : ''}" aria-label="Cut list" title="${ttl}" onclick="openCutModal('${p.id}')">${svgi('saw', 14)} ${isLathe ? 'Lathe list' : 'Cut list'}</button>`);
+      const ttl = !cutPcs.length ? 'Make a cut list for the workshop'
+        : `Cut list \u2014 ${cutDone} of ${cutPcs.length} cut${isLathe ? `, ${turnDone} turned` : ''}${cutHeld ? `, ${cutHeld} on hold` : ''}`;
+      prep.push(`<button class="prep-btn${cutAll ? ' has' : cutPcs.length ? ' prep' : ''}" aria-label="Cut list" title="${ttl}" onclick="openCutModal('${p.id}')">${svgi('saw', 14)} Cut list</button>`);
     }
   }
   acts.push(`<button class="icon-btn ${window._expandedCards.has(p.id) ? 'on' : ''}" aria-label="Details" title="Items, specs &amp; note history" onclick="toggleCard('${p.id}')">${svgi('list', 15)}</button>`);
@@ -1569,12 +1574,20 @@ function buildCard(p) {
       return `<div class="dt-item"><div class="dt-item-n">${escHtml(it.name)}</div>${dims ? `<div class="dt-item-d">${escHtml(dims)}</div>` : ''}<div class="dt-item-q">${escHtml(it.qty)} ${escHtml(it.unit || 'Nos')}</div></div>`;
     }).join('') + '</div>';
   }
+  // Cut list progress, piece by piece (what the workshop has ticked on the tablet)
+  const st = (ok, by, lbl) => `<span class="cp-st${ok ? ' ok' : ''}" title="${ok && by ? escHtml(lbl + ' by ' + by) : ''}">${ok ? '\u2713 ' : ''}${lbl}</span>`;
+  const cutRows = cutPcs.length ? `<div><div class="dt-lbl">Cut list (${cutPcs.length})</div>` + cutPcs.map(pc => {
+    const dims = [pc.l, pc.w, pc.t].filter(Boolean).map(fmtSize).join(' × ');
+    const held = pc.hold && !(pc.done && (!isLathe || pc.turned));
+    return `<div class="dt-item"><div class="dt-item-n">${escHtml(pc.name || 'Piece')}</div>${dims ? `<div class="dt-item-d">${escHtml(dims)}</div>` : ''}<div class="dt-item-q">${escHtml(pc.qty || '1')} Nos</div>`
+      + `<div class="cp-sts">${held ? '<span class="cp-st held">On hold</span>' : st(pc.done, pc.doneBy, 'Cut') + (isLathe ? st(pc.turned, pc.turnedBy, 'Turned') : '')}</div></div>`;
+  }).join('') + '</div>' : '';
   const specs = p.notes ? `<div><div class="dt-lbl">Specs</div><div class="dt-specs">${escHtml(p.notes)}</div></div>` : '';
   // Internal notes: admins only (never on staff screens, never copied to the cut list)
   const internal = window._isAdmin && p.internalNotes ? `<div><div class="dt-lbl">Internal notes</div><div class="dt-specs">${escHtml(p.internalNotes)}</div></div>` : '';
   const movable = isActive(p) && canMove();
   const moveRow = movable ? `<div class="move-row"><span class="dt-lbl">Priority</span><button onclick="moveCard('${p.id}','front')">\u21E4 Move to front</button><button onclick="moveCard('${p.id}','up')">\u2039 Earlier</button><button onclick="moveCard('${p.id}','down')">Later \u203A</button></div>` : '';
-  const details = `<div class="oc-details">${moveRow}${items}${specs}${internal}<div><div class="dt-lbl">${T('activityHdr')}</div><div class="tl" id="tl-${p.id}">${timelineHtml(log)}</div></div></div>`;
+  const details = `<div class="oc-details">${moveRow}${items}${cutRows}${specs}${internal}<div><div class="dt-lbl">${T('activityHdr')}</div><div class="tl" id="tl-${p.id}">${timelineHtml(log)}</div></div></div>`;
 
   return `
   <div class="order-card ${p.archived ? 'archived' : ''} ${window._expandedCards.has(p.id) ? 'expanded' : ''}${movable ? ' movable' : ''}" id="card-${p.id}" style="--tone:${tone}">
@@ -2602,7 +2615,7 @@ function openCutModal(id) {
   const p = (window._projects || []).find(x => x.id === id); if (!p) return;
   window._cutId = id;
   const c = window._cutlists[id];
-  document.getElementById('cut-title').textContent = (p.projectType === 'lathe' ? 'Lathe List' : 'Cut List') + (p.orderNo ? ' · #' + p.orderNo : '') + ' · ' + p.client;
+  document.getElementById('cut-title').textContent = 'Cut List' + (p.orderNo ? ' · #' + p.orderNo : '') + ' · ' + p.client;
   document.getElementById('cut-sub').textContent = (p.item || typeLabelOf(p)) + (p.projectType === 'lathe' ? ' — shown under Lathe on the workshop tablet' : ' — shown under Woodwork on the workshop tablet');
   document.getElementById('cut-list-edit').innerHTML = '';
   (c?.pieces || []).forEach(pc => addCutRow(pc));
