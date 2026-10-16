@@ -53,7 +53,11 @@ A single-page PWA for tracking furniture orders. It is hosted on GitHub Pages (s
     - It keeps the project out of Done (`isDone` needs every piece done) until the hold is released or the piece deleted.
     - The slip prints it last with "होल्ड" in place of the tick box and its size struck through.
     - Order cards show an "N on hold" chip.
-  - Card icon: the saw icon is plain when there is no list, orange (`.prep`) once a list exists, and green (`.has`) when everything is cut (and, for lathe orders, turned).
+  - Card button: the cut-list button (prep row) is plain when there is no list, orange (`.prep`) once a list exists, and green (`.has`) when everything is cut (and, for lathe orders, turned).
+- **Drawing and prep row** (v3.74.0):
+  - The drawing state is `drawingDone` / `drawingNA`, and each tap cycles it: pending (plain) → done (green) → not needed (red) → pending.
+  - "Drawing pending" counts only pending drawings (`needsDrawing`).
+  - The drawing and cut-list buttons sit in their own labelled row on the card (`.oc-prep` / `.prep-btn`), above the action icons.
 - **Priority order** (v3.73.0): each project has a numeric `rank`; within a section, lower ranks are shown first.
   - Ranks were backfilled once in due-date order (`backfillRanks`). New orders get `_nextRank()`, which puts them at the end.
   - The sort switch above the list offers "My order" (rank), "Due date" or "Order date". It is remembered in localStorage (`af-sort`).
