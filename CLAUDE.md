@@ -54,6 +54,11 @@ A single-page PWA for tracking furniture orders. It is hosted on GitHub Pages (s
     - The slip prints it last with "होल्ड" in place of the tick box and its size struck through.
     - Order cards show an "N on hold" chip.
   - Card icon: the saw icon is plain when there is no list, orange (`.prep`) once a list exists, and green (`.has`) when everything is cut (and, for lathe orders, turned).
+- **Priority order** (v3.73.0): each project has a numeric `rank`; within a section, lower ranks are shown first.
+  - Ranks were backfilled once in due-date order (`backfillRanks`). New orders get `_nextRank()`, which puts them at the end.
+  - The sort switch above the list offers "My order" (rank), "Due date" or "Order date". It is remembered in localStorage (`af-sort`).
+  - In "My order", admins drag cards within a section on desktop (HTML5 drag and drop on `.order-card.movable`), or use the Move to front / Earlier / Later buttons in the card details. `applyOrder` reuses the section's own ranks and saves them in one `writeBatch`.
+  - `cutMeta` copies `rank` to the cut list, and the tablet sorts by rank, then due date.
 - **Drive folders**: `createDriveFolder` POSTs the order to an Apps Script webhook with `client`, `projectType`, `orderNo` and `otherLabel`. The script then writes the folder URL back to the order document.
 - **Keyboard shortcuts**:
   - `N` opens a new order (admins only).
@@ -66,11 +71,8 @@ A single-page PWA for tracking furniture orders. It is hosted on GitHub Pages (s
   - None of the plain-letter shortcuts fire while typing or while a dialog is open.
 
 ## Backlog (noted by the owner, not started)
-1. **Project priority.** A newly added urgent project currently lands below older ones. The owner wants:
-   - a priority set on each project, with the highest priority always at the top, including on the workshop tablet;
-   - a sort switch for priority, order date or delivery date.
-2. **Drive folder script.** Put `orderNo` in the folder names. The owner will paste the Apps Script.
-3. **"Paste items" box.** Fill an order's item rows from a pasted list.
-4. **Order numbers.** Confirm the existing orders were numbered from #1001.
-5. **Cut-list workflow change.** The owner will explain it later.
-6. **Firestore rules.** `isAdmin()` lists only rahulshrm195@gmail.com. Add rahul@ and father@amarfurniture.in if they should create orders.
+1. **Drive folder script.** Put `orderNo` in the folder names. The owner will paste the Apps Script.
+2. **"Paste items" box.** Fill an order's item rows from a pasted list.
+3. **Order numbers.** Confirm the existing orders were numbered from #1001.
+4. **Cut-list workflow change.** The owner will explain it later.
+5. **Firestore rules.** `isAdmin()` lists only rahulshrm195@gmail.com. Add rahul@ and father@amarfurniture.in if they should create orders.

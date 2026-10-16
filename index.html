@@ -11,7 +11,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.72.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
+/* ── v3.73.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -251,6 +251,19 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .sec-count{font-size:11.5px;font-weight:700;color:var(--ink2);background:var(--surface);border:1px solid var(--border);padding:3px 10px;border-radius:20px}
 .section-divider{height:1px;background:var(--border);margin-bottom:2px}
 .section-empty{border:1.5px dashed var(--border);border-radius:12px;padding:16px;text-align:center;color:var(--ink3);font-size:12.5px}
+.sort-bar{grid-column:1/-1;display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:2px 0 -2px}
+.sort-lbl{font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink3);margin-right:4px}
+.sort-opt{padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--ink2);font-size:12px;font-weight:700}
+.sort-opt.on{background:var(--clay-soft);border-color:var(--clay);color:var(--clay)}
+.sort-hint{font-size:11.5px;color:var(--ink3);margin-left:6px}
+.order-card.movable{cursor:grab}
+.order-card.dragging{opacity:.45}
+.order-card.drop-before,.order-card.drop-after{outline:2px dashed var(--clay);outline-offset:4px}
+.order-card.drop-before{box-shadow:-10px 0 0 -4px var(--clay)}
+.order-card.drop-after{box-shadow:10px 0 0 -4px var(--clay)}
+.move-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.move-row .dt-lbl{margin:0 4px 0 0}
+.move-row button{padding:6px 11px;border-radius:9px;border:1px solid var(--border);background:var(--ivory);color:var(--ink2);font-size:12px;font-weight:700}
 .section-banner{display:flex;align-items:center;gap:12px;background:var(--amber-soft);border:1px solid #E8CFA0;border-radius:12px;padding:14px 16px;color:#7A4A00}
 .section-banner .sb-text{font-weight:700;font-size:13.5px;flex:1}
 .section-banner button{background:none;border:none;color:inherit;font-size:12px;font-weight:700;white-space:nowrap}
@@ -476,7 +489,7 @@ button.chip{border:none;font-family:inherit}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.72.0</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.73.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -764,7 +777,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, signInWithEmailAndPassword, signOut as fbSignOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, updateDoc, setDoc, deleteDoc, doc,
-  onSnapshot, query, orderBy, serverTimestamp, runTransaction }
+  onSnapshot, query, orderBy, serverTimestamp, runTransaction, writeBatch }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // ── YOUR FIREBASE CONFIG ──
@@ -845,6 +858,23 @@ const ensureOrderNo = id => runTransaction(db, async tx => {
   tx.update(pr, { orderNo: n });
 });
 // One-time numbering of orders created before this feature, oldest first.
+// ── PRIORITY ORDER ──
+// Every order has a rank; within a section, lower rank = higher on the screen (and on the workshop tablet).
+// Moving cards rewrites the ranks of that section in one batch.
+window._saveRanks = pairs => { const b = writeBatch(db); pairs.forEach(([id, rank]) => b.update(doc(db, 'projects', id), { rank })); return b.commit(); };
+window._nextRank = () => Math.max(0, ...(window._projects || []).map(p => +p.rank || 0)) + 1;
+// One-time: orders from before this feature get ranks in their old (due date) order.
+async function backfillRanks() {
+  if (!window._isAdmin || window._rankBusy || window._rankFailed) return;
+  const missing = (window._projects || []).filter(p => p.rank == null)
+    .sort((a, b) => String(a.deadline || '9999').localeCompare(String(b.deadline || '9999')) || (a.orderNo || 0) - (b.orderNo || 0));
+  if (!missing.length) return;
+  window._rankBusy = true;
+  try { const start = window._nextRank(); await window._saveRanks(missing.map((p, i) => [p.id, start + i])); }
+  catch (err) { window._rankFailed = true; console.warn('Rank backfill failed:', err); }
+  finally { window._rankBusy = false; }
+}
+
 async function backfillOrderNos() {
   if (!window._isAdmin || window._orderNoBusy || window._orderNoFailed) return;
   const when = p => p.createdAt?.seconds ?? (p.createdAt?.toMillis ? p.createdAt.toMillis() / 1000 : (Date.parse(p.orderDate) / 1000 || 0));
@@ -896,6 +926,7 @@ function startListening() {
     window._projects = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderProjects(); updateStats();
     backfillOrderNos();
+    backfillRanks();
     syncCutLists();
     // Opened from a link / new tab on #reports: show Reports once the orders have loaded.
     if (!window._hashHandled) { window._hashHandled = true; if (location.hash === '#reports' && window._isAdmin) openReports(); }
@@ -991,6 +1022,7 @@ window.saveProject = async function() {
     data.createdAt = _serverTimestamp();
     // If numbering is unreachable the order still saves and is numbered on the next load.
     try { data.orderNo = await window._nextOrderNo(); } catch (err) { console.warn('Order number not assigned:', err); }
+    data.rank = window._nextRank();   // new orders join the end of their section
     if (data.status === 4) data.deliveredAt = _todayStr();
     // Folder creation needs both the global Settings switch on AND this
     // order's own "Create Drive Folder" checkbox ticked — the global switch
@@ -1060,7 +1092,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.72.0';
+const APP_VERSION = 'v3.73.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -1532,10 +1564,12 @@ function buildCard(p) {
   const specs = p.notes ? `<div><div class="dt-lbl">Specs</div><div class="dt-specs">${escHtml(p.notes)}</div></div>` : '';
   // Internal notes: admins only (never on staff screens, never copied to the cut list)
   const internal = window._isAdmin && p.internalNotes ? `<div><div class="dt-lbl">Internal notes</div><div class="dt-specs">${escHtml(p.internalNotes)}</div></div>` : '';
-  const details = `<div class="oc-details">${items}${specs}${internal}<div><div class="dt-lbl">${T('activityHdr')}</div><div class="tl" id="tl-${p.id}">${timelineHtml(log)}</div></div></div>`;
+  const movable = isActive(p) && canMove();
+  const moveRow = movable ? `<div class="move-row"><span class="dt-lbl">Priority</span><button onclick="moveCard('${p.id}','front')">\u21E4 Move to front</button><button onclick="moveCard('${p.id}','up')">\u2039 Earlier</button><button onclick="moveCard('${p.id}','down')">Later \u203A</button></div>` : '';
+  const details = `<div class="oc-details">${moveRow}${items}${specs}${internal}<div><div class="dt-lbl">${T('activityHdr')}</div><div class="tl" id="tl-${p.id}">${timelineHtml(log)}</div></div></div>`;
 
   return `
-  <div class="order-card ${p.archived ? 'archived' : ''} ${window._expandedCards.has(p.id) ? 'expanded' : ''}" id="card-${p.id}" style="--tone:${tone}">
+  <div class="order-card ${p.archived ? 'archived' : ''} ${window._expandedCards.has(p.id) ? 'expanded' : ''}${movable ? ' movable' : ''}" id="card-${p.id}" style="--tone:${tone}">
     <div class="oc-top">
       <div>
         <div class="oc-name">${p.orderNo ? `<span class="ono">#${p.orderNo}</span>` : ''}${escHtml(p.client)}</div>
@@ -1580,6 +1614,96 @@ function applyFilters(p) {
 function sortByDeadline(arr) {
   return [...arr].sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
 }
+// Sort switch above the list: "My order" (drag to reorder), due date, or order date. Remembered per device.
+window._sortMode = 'mine';
+try { const m = localStorage.getItem('af-sort'); if (m === 'due' || m === 'order') window._sortMode = m; } catch {}
+function sortList(arr) {
+  const m = window._sortMode;
+  if (m === 'due') return sortByDeadline(arr);
+  if (m === 'order') return [...arr].sort((a, b) => String(a.orderDate || '').localeCompare(String(b.orderDate || '')) || (a.orderNo || 0) - (b.orderNo || 0));
+  return [...arr].sort((a, b) => (a.rank ?? 1e12) - (b.rank ?? 1e12) || new Date(a.deadline) - new Date(b.deadline));
+}
+function setSortMode(m) {
+  window._sortMode = m;
+  try { localStorage.setItem('af-sort', m); } catch {}
+  renderProjects();
+}
+function sortBar() {
+  const b = (m, lbl) => `<button class="sort-opt ${window._sortMode === m ? 'on' : ''}" onclick="setSortMode('${m}')">${lbl}</button>`;
+  const hint = window._isAdmin && window._sortMode === 'mine' ? `<span class="sort-hint">Drag cards to set priority</span>` : '';
+  return `<div class="sort-bar"><span class="sort-lbl">Sort</span>${b('mine', 'My order')}${b('due', 'Due date')}${b('order', 'Order date')}${hint}</div>`;
+}
+
+// ── Moving cards (admins, "My order" only): drag on desktop, Move buttons in the card details on phones ──
+const canMove = () => window._isAdmin && window._sortMode === 'mine' && window._typeFilter === 'active' && !(document.getElementById('search-input')?.value || '').trim();
+function sectionOf(p) { return SECTIONS.find(sec => sec.match(p)); }
+// The cards of p's section in their current on-screen order.
+function sectionPeers(p) {
+  const sec = sectionOf(p);
+  return sortList((window._projects || []).filter(x => isActive(x) && sec && sec.match(x)));
+}
+// Put the section in the given order, reusing its own ranks so other sections are untouched.
+async function applyOrder(ordered) {
+  const ranks = ordered.map(x => x.rank ?? 1e12).sort((a, b) => a - b);
+  const used = new Set(), pairs = [];
+  ordered.forEach((x, i) => {
+    let r = ranks[i];
+    if (r >= 1e12 || used.has(r)) r = window._nextRank() + i;   // missing/duplicate ranks get fresh ones
+    used.add(r);
+    if (x.rank !== r) { x.rank = r; pairs.push([x.id, r]); }
+  });
+  if (!pairs.length) return;
+  renderProjects();
+  try { await window._saveRanks(pairs); }
+  catch (err) { showToast('Could not save the order: ' + (err?.code || err?.message || 'error')); }
+}
+function moveCard(id, where) {
+  const p = (window._projects || []).find(x => x.id === id); if (!p) return;
+  const list = sectionPeers(p), i = list.indexOf(p);
+  const j = where === 'front' ? 0 : where === 'up' ? i - 1 : i + 1;
+  if (i < 0 || j < 0 || j >= list.length || j === i) return;
+  list.splice(i, 1); list.splice(j, 0, p);
+  applyOrder(list);
+}
+let _dragId = null;
+document.addEventListener('mousedown', e => {
+  const card = e.target.closest?.('.order-card.movable');
+  // Typing in a card's note box or pressing its buttons must never start a drag.
+  if (card) card.draggable = !e.target.closest('input, textarea, button, a, select');
+});
+document.addEventListener('dragstart', e => {
+  const card = e.target.closest?.('.order-card.movable'); if (!card) return;
+  _dragId = card.id.slice(5); card.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  try { e.dataTransfer.setData('text/plain', _dragId); } catch {}
+});
+document.addEventListener('dragend', () => {
+  document.querySelectorAll('.order-card.dragging, .order-card.drop-before, .order-card.drop-after').forEach(el => el.classList.remove('dragging', 'drop-before', 'drop-after'));
+  _dragId = null;
+});
+function dropSpot(e) {
+  const card = e.target.closest?.('.order-card.movable'); if (!card || !_dragId || card.id.slice(5) === _dragId) return null;
+  const a = (window._projects || []).find(x => x.id === _dragId), b = (window._projects || []).find(x => x.id === card.id.slice(5));
+  if (!a || !b || sectionOf(a) !== sectionOf(b)) return null;          // only within the same section
+  const r = card.getBoundingClientRect();
+  return { card, target: b, after: e.clientX > r.left + r.width / 2 };
+}
+document.addEventListener('dragover', e => {
+  if (!_dragId) return;
+  const spot = dropSpot(e);
+  document.querySelectorAll('.drop-before, .drop-after').forEach(el => el.classList.remove('drop-before', 'drop-after'));
+  if (!spot) return;
+  e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+  spot.card.classList.add(spot.after ? 'drop-after' : 'drop-before');
+});
+document.addEventListener('drop', e => {
+  const spot = _dragId && dropSpot(e); if (!spot) return;
+  e.preventDefault();
+  const p = (window._projects || []).find(x => x.id === _dragId);
+  const list = sectionPeers(p).filter(x => x !== p);
+  list.splice(list.indexOf(spot.target) + (spot.after ? 1 : 0), 0, p);
+  applyOrder(list);
+});
 
 function toggleHold() {
   window._showHold = !window._showHold;
@@ -1631,12 +1755,13 @@ function renderProjects() {
   let html = '';
 
   if (tf === 'active') {
-    const activeAll = sortByDeadline(all.filter(isActive));
-    const readyAll  = sortByDeadline(all.filter(isReady));
-    const onHoldAll = sortByDeadline(all.filter(p => isOnHold(p) && !isDelivered(p)));
+    const activeAll = sortList(all.filter(isActive));
+    const readyAll  = sortList(all.filter(isReady));
+    const onHoldAll = sortList(all.filter(p => isOnHold(p) && !isDelivered(p)));
+    html += sortBar();
 
     if (!activeAll.length && !readyAll.length && !onHoldAll.length) {
-      list.innerHTML = `<div class="section-empty">${q ? 'No orders match your search' : T('noOrders') + ' ' + (window._isAdmin ? T('tapToAdd') : T('nothingToShow'))}</div>`;
+      list.innerHTML = sortBar() + `<div class="section-empty">${q ? 'No orders match your search' : T('noOrders') + ' ' + (window._isAdmin ? T('tapToAdd') : T('nothingToShow'))}</div>`;
       return;
     }
 
@@ -2450,7 +2575,7 @@ document.addEventListener('keydown', e => {
 });
 // ── Cut lists (woodwork) ──
 // What the tablet may see of an order. Delivered or archived orders drop off the tablet.
-const cutMeta = p => ({ dept: p.projectType === 'lathe' ? 'lathe' : 'wood', orderNo: p.orderNo || 0, client: p.client || '', title: p.item || '', deadline: p.deadline || '', hidden: !!p.archived || (p.status ?? 0) >= 4 });
+const cutMeta = p => ({ rank: p.rank ?? null, dept: p.projectType === 'lathe' ? 'lathe' : 'wood', orderNo: p.orderNo || 0, client: p.client || '', title: p.item || '', deadline: p.deadline || '', hidden: !!p.archived || (p.status ?? 0) >= 4 });
 // Keeps each cut list's name / number / deadline in step with its order (writes only when something changed).
 function syncCutLists() {
   for (const c of Object.values(window._cutlists || {})) {
