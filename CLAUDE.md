@@ -64,6 +64,7 @@ A single-page PWA for tracking furniture orders. It is hosted on GitHub Pages (s
   - The drawing state is `drawingDone` / `drawingNA`, and each tap cycles it: pending (plain) → done (green) → not needed (red) → pending.
   - "Drawing pending" counts only pending drawings (`needsDrawing`).
   - The drawing and cut-list buttons sit in their own labelled row on the card (`.oc-prep` / `.prep-btn`), above the action icons.
+- **Section ribbons** (v3.76.0): each section header on the list (`sectionHeader`) is a band in its type's soft colour with a 4px left stripe in the strong colour (`--sb` / `--sc`), so the sections are easy to tell apart while scrolling.
 - **Priority order** (v3.73.0): each project has a numeric `rank`; within a section, lower ranks are shown first.
   - Ranks were backfilled once in due-date order (`backfillRanks`). New orders get `_nextRank()`, which puts them at the end.
   - The sort switch above the list offers "My order" (rank), "Due date" or "Order date". It is remembered in localStorage (`af-sort`).
