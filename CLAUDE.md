@@ -25,7 +25,7 @@ A single-page PWA for tracking furniture orders. It is hosted on GitHub Pages (s
 
 ## Data and features
 - **Firestore**
-  - `projects` holds one document per order. Fields include `client`, `phone`, `item`, `notes`, `internalNotes` (admin-only on screen), `projectType`, `status` (0–4, where 4 means delivered), `items[]`, `amount`, `advance`, `payments`, `activityLog` (newest first), `archived`, `orderNo`, `createdAt` and `driveFolderUrl`. Each item in `items[]` has `name`, `l`, `b`, `w`, `qty`, `unit` and an optional `note` (v3.78.0).
+  - `projects` holds one document per order. Fields include `client`, `phone`, `item`, `notes`, `internalNotes` (admin-only on screen), `projectType`, `status` (0–4, where 4 means delivered), `items[]`, `amount`, `advance`, `payments`, `activityLog` (newest first), `archived`, `orderNo`, `createdAt`, `driveFolderUrl` and `carpenter`. Each item in `items[]` has `name`, `l`, `b`, `w`, `qty`, `unit` and an optional `note` (v3.78.0).
   - `settings/app` holds app settings and `lastOrderNo`.
 - **Order numbers** (v3.59.0): orders are numbered #1001 and up. `_nextOrderNo()` hands out each number inside a transaction, and numbers are never reused. Older orders without a number are backfilled oldest-first the first time an admin loads the app (`backfillOrderNos`).
 - **Cut lists** (v3.60.0):
@@ -68,6 +68,7 @@ A single-page PWA for tracking furniture orders. It is hosted on GitHub Pages (s
 - **Order form** (v3.78.0): one column on desktop (no side-by-side columns): project type chips, then client / phone / dates in one row, description and amounts, the Hold and Drive Folder switches, the items table, the two notes boxes and Status as a row of chips. The title and the Save/Cancel row stay put while the body scrolls.
   - Items are a table on desktop: # · Item · L · B · W · Qty · Unit · Note · × (`.items-head`, and the row's wrappers are `display:contents`). On phones each item stays a small card with the note box underneath.
   - The Items heading shows "6 items · 13 Nos" (`updateItemsSum`).
+- **Carpenter on an order** (v3.79.0): when "In Progress" is selected in the Update Status dialog or the order form, the carpenter names from Settings show as chips in that same row (`renderStatusSel`, `pickCarpenter`). Tapping the chosen name again clears it. It is saved as `carpenter` and shown on the card as a chip with a person icon until the order is delivered.
 - **Section ribbons** (v3.76.0): each section header on the list (`sectionHeader`) is a band in its type's soft colour with a 4px left stripe in the strong colour (`--sb` / `--sc`), so the sections are easy to tell apart while scrolling.
 - **Priority order** (v3.73.0): each project has a numeric `rank`; within a section, lower ranks are shown first.
   - Ranks were backfilled once in due-date order (`backfillRanks`). New orders get `_nextRank()`, which puts them at the end.

@@ -12,7 +12,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.78.1 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
+/* ── v3.79.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -420,6 +420,11 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
 .status-opt{padding:10px 13px;border-radius:10px;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:13px;font-weight:600;color:var(--ink2);display:flex;align-items:center;gap:9px;transition:all .15s}
 .status-opt .dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
 .status-opt.selected{border-color:var(--clay);background:var(--clay-soft);color:var(--clay)}
+.status-opt{flex-wrap:wrap}
+.st-cp{display:flex;flex-wrap:wrap;gap:5px;margin-left:auto}
+.st-cp-btn{padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--ink2);font-size:12px;font-weight:700}
+.st-cp-btn.on{background:var(--clay);border-color:var(--clay);color:#FAF9F5}
+.st-cp-none{font-size:11.5px;font-weight:500;color:var(--ink3)}
 .dot.s0{background:#B8B2A0}.dot.s1{background:#4E7DB5}.dot.s2{background:#6E3F94}.dot.s3{background:#8B6B2E}.dot.s4{background:var(--green)}
 
 .on-hold-toggle{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--amber-soft);border:1px solid #E8CFA0;border-radius:12px;margin-bottom:14px;cursor:pointer}
@@ -524,7 +529,7 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.78.1</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.79.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -1039,7 +1044,7 @@ window.saveProject = async function() {
     orderDate: date, deadline,
     amount:    parseFloat(document.getElementById('f-amount').value) || 0,
     advance:   parseFloat(document.getElementById('f-advance').value) || 0,
-    items, status: window._editStatus ?? 0,
+    items, status: window._editStatus ?? 0, carpenter: window._editCarpenter || '',
     notes:     document.getElementById('f-notes').value.trim(),
     internalNotes: document.getElementById('f-internal').value.trim(),
     onHold:    window._editOnHold ?? false,
@@ -1124,7 +1129,7 @@ window.restoreProject = async function(id) {
 
 window.saveStatusUpdate = async function() {
   if (window._statusUpdateId == null || window._updateStatusVal == null) return;
-  const patch = { status: window._updateStatusVal, updatedAt: _serverTimestamp() };
+  const patch = { status: window._updateStatusVal, carpenter: window._updateCarpenter || '', updatedAt: _serverTimestamp() };
   const prev = (window._projects || []).find(x => x.id === window._statusUpdateId);
   const wasDel = prev && (prev.status ?? 0) === 4;
   if (patch.status === 4 && !wasDel)      patch.deliveredAt = _todayStr();   // remember the day it was delivered
@@ -1136,7 +1141,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.78.1';
+const APP_VERSION = 'v3.79.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -1384,6 +1389,7 @@ window.resolveStuckFolder = function(id) {
 
 // ── ICONS (Concept A set — 24px grid, round strokes) ──
 const IC = {
+  user:    '<circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c.8-3.8 3.8-6 7.5-6s6.7 2.2 7.5 6"/>',
   wood:    '<rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/>',
   home:    '<path d="M4 11.5 12 4l8 7.5"/><path d="M6 10.5V20h12v-9.5"/>',
   lathe:   '<circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M21.5 12h-3M5.5 12h-3M18.5 5.5l-2.1 2.1M7.6 16.4l-2.1 2.1M18.5 18.5l-2.1-2.1M7.6 7.6 5.5 5.5"/>',
@@ -1439,6 +1445,8 @@ window._typeFilter     = 'active';
 window._stageFilter    = 'all';
 window._statusUpdateId = null;
 window._updateStatusVal= null;
+window._editCarpenter  = '';   // carpenter making the order (picked under "In Progress")
+window._updateCarpenter= '';
 window._showHold       = false;
 window._expandedCards  = new Set();
 window._cutlists       = {};
@@ -1542,6 +1550,7 @@ function buildCard(p) {
       : `<div class="chip warn">${svgi('clock', 11, 2)} Folder pending</div>`;
   }
   const archChip = p.archived ? `<div class="chip plain">Archived</div>` : '';
+  const cpChip = p.carpenter && !isDelivered(p) ? `<div class="chip plain" title="Carpenter">${svgi('user', 11, 2)} ${escHtml(p.carpenter)}</div>` : '';
   // Cut list progress (pieces ticked off on the workshop tablet)
   // Counted in Nos (a "Wood Panel × 12 Nos" line counts as 12); a blank qty counts as 1.
   const cutPcs = window._cutlists[p.id]?.pieces || [];
@@ -1640,7 +1649,7 @@ function buildCard(p) {
       </div>
       <div class="oc-days"><div class="oc-days-n">${daysText}</div><div class="oc-days-l">${daysLbl}</div></div>
     </div>
-    <div class="oc-stage">${lead}<div class="chip s${stageIdx}">${stage.label}</div>${holdChip}${folderChip}${archChip}</div>
+    <div class="oc-stage">${lead}<div class="chip s${stageIdx}">${stage.label}</div>${cpChip}${holdChip}${folderChip}${archChip}</div>
     <div class="oc-chips"><div class="chip plain">Due ${date}</div>${cutChip}${money}</div>
     <div class="note-block">
       <div class="note-row">${svgi('note', 13)}<div class="note-text ${latest ? 'has' : ''}">${latest || T('noActivity')}</div></div>
@@ -2440,7 +2449,7 @@ function jumpToArchived() {
 // ── Order form ──
 function openAddModal() {
   if (!window._isAdmin) return;
-  window._editId = null; window._editStatus = 0; window._editType = 'woodwork'; window._editOnHold = false;
+  window._editId = null; window._editStatus = 0; window._editType = 'woodwork'; window._editOnHold = false; window._editCarpenter = '';
   document.getElementById('on-hold-toggle')?.classList.remove('active');
   window._editCreateFolder = false;
   const folderTog = document.getElementById('create-folder-toggle');
@@ -2465,7 +2474,7 @@ function openEditModal(id) {
   if (!window._isAdmin) return;
   const p = window._projects.find(x => x.id === id);
   if (!p) return;
-  window._editId = id; window._editStatus = p.status ?? 0; window._editType = p.projectType || 'woodwork';
+  window._editId = id; window._editStatus = p.status ?? 0; window._editCarpenter = p.carpenter || ''; window._editType = p.projectType || 'woodwork';
   document.getElementById('modal-title').textContent   = 'Edit Order' + (p.orderNo ? ' #' + p.orderNo : '');
   document.getElementById('delete-btn').style.display  = 'flex';
   document.getElementById('archive-btn').style.display = p.archived ? 'none' : 'flex';
@@ -2499,7 +2508,7 @@ function openEditModal(id) {
 function openStatusModal(id) {
   const p = window._projects.find(x => x.id === id);
   if (!p) return;
-  window._statusUpdateId = id; window._updateStatusVal = p.status ?? 0;
+  window._statusUpdateId = id; window._updateStatusVal = p.status ?? 0; window._updateCarpenter = p.carpenter || '';
   document.getElementById('status-modal-info').innerHTML =
     `<strong style="color:var(--ink)">${escHtml(p.client)}</strong> · ${escHtml(typeLabelOf(p))}${p.item ? '<br>' + escHtml(p.item) : ''}`;
   renderStatusSel('status-update-opts', p.status ?? 0, true);
@@ -2507,10 +2516,24 @@ function openStatusModal(id) {
 }
 
 function renderStatusSel(containerId, current, isUpdate) {
+  // "In Progress" picks who is making it: the carpenter names from Settings show in the same row once it is selected.
+  const cp = isUpdate ? window._updateCarpenter : window._editCarpenter;
+  const names = window._carpenters || [];
+  const who = s => s.v !== 1 || s.v !== current ? '' : `<span class="st-cp">${names.length
+    ? names.map((n, i) => `<button type="button" class="st-cp-btn${n === cp ? ' on' : ''}" onclick="event.stopPropagation();pickCarpenter(${isUpdate},${i})">${escHtml(n)}</button>`).join('')
+    : '<span class="st-cp-none">Add carpenter names in Settings</span>'}</span>`;
   document.getElementById(containerId).innerHTML = getPipeline().map(s => {
     const fn = isUpdate ? `selectUpdateSt(${s.v})` : `selectFormSt(${s.v})`;
-    return `<div tabindex="0" role="button" class="status-opt ${s.v === current ? 'selected' : ''}" data-v="${s.v}" onclick="${fn}"><span class="dot s${s.v}"></span>${s.label}</div>`;
+    return `<div tabindex="0" role="button" class="status-opt ${s.v === current ? 'selected' : ''}" data-v="${s.v}" onclick="${fn}"><span class="dot s${s.v}"></span>${s.label}${who(s)}</div>`;
   }).join('');
+}
+// Tapping the chosen name again clears it.
+function pickCarpenter(isUpdate, i) {
+  const name = (window._carpenters || [])[i] || '';
+  const k = isUpdate ? '_updateCarpenter' : '_editCarpenter';
+  window[k] = window[k] === name ? '' : name;
+  if (isUpdate) renderStatusSel('status-update-opts', window._updateStatusVal, true);
+  else renderStatusSel('status-selector-opts', window._editStatus, false);
 }
 
 function selectType(type) {
@@ -2526,11 +2549,13 @@ function selectType(type) {
 
 function selectFormSt(v) {
   window._editStatus = v;
-  document.querySelectorAll('#status-selector-opts .status-opt').forEach(el => el.classList.toggle('selected', +el.dataset.v === v));
+  renderStatusSel('status-selector-opts', v, false);
+  document.querySelector(`#status-selector-opts .status-opt[data-v="${v}"]`)?.focus();
 }
 function selectUpdateSt(v) {
   window._updateStatusVal = v;
-  document.querySelectorAll('#status-update-opts .status-opt').forEach(el => el.classList.toggle('selected', +el.dataset.v === v));
+  renderStatusSel('status-update-opts', v, true);
+  document.querySelector(`#status-update-opts .status-opt[data-v="${v}"]`)?.focus();
 }
 
 function addItemRow(name='', l='', b='', w='', qty='', unit='Nos', note='') {
@@ -2652,7 +2677,7 @@ document.addEventListener('keydown', e => {
 document.addEventListener('keydown', e => {
   if ((e.key !== ' ' && e.key !== 'Enter') || e.repeat) return;
   const el = e.target.closest?.('.type-opt, .status-opt, .on-hold-toggle');
-  if (!el) return;
+  if (!el || e.target.tagName === 'BUTTON') return;   // a carpenter name inside "In Progress" is a real button
   e.preventDefault(); el.click();
 });
 // H goes Home from anywhere (everyone, not just admins; same guards: not while typing or with a dialog open).
