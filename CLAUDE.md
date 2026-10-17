@@ -48,7 +48,11 @@ A single-page PWA for tracking furniture orders. It is hosted on GitHub Pages (s
   - Timber Supply / CNC Work (v3.75.0): project types `timber` and `cnc`, each with its own section, KPI card and type button.
     - Timber cut lists use `dept: 'wood'`, so they appear only on the Woodwork tab. New timber orders start with `drawingNA: true` (No drawing).
     - CNC works like lathe: `dept: 'cnc'`. Its wood is cut on the Woodwork tab (`done`), then the CNC step is done on the tablet's CNC tab (`cnc`/`cncBy`/`cncAt`, pin `activeCnc`). Cards show "Cut x/n" and "CNC y/n".
-    - On the order cards, `isLathe` means "has a second step" (lathe or CNC), and `step2` picks the right field and label.
+  - Per-piece step (v3.82.0): each piece can go on to Lathe or CNC after cutting, so one order can mix both (e.g. a lathe pillar + a CNC mihrab).
+    - `pieceStep(pc, p)` / tablet `stepOf(p, c)`: the piece's own `step` (`''`, `'lathe'`, `'cnc'`), else the order type's default (`defaultStep`: lathe → lathe, cnc → cnc, others → none).
+    - The cut list editor has a "Cut only / Then Lathe / Then CNC" dropdown per piece. Only a step that differs from the default is saved.
+    - Tablet: the Lathe / CNC tabs show a list if any piece is for them, with only those pieces (`inTab`, `forTab`). The Woodwork tab tags each piece "→ लेथ" / "→ CNC".
+    - Order cards show a Turned and/or CNC chip for whichever steps the pieces use, and the details show each piece's own step.
   - Cut size OK (v3.70.0): each piece has `cs`, a list of the sides (`'l'`, `'w'`, `'t'`) where a cut size is acceptable (the standard ¼" less, which the carpenters know). The editor toggles it with the "=" button under each size box. The tablet and slip show those numbers double-underlined (`sizeHtml`), with no extra text.
   - Fractions (v3.71.0): sizes are displayed with single-character fractions (`fmtSize`, which is in both `index.html` and `cut/index.html`). For example, "2 1/2", "2.5" and "5/2" all show as 2 ½ (non-breaking space after the whole number), "0.25" shows as ¼, and odd ones like 3/16 show as ³⁄₁₆. Decimals become fractions only when they land exactly on a 1/16. Stored values and form inputs stay exactly as typed.
   - Hold pieces (v3.72.0): a piece with `hold: true` is set by the office with the "Hold" button in the editor.
