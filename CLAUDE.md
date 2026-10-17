@@ -77,7 +77,8 @@ A single-page PWA for tracking furniture orders. It is hosted on GitHub Pages (s
   - Cmd/Ctrl+S saves the order form or the cut list.
   - Cmd/Ctrl+F jumps to search.
   - Esc closes the small dialogs, but never the order form.
-  - Tab stays inside the open dialog.
+  - Tab stays inside the open dialog. The app moves focus itself, so buttons and dropdowns are reached in every browser (Safari's own Tab skips them).
+  - Order items (v3.75.1): Tab goes Internal Notes → "+ Add Item" → Name → L → B → W → Qty → Unit; the row's × button is skipped. Enter in an item row jumps to the next row, or adds a new one from the last row. Empty rows are dropped on save.
   - None of the plain-letter shortcuts fire while typing or while a dialog is open.
 
 ## Backlog (noted by the owner, not started)
