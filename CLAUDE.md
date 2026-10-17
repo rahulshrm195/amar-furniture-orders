@@ -7,7 +7,7 @@ A single-page PWA for tracking furniture orders. It is hosted on GitHub Pages (s
   - The `<style>` block is split into sections marked `/* ── … ── */` (topbar, KPI strip, Reports, order card, modals, desktop).
   - The module script holds Firebase setup (Auth + Firestore), the admin email list, order numbers, the live `projects` listener, and save/update.
   - The plain script holds `APP_VERSION`, the language strings, the service worker and self-update, the Drive folder webhook, icons, order cards, sections, the KPI strip, Reports, the order form and keyboard shortcuts.
-- `cut/index.html` and `cut/manifest.json`: the workshop tablet page at `/cut/`, a cutting list for the woodwork and lathe departments. It is a standalone page that loads none of the orders app, and it signs in as `workshop@amarfurniture.in`. If that account opens the main app, it is redirected to `/cut/`.
+- `cut/index.html` and `cut/manifest.json`: the workshop tablet page at `/cut/`, a cutting list with Woodwork, Lathe and CNC tabs. It is a standalone page that loads none of the orders app, and it signs in as `workshop@amarfurniture.in`. If that account opens the main app, it is redirected to `/cut/`.
 - `firestore.rules`: a copy of the live Firestore rules, which are pasted into the Firebase console by hand. Keep this file in step with what is live.
 - `sw.js`: the service worker. It is network-first and also handles push notifications. The `CACHE` name holds the SW version.
 - `manifest.json` and `icon-*.png`: the PWA install files.
@@ -45,6 +45,10 @@ A single-page PWA for tracking furniture orders. It is hosted on GitHub Pages (s
     - The Woodwork tab shows every list. The Lathe tab shows only lathe orders and says "turned" instead of "cut".
     - Lathe cards show both "Cut x/n" and "Turned y/n".
     - The tablet remembers its tab in localStorage (`af-cut-dept`). Lists without `dept` count as woodwork.
+  - Timber Supply / CNC Work (v3.75.0): project types `timber` and `cnc`, each with its own section, KPI card and type button.
+    - Timber cut lists use `dept: 'wood'`, so they appear only on the Woodwork tab. New timber orders start with `drawingNA: true` (No drawing).
+    - CNC works like lathe: `dept: 'cnc'`. Its wood is cut on the Woodwork tab (`done`), then the CNC step is done on the tablet's CNC tab (`cnc`/`cncBy`/`cncAt`, pin `activeCnc`). Cards show "Cut x/n" and "CNC y/n".
+    - On the order cards, `isLathe` means "has a second step" (lathe or CNC), and `step2` picks the right field and label.
   - Cut size OK (v3.70.0): each piece has `cs`, a list of the sides (`'l'`, `'w'`, `'t'`) where a cut size is acceptable (the standard ¼" less, which the carpenters know). The editor toggles it with the "=" button under each size box. The tablet and slip show those numbers double-underlined (`sizeHtml`), with no extra text.
   - Fractions (v3.71.0): sizes are displayed with single-character fractions (`fmtSize`, which is in both `index.html` and `cut/index.html`). For example, "2 1/2", "2.5" and "5/2" all show as 2 ½ (non-breaking space after the whole number), "0.25" shows as ¼, and odd ones like 3/16 show as ³⁄₁₆. Decimals become fractions only when they land exactly on a 1/16. Stored values and form inputs stay exactly as typed.
   - Hold pieces (v3.72.0): a piece with `hold: true` is set by the office with the "Hold" button in the editor.

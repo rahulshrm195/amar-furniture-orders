@@ -11,7 +11,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.74.1 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
+/* ── v3.75.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -365,7 +365,7 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
 .stage-btn .sb-n{font-family:var(--serif);font-weight:700;font-size:20px;line-height:1.2;margin-top:4px}
 .sheet-h{font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink3);margin:18px 0 0}
 
-.type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
+.type-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:6px}
 .type-opt{padding:12px 8px;border-radius:12px;border:1px solid var(--border);background:var(--surface);text-align:center;cursor:pointer;color:var(--ink2);transition:all .15s}
 .type-opt .t-icon{display:flex;justify-content:center;margin-bottom:6px}
 .type-opt .t-lbl{font-size:11.5px;font-weight:700;line-height:1.2;display:block}
@@ -459,7 +459,7 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
   .modal-backdrop.open .modal{transform:none}
   .modal-handle{display:none}
   .modal-title{font-size:1.45rem}
-  .type-grid{grid-template-columns:repeat(5,1fr)}
+  .type-grid{grid-template-columns:repeat(7,1fr)}
   #stats-sheet-backdrop .modal{max-width:760px}
   #cut-modal .modal{max-width:640px}
 
@@ -499,7 +499,7 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.74.1</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.75.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -554,6 +554,8 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
     <div class="kpi kpi-link" role="button" tabindex="0" onclick="goKpi('wood')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goKpi('wood')}" style="--kc:var(--clay)"><div class="kpi-head"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg><span class="kpi-lbl">Woodwork</span></div><div class="kpi-num" id="kpi-wood">0</div></div>
     <div class="kpi kpi-link" role="button" tabindex="0" onclick="goKpi('ply')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goKpi('ply')}" style="--kc:#4E7DB5"><div class="kpi-head"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10.5V20h12v-9.5"/></svg><span class="kpi-lbl">Plywood</span></div><div class="kpi-num" id="kpi-ply">0</div></div>
     <div class="kpi kpi-link" role="button" tabindex="0" onclick="goKpi('lathe')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goKpi('lathe')}" style="--kc:#5C8A6B"><div class="kpi-head"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M21.5 12h-3M5.5 12h-3M18.5 5.5l-2.1 2.1M7.6 16.4l-2.1 2.1M18.5 18.5l-2.1-2.1M7.6 7.6 5.5 5.5"/></svg><span class="kpi-lbl">Lathe</span></div><div class="kpi-num" id="kpi-lathe">0</div></div>
+    <div class="kpi kpi-link" role="button" tabindex="0" onclick="goKpi('timber')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goKpi('timber')}" style="--kc:#8A5A2B"><div class="kpi-head"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7.5" r="3.5"/><circle cx="7" cy="16" r="3.5"/><circle cx="17" cy="16" r="3.5"/><circle cx="12" cy="7.5" r=".9"/><circle cx="7" cy="16" r=".9"/><circle cx="17" cy="16" r=".9"/></svg><span class="kpi-lbl">Timber</span></div><div class="kpi-num" id="kpi-timber">0</div></div>
+    <div class="kpi kpi-link" role="button" tabindex="0" onclick="goKpi('cnc')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goKpi('cnc')}" style="--kc:#3F6E8C"><div class="kpi-head"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="15" width="17" height="5" rx="1.2"/><path d="M9 3.5h6v4H9Z"/><path d="M12 7.5v3.5"/><path d="m10.5 11 1.5 2.5 1.5-2.5"/></svg><span class="kpi-lbl">CNC</span></div><div class="kpi-num" id="kpi-cnc">0</div></div>
     <div class="kpi kpi-link" role="button" tabindex="0" onclick="goKpi('modular')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goKpi('modular')}" style="--kc:var(--ink3)"><div class="kpi-head"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.2"/></svg><span class="kpi-lbl">Modular &amp; Others</span></div><div class="kpi-num" id="kpi-modular">0</div></div>
     <div class="kpi kpi-link" role="button" tabindex="0" onclick="goKpi('ready')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goKpi('ready')}" style="--kc:#8B6B2E"><div class="kpi-head"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8 12 3.5 20.5 8 12 12.5 3.5 8Z"/><path d="M3.5 8v9L12 21l8.5-4V8"/><path d="M12 12.5V21"/></svg><span class="kpi-lbl">Ready</span></div><div class="kpi-num" id="kpi-ready">0</div></div>
     <div class="kpi kpi-link" role="button" tabindex="0" onclick="goKpi('hold')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goKpi('hold')}" style="--kc:#9C7A1E"><div class="kpi-head"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg><span class="kpi-lbl">On Hold</span></div><div class="kpi-num" id="kpi-hold">0</div></div>
@@ -621,6 +623,8 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
             <div tabindex="0" role="button" class="type-opt"    id="pt-plywood"   onclick="selectType('plywood')"><span class="t-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10.5V20h12v-9.5"/></svg></span><span class="t-lbl">Plywood / Home</span></div>
             <div tabindex="0" role="button" class="type-opt"    id="pt-modular"   onclick="selectType('modular')"><span class="t-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.2"/></svg></span><span class="t-lbl">Modular Kitchen</span></div>
             <div tabindex="0" role="button" class="type-opt"    id="pt-lathe"     onclick="selectType('lathe')"><span class="t-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M21.5 12h-3M5.5 12h-3M18.5 5.5l-2.1 2.1M7.6 16.4l-2.1 2.1M18.5 18.5l-2.1-2.1M7.6 7.6 5.5 5.5"/></svg></span><span class="t-lbl">Lathe Work</span></div>
+            <div tabindex="0" role="button" class="type-opt"    id="pt-timber"    onclick="selectType('timber')"><span class="t-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7.5" r="3.5"/><circle cx="7" cy="16" r="3.5"/><circle cx="17" cy="16" r="3.5"/><circle cx="12" cy="7.5" r=".9"/><circle cx="7" cy="16" r=".9"/><circle cx="17" cy="16" r=".9"/></svg></span><span class="t-lbl">Timber Supply</span></div>
+            <div tabindex="0" role="button" class="type-opt"    id="pt-cnc"    onclick="selectType('cnc')"><span class="t-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="15" width="17" height="5" rx="1.2"/><path d="M9 3.5h6v4H9Z"/><path d="M12 7.5v3.5"/><path d="m10.5 11 1.5 2.5 1.5-2.5"/></svg></span><span class="t-lbl">CNC Work</span></div>
             <div tabindex="0" role="button" class="type-opt"    id="pt-other"     onclick="selectType('other')"><span class="t-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5h16v10H9.5L5 19v-3.5H4Z"/></svg></span><span class="t-lbl">Other</span></div>
           </div>
           <div id="other-label-wrap" style="display:none">
@@ -837,7 +841,8 @@ window._saveCutList = (id, meta, notes, edited) => runTransaction(db, async tx =
   const pieces = edited.map(e => {
     const o = old[e.id] || {};
     return { ...e, done: !!o.done, doneBy: o.doneBy || '', doneAt: o.doneAt || '',
-      turned: !!o.turned, turnedBy: o.turnedBy || '', turnedAt: o.turnedAt || '', createdAt: o.createdAt || now };
+      turned: !!o.turned, turnedBy: o.turnedBy || '', turnedAt: o.turnedAt || '',
+      cnc: !!o.cnc, cncBy: o.cncBy || '', cncAt: o.cncAt || '', createdAt: o.createdAt || now };
   });
   const data = { dept: 'wood', ...meta, notes, pieces, updatedAt: serverTimestamp() };
   if (cur) tx.update(ref, data);
@@ -1033,6 +1038,7 @@ window.saveProject = async function() {
     // If numbering is unreachable the order still saves and is numbered on the next load.
     try { data.orderNo = await window._nextOrderNo(); } catch (err) { console.warn('Order number not assigned:', err); }
     data.rank = window._nextRank();   // new orders join the end of their section
+    if (type === 'timber') data.drawingNA = true;   // timber supply only needs sizes, no drawing
     if (data.status === 4) data.deliveredAt = _todayStr();
     // Folder creation needs both the global Settings switch on AND this
     // order's own "Create Drive Folder" checkbox ticked — the global switch
@@ -1103,7 +1109,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.74.1';
+const APP_VERSION = 'v3.75.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -1367,6 +1373,8 @@ const IC = {
   clock:   '<path d="M12 6v6l4 2"/><circle cx="12" cy="12" r="9"/>',
   ruler:   '<rect x="3" y="7.5" width="18" height="9" rx="1.6"/><path d="M7 7.5v3M11 7.5v4.5M15 7.5v3"/>',
   close:   '<path d="M6 6l12 12M18 6 6 18"/>',
+  timber:  '<circle cx="12" cy="7.5" r="3.5"/><circle cx="7" cy="16" r="3.5"/><circle cx="17" cy="16" r="3.5"/><circle cx="12" cy="7.5" r=".9"/><circle cx="7" cy="16" r=".9"/><circle cx="17" cy="16" r=".9"/>',
+  cnc:     '<rect x="3.5" y="15" width="17" height="5" rx="1.2"/><path d="M9 3.5h6v4H9Z"/><path d="M12 7.5v3.5"/><path d="m10.5 11 1.5 2.5 1.5-2.5"/>',
   saw:     '<path d="M3.5 15 14 4.5h5.5V10L9 20.5H3.5Z"/><path d="M6.5 15.5l1.5 1.5M9 13l1.5 1.5M11.5 10.5 13 12M14 8l1.5 1.5"/>',
 };
 function svgi(name, size, sw) {
@@ -1379,6 +1387,8 @@ const TYPES = {
   plywood:  { label:'Plywood / Home',  ico:'home',  color:'#4E7DB5', bg:'#E4EDF6' },
   modular:  { label:'Modular Kitchen', ico:'grid',  color:'#9C9483', bg:'#EFECE4' },
   lathe:    { label:'Lathe Work',      ico:'lathe', color:'#5C8A6B', bg:'#E3EDE6' },
+  timber:   { label:'Timber Supply',   ico:'timber', color:'#8A5A2B', bg:'#F1E6D8' },
+  cnc:      { label:'CNC Work',        ico:'cnc',   color:'#3F6E8C', bg:'#E2ECF2' },
   other:    { label:'Other',           ico:'grid',  color:'#9C9483', bg:'#EFECE4' },
 };
 
@@ -1508,12 +1518,14 @@ function buildCard(p) {
   // Cut list progress (pieces ticked off on the workshop tablet)
   const cutPcs = window._cutlists[p.id]?.pieces || [];
   const cutDone = cutPcs.filter(x => x.done).length;
-  const isLathe = p.projectType === 'lathe';
+  const isLathe = p.projectType === 'lathe' || p.projectType === 'cnc';   // has a second step after cutting
+  const step2 = p.projectType === 'cnc' ? { f: 'cnc', by: 'cncBy', lbl: 'CNC' } : { f: 'turned', by: 'turnedBy', lbl: 'Turned' };
   // Lathe orders are cut first (Woodwork tab), then turned (Lathe tab): two chips.
-  const turnDone = cutPcs.filter(x => x.turned).length;
+  const turnDone = cutPcs.filter(x => x[step2.f]).length;
   const chipOf = (lbl, d) => `<button class="chip cut${d === cutPcs.length ? ' full' : ''}" title="See each piece" onclick="toggleCard('${p.id}')">${svgi('saw', 11, 2)} ${lbl} ${d}/${cutPcs.length}</button>`;
-  const cutChip = cutPcs.length ? chipOf('Cut', cutDone) + (isLathe ? chipOf('Turned', turnDone) : '')
-    + (cutPcs.some(x => x.hold && !(x.done && (!isLathe || x.turned))) ? `<div class="chip warn">${svgi('hold', 11, 2)} ${cutPcs.filter(x => x.hold && !(x.done && (!isLathe || x.turned))).length} on hold</div>` : '') : '';
+  const fin = x => x.done && (!isLathe || x[step2.f]);
+  const cutChip = cutPcs.length ? chipOf('Cut', cutDone) + (isLathe ? chipOf(step2.lbl, turnDone) : '')
+    + (cutPcs.some(x => x.hold && !fin(x)) ? `<div class="chip warn">${svgi('hold', 11, 2)} ${cutPcs.filter(x => x.hold && !fin(x)).length} on hold</div>` : '') : '';
   const cutHeld = cutPcs.filter(x => x.hold && !x.done).length;
   const cutAll = cutPcs.length > 0 && cutDone === cutPcs.length && (!isLathe || turnDone === cutPcs.length);
 
@@ -1541,10 +1553,10 @@ function buildCard(p) {
   } else {
     if (!window._isManager) acts.push(`<button class="icon-btn" aria-label="${T('updateStatus')}" title="${T('updateStatus')}" onclick="openStatusModal('${p.id}')">${svgi('refresh', 15)}</button>`);
     if (window._isAdmin)    acts.push(`<button class="icon-btn" aria-label="${T('edit')}" title="${T('edit')}" onclick="openEditModal('${p.id}')">${svgi('edit', 15)}</button>`);
-    if (window._isAdmin && (p.projectType === 'woodwork' || isLathe)) {
+    if (window._isAdmin && (p.projectType === 'woodwork' || p.projectType === 'timber' || isLathe)) {
       // Plain = no list yet, orange = list made, green = everything cut (and turned)
       const ttl = !cutPcs.length ? 'Make a cut list for the workshop'
-        : `Cut list \u2014 ${cutDone} of ${cutPcs.length} cut${isLathe ? `, ${turnDone} turned` : ''}${cutHeld ? `, ${cutHeld} on hold` : ''}`;
+        : `Cut list \u2014 ${cutDone} of ${cutPcs.length} cut${isLathe ? `, ${turnDone} ${step2.lbl === 'CNC' ? 'done on CNC' : 'turned'}` : ''}${cutHeld ? `, ${cutHeld} on hold` : ''}`;
       prep.push(`<button class="prep-btn${cutAll ? ' has' : cutPcs.length ? ' prep' : ''}" aria-label="Cut list" title="${ttl}" onclick="openCutModal('${p.id}')">${svgi('saw', 14)} Cut list</button>`);
     }
   }
@@ -1578,9 +1590,9 @@ function buildCard(p) {
   const st = (ok, by, lbl) => `<span class="cp-st${ok ? ' ok' : ''}" title="${ok && by ? escHtml(lbl + ' by ' + by) : ''}">${ok ? '\u2713 ' : ''}${lbl}</span>`;
   const cutRows = cutPcs.length ? `<div><div class="dt-lbl">Cut list (${cutPcs.length})</div>` + cutPcs.map(pc => {
     const dims = [pc.l, pc.w, pc.t].filter(Boolean).map(fmtSize).join(' × ');
-    const held = pc.hold && !(pc.done && (!isLathe || pc.turned));
+    const held = pc.hold && !fin(pc);
     return `<div class="dt-item"><div class="dt-item-n">${escHtml(pc.name || 'Piece')}</div>${dims ? `<div class="dt-item-d">${escHtml(dims)}</div>` : ''}<div class="dt-item-q">${escHtml(pc.qty || '1')} Nos</div>`
-      + `<div class="cp-sts">${held ? '<span class="cp-st held">On hold</span>' : st(pc.done, pc.doneBy, 'Cut') + (isLathe ? st(pc.turned, pc.turnedBy, 'Turned') : '')}</div></div>`;
+      + `<div class="cp-sts">${held ? '<span class="cp-st held">On hold</span>' : st(pc.done, pc.doneBy, 'Cut') + (isLathe ? st(pc[step2.f], pc[step2.by], step2.lbl) : '')}</div></div>`;
   }).join('') + '</div>' : '';
   const specs = p.notes ? `<div><div class="dt-lbl">Specs</div><div class="dt-specs">${escHtml(p.notes)}</div></div>` : '';
   // Internal notes: admins only (never on staff screens, never copied to the cut list)
@@ -1750,6 +1762,8 @@ const SECTIONS = [
   { id:'sec-wood',    label:'Woodwork',         ico:'wood',  bg:'#F5E3D5', color:'#C1602F', match:p => p.projectType === 'woodwork', empty:'No woodwork orders right now' },
   { id:'sec-ply',     label:'Plywood / Home',   ico:'home',  bg:'#E4EDF6', color:'#4E7DB5', match:p => p.projectType === 'plywood',  empty:'No plywood orders right now' },
   { id:'sec-lathe',   label:'Lathe Work',       ico:'lathe', bg:'#E3EDE6', color:'#5C8A6B', match:p => p.projectType === 'lathe',    empty:'No lathe orders right now' },
+  { id:'sec-timber',  label:'Timber Supply',    ico:'timber', bg:'#F1E6D8', color:'#8A5A2B', match:p => p.projectType === 'timber', empty:'No timber supply orders right now' },
+  { id:'sec-cnc',     label:'CNC Work',         ico:'cnc',   bg:'#E2ECF2', color:'#3F6E8C', match:p => p.projectType === 'cnc',      empty:'No CNC orders right now' },
   { id:'sec-modular', label:'Modular & Others', ico:'grid',  bg:'#EFECE4', color:'#9C9483', match:p => p.projectType === 'modular' || p.projectType === 'other', empty:'No modular kitchen or other-type orders right now' },
 ];
 
@@ -1870,7 +1884,7 @@ function goKpi(key) {
   if (key === 'hold') window._showHold = true;
   if (needReset || key === 'hold') renderProjects();
 
-  const ids = { wood:'sec-wood', ply:'sec-ply', lathe:'sec-lathe', modular:'sec-modular', ready:'sec-ready', hold:'sec-hold' };
+  const ids = { wood:'sec-wood', ply:'sec-ply', lathe:'sec-lathe', timber:'sec-timber', cnc:'sec-cnc', modular:'sec-modular', ready:'sec-ready', hold:'sec-hold' };
   const el = document.getElementById(ids[key]);
   if (!el) { showToast(key === 'ready' ? 'No orders are ready to deliver' : 'No orders on hold'); return; }
   scrollToEl(el);
@@ -1885,6 +1899,8 @@ function updateKpiStrip() {
     'kpi-wood':    byType('woodwork'),
     'kpi-ply':     byType('plywood'),
     'kpi-lathe':   byType('lathe'),
+    'kpi-timber':  byType('timber'),
+    'kpi-cnc':     byType('cnc'),
     'kpi-modular': all.filter(p => isActive(p) && (p.projectType === 'modular' || p.projectType === 'other')).length,
     'kpi-ready':   all.filter(p => isReady(p)).length,
     'kpi-hold':    all.filter(p => isOnHold(p) && !isDelivered(p)).length,
@@ -2597,7 +2613,7 @@ document.addEventListener('keydown', e => {
 });
 // ── Cut lists (woodwork) ──
 // What the tablet may see of an order. Delivered or archived orders drop off the tablet.
-const cutMeta = p => ({ rank: p.rank ?? null, dept: p.projectType === 'lathe' ? 'lathe' : 'wood', orderNo: p.orderNo || 0, client: p.client || '', title: p.item || '', deadline: p.deadline || '', hidden: !!p.archived || (p.status ?? 0) >= 4 });
+const cutMeta = p => ({ rank: p.rank ?? null, dept: p.projectType === 'lathe' || p.projectType === 'cnc' ? p.projectType : 'wood', orderNo: p.orderNo || 0, client: p.client || '', title: p.item || '', deadline: p.deadline || '', hidden: !!p.archived || (p.status ?? 0) >= 4 });
 // Keeps each cut list's name / number / deadline in step with its order (writes only when something changed).
 function syncCutLists() {
   for (const c of Object.values(window._cutlists || {})) {
@@ -2616,7 +2632,7 @@ function openCutModal(id) {
   window._cutId = id;
   const c = window._cutlists[id];
   document.getElementById('cut-title').textContent = 'Cut List' + (p.orderNo ? ' · #' + p.orderNo : '') + ' · ' + p.client;
-  document.getElementById('cut-sub').textContent = (p.item || typeLabelOf(p)) + (p.projectType === 'lathe' ? ' — shown under Lathe on the workshop tablet' : ' — shown under Woodwork on the workshop tablet');
+  document.getElementById('cut-sub').textContent = (p.item || typeLabelOf(p)) + (p.projectType === 'lathe' ? ' — cut under Woodwork, then turned under Lathe on the workshop tablet' : p.projectType === 'cnc' ? ' — cut under Woodwork, then done under CNC on the workshop tablet' : ' — shown under Woodwork on the workshop tablet');
   document.getElementById('cut-list-edit').innerHTML = '';
   (c?.pieces || []).forEach(pc => addCutRow(pc));
   document.getElementById('cut-copy-btn').style.display = p.items?.length ? 'flex' : 'none';

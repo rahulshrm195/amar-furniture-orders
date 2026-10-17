@@ -8,7 +8,7 @@
 <title>Amar Furniture — Cutting List</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.74.1 — Workshop cutting list (tablet); UI is Concept A ── */
+/* ── v3.75.0 — Workshop cutting list (tablet); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -213,7 +213,7 @@ input{font-family:inherit}
 <div id="auth-screen">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Cutting List · v3.74.1</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Cutting List · v3.75.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Workshop Sign In</h2>
@@ -274,7 +274,7 @@ const firebaseConfig = {
   messagingSenderId: "460562943530",
   appId:             "1:460562943530:web:d89b913ec8e6ecd85e7d53"
 };
-const CUT_VERSION = 'v3.74.1';
+const CUT_VERSION = 'v3.75.0';
 
 document.getElementById('tb-ver').textContent = CUT_VERSION;
 const app  = initializeApp(firebaseConfig);
@@ -285,7 +285,7 @@ let all = [];            // every open list (not hidden, with pieces)
 let lists = [];          // the ones for the department on screen
 // Woodwork or Lathe: the tablet remembers which one it was showing.
 let dept = 'wood';
-try { if (localStorage.getItem('af-cut-dept') === 'lathe') dept = 'lathe'; } catch {}
+try { const d = localStorage.getItem('af-cut-dept'); if (d === 'lathe' || d === 'cnc') dept = d; } catch {}
 // Hindi (default on the tablet) or English: the हिं / EN button switches, and the tablet remembers it.
 let lang = 'hi';
 try { if (localStorage.getItem('af-cut-lang') === 'en') lang = 'en'; } catch {}
@@ -294,10 +294,12 @@ const WORDS = {
   en: {
     wood:  { label: 'Woodwork', cut: 'cut',    Cut: 'Cut',    now: 'Cutting now', start: 'Start cutting', todo: 'To cut',  list: 'Cut List',   who: 'Who cut' },
     lathe: { label: 'Lathe',    cut: 'turned', Cut: 'Turned', now: 'Turning now', start: 'Start turning', todo: 'To turn', list: 'Lathe List', who: 'Who turned' },
+    cnc:   { label: 'CNC',      cut: 'done on CNC', Cut: 'CNC done', now: 'On CNC now', start: 'Start CNC', todo: 'To do on CNC', list: 'CNC List', who: 'Who did CNC on' },
   },
   hi: {
     wood:  { label: 'लकड़ी', cut: 'कटा',     Cut: 'कटा',     now: 'अभी कट रहा', start: 'कटाई शुरू', todo: 'कटना बाकी', list: 'कटिंग लिस्ट', who: 'किसने काटा' },
     lathe: { label: 'लेथ',   cut: 'लेथ हुआ', Cut: 'लेथ हुआ', now: 'अभी लेथ पर', start: 'लेथ शुरू',  todo: 'लेथ बाकी',  list: 'लेथ लिस्ट',   who: 'किसने लेथ किया' },
+    cnc:   { label: 'CNC',   cut: 'CNC हुआ', Cut: 'CNC हुआ', now: 'अभी CNC पर', start: 'CNC शुरू',  todo: 'CNC बाकी',  list: 'CNC लिस्ट',   who: 'किसने CNC किया' },
   },
 };
 const W = (d = dept) => WORDS[lang][d];
@@ -312,7 +314,7 @@ const TX = {
     ofCut: (d, n, w) => `${d} of ${n} ${w.cut}`,
     empty: w => `No ${w.label.toLowerCase()} lists yet.<br>They appear here as soon as the office adds one.`,
     showAll: n => `Show all ${n} done`,
-    left: (n, p) => `${n} piece${n === 1 ? '' : 's'} to ${dept === 'lathe' ? 'turn' : 'cut'} · ${p} project${p === 1 ? '' : 's'}`,
+    left: (n, p) => `${n} piece${n === 1 ? '' : 's'} to ${dept === 'lathe' ? 'turn' : dept === 'cnc' ? 'do on CNC' : 'cut'} · ${p} project${p === 1 ? '' : 's'}`,
     allDone: w => `All ${w.cut}`,
     markAs: w => `Mark as ${w.cut}`,
     selected: n => `${n} selected`,
@@ -329,7 +331,7 @@ const TX = {
     late: n => `${n}d late`,
     hold: 'On hold', holdTap: 'On hold by the office — do not cut yet',
     heldN: n => `${n} on hold`,
-    holdSec: w => `On hold — do not ${w === WORDS.en.lathe ? 'turn' : 'cut'} yet`,
+    holdSec: w => `On hold — do not ${w === WORDS.en.lathe ? 'turn' : w === WORDS.en.cnc ? 'do on CNC' : 'cut'} yet`,
     due: d => `Due ${d}`,
   },
   hi: {
@@ -341,7 +343,7 @@ const TX = {
     ofCut: (d, n, w) => `${n} में से ${d} ${w.cut}`,
     empty: w => `अभी कोई ${w.label} लिस्ट नहीं है।<br>ऑफिस से लिस्ट जुड़ते ही यहाँ दिखेगी।`,
     showAll: n => `सभी ${n} पूरे देखें`,
-    left: (n, p) => `${n} पीस ${dept === 'lathe' ? 'लेथ' : 'कटना'} बाकी · ${p} प्रोजेक्ट`,
+    left: (n, p) => `${n} पीस ${dept === 'lathe' ? 'लेथ' : dept === 'cnc' ? 'CNC' : 'कटना'} बाकी · ${p} प्रोजेक्ट`,
     allDone: w => `सब ${w.cut}`,
     markAs: w => `${w.cut} मार्क करें`,
     selected: n => `${n} चुने`,
@@ -358,7 +360,7 @@ const TX = {
     late: n => `${n} दिन लेट`,
     hold: 'होल्ड', holdTap: 'ऑफिस ने होल्ड किया है — अभी नहीं',
     heldN: n => `${n} होल्ड`,
-    holdSec: w => w === WORDS.hi.lathe ? 'होल्ड — अभी लेथ मत करो' : 'होल्ड — अभी मत काटो',
+    holdSec: w => w === WORDS.hi.lathe ? 'होल्ड — अभी लेथ मत करो' : w === WORDS.hi.cnc ? 'होल्ड — अभी CNC मत करो' : 'होल्ड — अभी मत काटो',
     due: d => `${d} तक`,
   },
 };
@@ -368,15 +370,16 @@ window.toggleLang = () => {
   try { localStorage.setItem('af-cut-lang', lang); } catch {}
   render();
 };
-const deptOf = c => c.dept === 'lathe' ? 'lathe' : 'wood';
+const deptOf = c => c.dept === 'lathe' || c.dept === 'cnc' ? c.dept : 'wood';
 // Lathe orders go through both tabs: Woodwork cuts the blanks (done / doneBy / doneAt / active),
 // then Lathe turns them (turned / turnedBy / turnedAt / activeLathe).
 const KEYS = {
   wood:  { f: 'done',   by: 'doneBy',   at: 'doneAt',   pin: 'active' },
   lathe: { f: 'turned', by: 'turnedBy', at: 'turnedAt', pin: 'activeLathe' },
+  cnc:   { f: 'cnc',    by: 'cncBy',    at: 'cncAt',    pin: 'activeCnc' },
 };
 const K = () => KEYS[dept];
-const inTab = (c, d) => d === 'wood' || deptOf(c) === 'lathe';   // Woodwork shows every list; Lathe only lathe orders
+const inTab = (c, d) => d === 'wood' || deptOf(c) === d;   // Woodwork shows every list (all wood is cut there); Lathe / CNC only their own orders
 const isP = p => !!p[K().f];
 let names = [];          // carpenter names from Settings
 let selId = null;        // project shown on the right
@@ -480,7 +483,7 @@ function tile(c) {
   return `<button class="pj ${c[K().pin] && !fin ? 'pinned' : ''} ${c.id === selId ? 'sel' : ''}" onclick="openList('${c.id}')">
     <div class="pj-top"><div>
       <div class="pj-name">${c.orderNo ? `<span class="ono">#${c.orderNo}</span>` : ''}${esc(c.client)}</div>
-      <div class="pj-desc">${dept === 'wood' && deptOf(c) === 'lathe' ? `<span class="tag">${W('lathe').label}</span>` : ''}${esc(c.title) || '&nbsp;'}</div>
+      <div class="pj-desc">${dept === 'wood' && deptOf(c) !== 'wood' ? `<span class="tag">${W(deptOf(c)).label}</span>` : ''}${esc(c.title) || '&nbsp;'}</div>
     </div>${!fin ? dueChip(c) : ''}</div>
     <div class="bar ${fin ? 'full' : ''}"><i style="width:${n ? Math.round(d / n * 100) : 0}%"></i></div>
     <div class="pj-cnt">${L().ofCut(d, n, W())}${h ? `<span class="hcnt">${L().heldN(h)}</span>` : ''}</div>
@@ -505,7 +508,7 @@ function render() {
   const doneShown = showAllDone ? done : done.slice(0, 5);
   const tab = d => { const k = all.filter(c => inTab(c, d) && c.pieces.some(p => !p[KEYS[d].f])).length;
     return `<button class="tab ${d === dept ? 'on' : ''}" onclick="setDept('${d}')">${W(d).label}${k ? ` <b>${k}</b>` : ''}</button>`; };
-  $('side').innerHTML = `<div class="tabs">${tab('wood')}${tab('lathe')}</div>` + (!lists.length
+  $('side').innerHTML = `<div class="tabs">${tab('wood')}${tab('lathe')}${tab('cnc')}</div>` + (!lists.length
     ? `<div class="empty">${L().empty(W())}</div>`
     : sec(W().now, pinned) + sec(W().todo, todo) + sec(L().done, doneShown))
       + (done.length > doneShown.length ? `<button class="more" onclick="moreDone()">${L().showAll(done.length)}</button>` : '');
@@ -588,7 +591,7 @@ function pieceRow(p) {
           ${p.wood ? `<div class="pc-w">${esc(p.wood)}</div>` : ''}
           ${isP(p) ? `<div class="pc-by">${esc(L().by(W(), p[K().by]))}${p[K().at] ? ' · ' + fmtStamp(p[K().at]) : ''}</div>`
             : held ? `<div class="pc-hold">${L().hold}</div>`
-            : dept === 'lathe' && !p.done ? `<div class="pc-wait">${L().notYet}</div>` : ''}
+            : dept !== 'wood' && !p.done ? `<div class="pc-wait">${L().notYet}</div>` : ''}
         </span>
         <span class="pc-size">${sizeHtml(p)}</span>
         <span class="pc-q">× ${esc(p.qty || '1')} Nos</span>
