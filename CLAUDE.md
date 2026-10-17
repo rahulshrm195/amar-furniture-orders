@@ -57,6 +57,7 @@ A single-page PWA for tracking furniture orders. It is hosted on GitHub Pages (s
     - It keeps the project out of Done (`isDone` needs every piece done) until the hold is released or the piece deleted.
     - The slip prints it last with "होल्ड" in place of the tick box and its size struck through.
     - Order cards show an "N on hold" chip.
+  - Counts in Nos (v3.77.0): every count adds up the pieces' qty (blank = 1), so a "Wood Panel × 12 Nos" line counts as 12. This covers the tablet's "x Nos में से y कटा", header, hold count, prompts and slip footer (`nosOf`), and the order cards' Cut / Turned / CNC chips and "N Nos on hold". A line is still ticked as a whole; partial cuts are for later.
   - Naming (v3.74.1): the orders app calls it "Cut list" for every order, lathe ones included. Only the tablet's Lathe tab says लेथ लिस्ट.
   - Card details (v3.74.1): the list icon, or a tap on the Cut / Turned chips, opens a "Cut list (n)" block with each piece's size, qty and ✓ Cut / ✓ Turned / On hold status. Hovering a status shows who did it.
   - Card button: the cut-list button (prep row) is plain when there is no list, orange (`.prep`) once a list exists, and green (`.has`) when everything is cut (and, for lathe orders, turned).

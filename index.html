@@ -11,7 +11,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.76.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
+/* ── v3.77.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -501,7 +501,7 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.76.0</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.77.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -1111,7 +1111,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.76.0';
+const APP_VERSION = 'v3.77.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -1518,18 +1518,21 @@ function buildCard(p) {
   }
   const archChip = p.archived ? `<div class="chip plain">Archived</div>` : '';
   // Cut list progress (pieces ticked off on the workshop tablet)
+  // Counted in Nos (a "Wood Panel × 12 Nos" line counts as 12); a blank qty counts as 1.
   const cutPcs = window._cutlists[p.id]?.pieces || [];
-  const cutDone = cutPcs.filter(x => x.done).length;
+  const nosOf = ps => Math.round(ps.reduce((s, x) => s + (parseFloat(x.qty) || 1), 0) * 100) / 100;
+  const cutN = nosOf(cutPcs);
+  const cutDone = nosOf(cutPcs.filter(x => x.done));
   const isLathe = p.projectType === 'lathe' || p.projectType === 'cnc';   // has a second step after cutting
   const step2 = p.projectType === 'cnc' ? { f: 'cnc', by: 'cncBy', lbl: 'CNC' } : { f: 'turned', by: 'turnedBy', lbl: 'Turned' };
   // Lathe orders are cut first (Woodwork tab), then turned (Lathe tab): two chips.
-  const turnDone = cutPcs.filter(x => x[step2.f]).length;
-  const chipOf = (lbl, d) => `<button class="chip cut${d === cutPcs.length ? ' full' : ''}" title="See each piece" onclick="toggleCard('${p.id}')">${svgi('saw', 11, 2)} ${lbl} ${d}/${cutPcs.length}</button>`;
+  const turnDone = nosOf(cutPcs.filter(x => x[step2.f]));
+  const chipOf = (lbl, d) => `<button class="chip cut${d === cutN ? ' full' : ''}" title="${d} of ${cutN} Nos · see each piece" onclick="toggleCard('${p.id}')">${svgi('saw', 11, 2)} ${lbl} ${d}/${cutN}</button>`;
   const fin = x => x.done && (!isLathe || x[step2.f]);
   const cutChip = cutPcs.length ? chipOf('Cut', cutDone) + (isLathe ? chipOf(step2.lbl, turnDone) : '')
-    + (cutPcs.some(x => x.hold && !fin(x)) ? `<div class="chip warn">${svgi('hold', 11, 2)} ${cutPcs.filter(x => x.hold && !fin(x)).length} on hold</div>` : '') : '';
-  const cutHeld = cutPcs.filter(x => x.hold && !x.done).length;
-  const cutAll = cutPcs.length > 0 && cutDone === cutPcs.length && (!isLathe || turnDone === cutPcs.length);
+    + (cutPcs.some(x => x.hold && !fin(x)) ? `<div class="chip warn">${svgi('hold', 11, 2)} ${nosOf(cutPcs.filter(x => x.hold && !fin(x)))} Nos on hold</div>` : '') : '';
+  const cutHeld = nosOf(cutPcs.filter(x => x.hold && !x.done));
+  const cutAll = cutPcs.length > 0 && cutPcs.every(fin);
 
   // Chips row: due date + money
   let money = '';
@@ -1558,7 +1561,7 @@ function buildCard(p) {
     if (window._isAdmin && (p.projectType === 'woodwork' || p.projectType === 'timber' || isLathe)) {
       // Plain = no list yet, orange = list made, green = everything cut (and turned)
       const ttl = !cutPcs.length ? 'Make a cut list for the workshop'
-        : `Cut list \u2014 ${cutDone} of ${cutPcs.length} cut${isLathe ? `, ${turnDone} ${step2.lbl === 'CNC' ? 'done on CNC' : 'turned'}` : ''}${cutHeld ? `, ${cutHeld} on hold` : ''}`;
+        : `Cut list \u2014 ${cutDone} of ${cutN} Nos cut${isLathe ? `, ${turnDone} ${step2.lbl === 'CNC' ? 'done on CNC' : 'turned'}` : ''}${cutHeld ? `, ${cutHeld} Nos on hold` : ''}`;
       prep.push(`<button class="prep-btn${cutAll ? ' has' : cutPcs.length ? ' prep' : ''}" aria-label="Cut list" title="${ttl}" onclick="openCutModal('${p.id}')">${svgi('saw', 14)} Cut list</button>`);
     }
   }
@@ -1590,7 +1593,7 @@ function buildCard(p) {
   }
   // Cut list progress, piece by piece (what the workshop has ticked on the tablet)
   const st = (ok, by, lbl) => `<span class="cp-st${ok ? ' ok' : ''}" title="${ok && by ? escHtml(lbl + ' by ' + by) : ''}">${ok ? '\u2713 ' : ''}${lbl}</span>`;
-  const cutRows = cutPcs.length ? `<div><div class="dt-lbl">Cut list (${cutPcs.length})</div>` + cutPcs.map(pc => {
+  const cutRows = cutPcs.length ? `<div><div class="dt-lbl">Cut list (${cutN} Nos)</div>` + cutPcs.map(pc => {
     const dims = [pc.l, pc.w, pc.t].filter(Boolean).map(fmtSize).join(' × ');
     const held = pc.hold && !fin(pc);
     return `<div class="dt-item"><div class="dt-item-n">${escHtml(pc.name || 'Piece')}</div>${dims ? `<div class="dt-item-d">${escHtml(dims)}</div>` : ''}<div class="dt-item-q">${escHtml(pc.qty || '1')} Nos</div>`
