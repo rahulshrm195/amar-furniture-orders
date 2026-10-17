@@ -10,7 +10,7 @@ A single-page PWA for tracking furniture orders. It is hosted on GitHub Pages (s
 - `cut/index.html` and `cut/manifest.json`: the workshop tablet page at `/cut/`, a cutting list with Woodwork, Lathe and CNC tabs. It is a standalone page that loads none of the orders app, and it signs in as `workshop@amarfurniture.in`. If that account opens the main app, it is redirected to `/cut/`.
 - `firestore.rules`: a copy of the live Firestore rules, which are pasted into the Firebase console by hand. Keep this file in step with what is live.
 - `sw.js`: the service worker. It is network-first and also handles push notifications. The `CACHE` name holds the SW version.
-- `manifest.json` and `icon-*.png`: the PWA install files.
+- `manifest.json`, `icon-*.png` and `apple-touch-icon.png`: the PWA install files. The icon (v3.78.1) is the three-plank mark in ivory on a clay square, kept inside the centre so round and squircle crops work.
 - `deployment-guide.docx`: the setup guide for the owner.
 
 ## Working rules
