@@ -12,7 +12,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.79.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
+/* ── v3.80.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -265,6 +265,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .order-card.drop-after{box-shadow:10px 0 0 -4px var(--clay)}
 .move-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
 .move-row .dt-lbl{margin:0 4px 0 0}
+.move-row button.on{background:var(--clay-soft);border-color:var(--clay);color:var(--clay)}
 .move-row button{padding:6px 11px;border-radius:9px;border:1px solid var(--border);background:var(--ivory);color:var(--ink2);font-size:12px;font-weight:700}
 .section-banner{display:flex;align-items:center;gap:12px;background:var(--amber-soft);border:1px solid #E8CFA0;border-radius:12px;padding:14px 16px;color:#7A4A00}
 .section-banner .sb-text{font-weight:700;font-size:13.5px;flex:1}
@@ -292,6 +293,13 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .oc-chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{font-size:11px;font-weight:700;padding:4px 9px;border-radius:20px;white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
 .chip.plain{background:var(--ivory);color:var(--ink2);border:1px solid var(--border)}
+.chip.size-b{background:var(--clay);color:#FAF9F5;letter-spacing:.04em}
+.size-divider{grid-column:1/-1;display:flex;align-items:center;gap:10px;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin:4px 0 -4px}
+.size-divider::after{content:'';flex:1;border-top:1px dashed var(--border)}
+.size-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.size-opt{padding:8px 16px;border-radius:20px;border:1px solid var(--border);background:var(--surface);font-size:13px;font-weight:700;color:var(--ink2);cursor:pointer}
+.size-opt.sel{border-color:var(--clay);background:var(--clay-soft);color:var(--clay)}
+.size-opt:focus-visible{outline:2px solid var(--clay);outline-offset:2px}
 .chip.money{background:var(--ivory);color:var(--ink);border:1px solid var(--border)}
 .chip.due{background:var(--red-soft);color:var(--red)}
 .chip.paid{background:var(--green-soft);color:var(--green)}
@@ -529,7 +537,7 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.79.0</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.80.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -704,6 +712,11 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
         </div>
 
         <div class="field" id="f-drive-field" style="display:none"><label>Drive folder link</label><input type="url" id="f-drive" placeholder="Paste Drive folder link (empty = none)" autocomplete="off"></div>
+
+        <div class="field">
+          <label>Job Size</label>
+          <div class="size-row" id="size-sel"><div tabindex="0" role="button" class="size-opt" data-s="s" onclick="selectSize('s')">Small</div><div tabindex="0" role="button" class="size-opt" data-s="m" onclick="selectSize('m')">Medium</div><div tabindex="0" role="button" class="size-opt" data-s="b" onclick="selectSize('b')">Big</div></div>
+        </div>
 
         <div class="field">
           <label>Status</label>
@@ -1044,7 +1057,7 @@ window.saveProject = async function() {
     orderDate: date, deadline,
     amount:    parseFloat(document.getElementById('f-amount').value) || 0,
     advance:   parseFloat(document.getElementById('f-advance').value) || 0,
-    items, status: window._editStatus ?? 0, carpenter: window._editCarpenter || '',
+    items, status: window._editStatus ?? 0, carpenter: window._editCarpenter || '', size: window._editSize || 'm',
     notes:     document.getElementById('f-notes').value.trim(),
     internalNotes: document.getElementById('f-internal').value.trim(),
     onHold:    window._editOnHold ?? false,
@@ -1141,7 +1154,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.79.0';
+const APP_VERSION = 'v3.80.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -1445,6 +1458,7 @@ window._typeFilter     = 'active';
 window._stageFilter    = 'all';
 window._statusUpdateId = null;
 window._updateStatusVal= null;
+window._editSize       = 'm';  // job size in the order form: 's' small, 'm' medium, 'b' big
 window._editCarpenter  = '';   // carpenter making the order (picked under "In Progress")
 window._updateCarpenter= '';
 window._showHold       = false;
@@ -1550,6 +1564,7 @@ function buildCard(p) {
       : `<div class="chip warn">${svgi('clock', 11, 2)} Folder pending</div>`;
   }
   const archChip = p.archived ? `<div class="chip plain">Archived</div>` : '';
+  const sizeChip = jobSize(p) === 'b' ? '<div class="chip size-b">BIG</div>' : jobSize(p) === 's' ? '<div class="chip plain">Small</div>' : '';
   const cpChip = p.carpenter && !isDelivered(p) ? `<div class="chip plain" title="Carpenter">${svgi('user', 11, 2)} ${escHtml(p.carpenter)}</div>` : '';
   // Cut list progress (pieces ticked off on the workshop tablet)
   // Counted in Nos (a "Wood Panel × 12 Nos" line counts as 12); a blank qty counts as 1.
@@ -1638,7 +1653,8 @@ function buildCard(p) {
   const internal = window._isAdmin && p.internalNotes ? `<div><div class="dt-lbl">Internal notes</div><div class="dt-specs">${escHtml(p.internalNotes)}</div></div>` : '';
   const movable = isActive(p) && canMove();
   const moveRow = movable ? `<div class="move-row"><span class="dt-lbl">Priority</span><button onclick="moveCard('${p.id}','front')">\u21E4 Move to front</button><button onclick="moveCard('${p.id}','up')">\u2039 Earlier</button><button onclick="moveCard('${p.id}','down')">Later \u203A</button></div>` : '';
-  const details = `<div class="oc-details">${moveRow}${items}${cutRows}${specs}${internal}<div><div class="dt-lbl">${T('activityHdr')}</div><div class="tl" id="tl-${p.id}">${timelineHtml(log)}</div></div></div>`;
+  const sizeRow = window._isAdmin && !isDelivered(p) ? `<div class="move-row"><span class="dt-lbl">Job size</span>${[['s', 'Small'], ['m', 'Medium'], ['b', 'Big']].map(([v, l]) => `<button class="${jobSize(p) === v ? 'on' : ''}" onclick="setJobSize('${p.id}','${v}')">${l}</button>`).join('')}</div>` : '';
+  const details = `<div class="oc-details">${sizeRow}${moveRow}${items}${cutRows}${specs}${internal}<div><div class="dt-lbl">${T('activityHdr')}</div><div class="tl" id="tl-${p.id}">${timelineHtml(log)}</div></div></div>`;
 
   return `
   <div class="order-card ${p.archived ? 'archived' : ''} ${window._expandedCards.has(p.id) ? 'expanded' : ''}${movable ? ' movable' : ''}" id="card-${p.id}" style="--tone:${tone}">
@@ -1649,7 +1665,7 @@ function buildCard(p) {
       </div>
       <div class="oc-days"><div class="oc-days-n">${daysText}</div><div class="oc-days-l">${daysLbl}</div></div>
     </div>
-    <div class="oc-stage">${lead}<div class="chip s${stageIdx}">${stage.label}</div>${cpChip}${holdChip}${folderChip}${archChip}</div>
+    <div class="oc-stage">${lead}<div class="chip s${stageIdx}">${stage.label}</div>${sizeChip}${cpChip}${holdChip}${folderChip}${archChip}</div>
     <div class="oc-chips"><div class="chip plain">Due ${date}</div>${cutChip}${money}</div>
     <div class="note-block">
       <div class="note-row">${svgi('note', 13)}<div class="note-text ${latest ? 'has' : ''}">${latest || T('noActivity')}</div></div>
@@ -1696,6 +1712,15 @@ function sortList(arr) {
   if (m === 'order') return [...arr].sort((a, b) => String(a.orderDate || '').localeCompare(String(b.orderDate || '')) || (a.orderNo || 0) - (b.orderNo || 0));
   return [...arr].sort((a, b) => (a.rank ?? 1e12) - (b.rank ?? 1e12) || new Date(a.deadline) - new Date(b.deadline));
 }
+// Job size (set by the office): big jobs first in each running section, small ones last under a "Small jobs" line.
+// Orders without a size count as medium.
+const jobSize = p => p.size === 's' || p.size === 'b' ? p.size : 'm';
+const SIZE_ORDER = { b: 0, m: 1, s: 2 };
+const bySize = arr => [...arr].sort((a, b) => SIZE_ORDER[jobSize(a)] - SIZE_ORDER[jobSize(b)]);   // stable: keeps the chosen sort inside each size
+async function setJobSize(id, v) {
+  try { await _updateDoc(_doc(_db, 'projects', id), { size: v, updatedAt: _serverTimestamp() }); }
+  catch (err) { showToast('Could not save the size: ' + (err?.code || err?.message || 'error')); }
+}
 function setSortMode(m) {
   window._sortMode = m;
   try { localStorage.setItem('af-sort', m); } catch {}
@@ -1710,10 +1735,10 @@ function sortBar() {
 // ── Moving cards (admins, "My order" only): drag on desktop, Move buttons in the card details on phones ──
 const canMove = () => window._isAdmin && window._sortMode === 'mine' && window._typeFilter === 'active' && !(document.getElementById('search-input')?.value || '').trim();
 function sectionOf(p) { return SECTIONS.find(sec => sec.match(p)); }
-// The cards of p's section in their current on-screen order.
+// The cards of p's section (and job size) in their current on-screen order.
 function sectionPeers(p) {
   const sec = sectionOf(p);
-  return sortList((window._projects || []).filter(x => isActive(x) && sec && sec.match(x)));
+  return sortList((window._projects || []).filter(x => isActive(x) && sec && sec.match(x) && jobSize(x) === jobSize(p)));
 }
 // Put the section in the given order, reusing its own ranks so other sections are untouched.
 async function applyOrder(ordered) {
@@ -1757,7 +1782,7 @@ document.addEventListener('dragend', () => {
 function dropSpot(e) {
   const card = e.target.closest?.('.order-card.movable'); if (!card || !_dragId || card.id.slice(5) === _dragId) return null;
   const a = (window._projects || []).find(x => x.id === _dragId), b = (window._projects || []).find(x => x.id === card.id.slice(5));
-  if (!a || !b || sectionOf(a) !== sectionOf(b)) return null;          // only within the same section
+  if (!a || !b || sectionOf(a) !== sectionOf(b) || jobSize(a) !== jobSize(b)) return null;   // only within the same section and size
   const r = card.getBoundingClientRect();
   return { card, target: b, after: e.clientX > r.left + r.width / 2 };
 }
@@ -1841,10 +1866,11 @@ function renderProjects() {
     }
 
     SECTIONS.forEach(sec => {
-      const ps = activeAll.filter(sec.match);
+      const ps = bySize(activeAll.filter(sec.match));
       if (!ps.length && q) return;            // while searching, hide empty sections
       html += sectionHeader(sec.ico, sec.bg, sec.color, sec.label, ps.length + ' running', !ps.length, sec.id);
-      html += ps.length ? ps.map(buildCard).join('') : `<div class="section-empty">${sec.empty}</div>`;
+      const firstSmall = ps.findIndex(x => jobSize(x) === 's');
+      html += ps.length ? ps.map((x, i) => (i === firstSmall && i > 0 ? '<div class="size-divider">Small jobs</div>' : '') + buildCard(x)).join('') : `<div class="section-empty">${sec.empty}</div>`;
     });
 
     if (readyAll.length) {
@@ -2449,7 +2475,7 @@ function jumpToArchived() {
 // ── Order form ──
 function openAddModal() {
   if (!window._isAdmin) return;
-  window._editId = null; window._editStatus = 0; window._editType = 'woodwork'; window._editOnHold = false; window._editCarpenter = '';
+  window._editId = null; window._editStatus = 0; window._editType = 'woodwork'; window._editOnHold = false; window._editCarpenter = ''; selectSize('m');
   document.getElementById('on-hold-toggle')?.classList.remove('active');
   window._editCreateFolder = false;
   const folderTog = document.getElementById('create-folder-toggle');
@@ -2474,7 +2500,7 @@ function openEditModal(id) {
   if (!window._isAdmin) return;
   const p = window._projects.find(x => x.id === id);
   if (!p) return;
-  window._editId = id; window._editStatus = p.status ?? 0; window._editCarpenter = p.carpenter || ''; window._editType = p.projectType || 'woodwork';
+  window._editId = id; window._editStatus = p.status ?? 0; window._editCarpenter = p.carpenter || ''; selectSize(jobSize(p)); window._editType = p.projectType || 'woodwork';
   document.getElementById('modal-title').textContent   = 'Edit Order' + (p.orderNo ? ' #' + p.orderNo : '');
   document.getElementById('delete-btn').style.display  = 'flex';
   document.getElementById('archive-btn').style.display = p.archived ? 'none' : 'flex';
@@ -2547,6 +2573,10 @@ function selectType(type) {
   renderStatusSel('status-selector-opts', window._editStatus, false);
 }
 
+function selectSize(v) {
+  window._editSize = v;
+  document.querySelectorAll('#size-sel .size-opt').forEach(el => el.classList.toggle('sel', el.dataset.s === v));
+}
 function selectFormSt(v) {
   window._editStatus = v;
   renderStatusSel('status-selector-opts', v, false);
@@ -2676,7 +2706,7 @@ document.addEventListener('keydown', e => {
 });
 document.addEventListener('keydown', e => {
   if ((e.key !== ' ' && e.key !== 'Enter') || e.repeat) return;
-  const el = e.target.closest?.('.type-opt, .status-opt, .on-hold-toggle');
+  const el = e.target.closest?.('.type-opt, .status-opt, .size-opt, .on-hold-toggle');
   if (!el || e.target.tagName === 'BUTTON') return;   // a carpenter name inside "In Progress" is a real button
   e.preventDefault(); el.click();
 });
