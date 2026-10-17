@@ -25,12 +25,12 @@ A single-page PWA for tracking furniture orders. It is hosted on GitHub Pages (s
 
 ## Data and features
 - **Firestore**
-  - `projects` holds one document per order. Fields include `client`, `phone`, `item`, `notes`, `internalNotes` (admin-only on screen), `projectType`, `status` (0–4, where 4 means delivered), `items[]`, `amount`, `advance`, `payments`, `activityLog` (newest first), `archived`, `orderNo`, `createdAt` and `driveFolderUrl`.
+  - `projects` holds one document per order. Fields include `client`, `phone`, `item`, `notes`, `internalNotes` (admin-only on screen), `projectType`, `status` (0–4, where 4 means delivered), `items[]`, `amount`, `advance`, `payments`, `activityLog` (newest first), `archived`, `orderNo`, `createdAt` and `driveFolderUrl`. Each item in `items[]` has `name`, `l`, `b`, `w`, `qty`, `unit` and an optional `note` (v3.78.0).
   - `settings/app` holds app settings and `lastOrderNo`.
 - **Order numbers** (v3.59.0): orders are numbered #1001 and up. `_nextOrderNo()` hands out each number inside a transaction, and numbers are never reused. Older orders without a number are backfilled oldest-first the first time an admin loads the app (`backfillOrderNos`).
 - **Cut lists** (v3.60.0):
   - Storage: one `cutlists/{orderId}` doc per order, holding `orderNo`, `client`, `title`, `deadline`, `hidden`, `active`, `notes`, `dept: 'wood'` and `pieces[]`.
-  - Each piece has `id`, `name`, `l`, `w`, `t` (inches), `qty`, `wood`, `done`, `doneBy`, `doneAt` and `createdAt`.
+  - Each piece has `id`, `name`, `l`, `w`, `t` (inches), `qty`, `wood`, `note`, `done`, `doneBy`, `doneAt` and `createdAt`. The `note` comes from the order item when the list is copied from the items, can be edited in the cut list editor, and shows under the piece name on the tablet and the slip.
   - Editing: admins edit a cut list from the saw icon on woodwork order cards. Saves run in a transaction that keeps the workshop's ticks.
   - Sync: `syncCutLists()` keeps the name, number and deadline in step with the order. `hidden` is set when the order is delivered or archived.
   - Copy from items (v3.62.0): a new cut list starts from the order's items, mapping L → L, B → W, W → T and keeping the qty. "Copy sizes from order items" adds any items that aren't on the list yet.
@@ -65,6 +65,9 @@ A single-page PWA for tracking furniture orders. It is hosted on GitHub Pages (s
   - The drawing state is `drawingDone` / `drawingNA`, and each tap cycles it: pending (plain) → done (green) → not needed (red) → pending.
   - "Drawing pending" counts only pending drawings (`needsDrawing`).
   - The drawing and cut-list buttons sit in their own labelled row on the card (`.oc-prep` / `.prep-btn`), above the action icons.
+- **Order form** (v3.78.0): one column on desktop (no side-by-side columns): project type chips, then client / phone / dates in one row, description and amounts, the Hold and Drive Folder switches, the items table, the two notes boxes and Status as a row of chips. The title and the Save/Cancel row stay put while the body scrolls.
+  - Items are a table on desktop: # · Item · L · B · W · Qty · Unit · Note · × (`.items-head`, and the row's wrappers are `display:contents`). On phones each item stays a small card with the note box underneath.
+  - The Items heading shows "6 items · 13 Nos" (`updateItemsSum`).
 - **Section ribbons** (v3.76.0): each section header on the list (`sectionHeader`) is a band in its type's soft colour with a 4px left stripe in the strong colour (`--sb` / `--sc`), so the sections are easy to tell apart while scrolling.
 - **Priority order** (v3.73.0): each project has a numeric `rank`; within a section, lower ranks are shown first.
   - Ranks were backfilled once in due-date order (`backfillRanks`). New orders get `_nextRank()`, which puts them at the end.
@@ -80,7 +83,7 @@ A single-page PWA for tracking furniture orders. It is hosted on GitHub Pages (s
   - Cmd/Ctrl+F jumps to search.
   - Esc closes the small dialogs, but never the order form.
   - Tab stays inside the open dialog. The app moves focus itself, so buttons and dropdowns are reached in every browser (Safari's own Tab skips them).
-  - Order items (v3.75.1): Tab goes Internal Notes → "+ Add Item" → Name → L → B → W → Qty → Unit; the row's × button is skipped. Enter in an item row jumps to the next row, or adds a new one from the last row. Empty rows are dropped on save.
+  - Order items (v3.75.1, v3.78.0): Tab goes through the switches → item rows (Name → L → B → W → Qty → Unit → Note) → "+ Add Item" → Notes → Internal Notes → Status; the row's × button is skipped. Enter in an item row jumps to the next row, or adds a new one from the last row. Empty rows are dropped on save.
   - None of the plain-letter shortcuts fire while typing or while a dialog is open.
 
 ## Backlog (noted by the owner, not started)

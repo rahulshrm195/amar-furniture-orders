@@ -11,7 +11,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.77.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
+/* ── v3.78.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -62,7 +62,6 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .field textarea{resize:none;min-height:76px}
 .field-grid{display:block}
 .modal-body{display:block}
-.modal-col{min-width:0}
 .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;border-radius:10px;border:1px solid transparent;font-weight:700;font-size:14px;transition:background .15s}
 .btn-primary{background:var(--clay);color:#FAF9F5}
 .btn-primary:hover{background:#A9521F}
@@ -387,6 +386,12 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
 .item-edit-row-dims{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1.4fr;gap:6px}
 .item-dim-wrap{display:flex;flex-direction:column;gap:3px}
 .item-dim-label{font-size:10px;color:var(--ink3);font-weight:800;text-transform:uppercase;letter-spacing:.04em;text-align:center}
+.item-note-inp{width:100%;margin-top:8px;background:var(--ivory);border:1px solid var(--border);border-radius:8px;padding:7px 11px;color:var(--ink);font-size:12.5px;outline:none}
+.item-note-inp:focus{border-color:var(--clay)}
+.items-head{display:none}
+.items-sum{text-transform:none;letter-spacing:0;font-weight:700;color:var(--ink3);margin-left:6px}
+.toggle-row:has(#create-folder-toggle[style*="none"]) #on-hold-toggle{grid-column:1/-1}
+.dt-note{display:block;font-weight:500;font-size:11.5px;color:var(--ink2);margin-top:1px}
 .item-dim-inp,.item-unit-sel{width:100%;background:var(--ivory);border:1px solid var(--border);border-radius:8px;padding:7px 4px;color:var(--ink);font-size:12.5px;outline:none;text-align:center}
 .add-item-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 14px;border-radius:10px;border:1.5px dashed var(--border);background:transparent;color:var(--clay);font-size:13px;font-weight:700;width:100%}
 .add-item-btn:hover{background:var(--clay-soft)}
@@ -465,21 +470,38 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
   #stats-sheet-backdrop .modal{max-width:760px}
   #cut-modal .modal{max-width:640px}
 
-  /* New / Edit order — real two-column desktop panel. DOM order is preserved
-     inside each column so Tab moves left-to-right, top-to-bottom. */
-  #project-modal .modal{max-width:1100px;width:94vw;max-height:94dvh;padding:28px 36px 32px;display:flex;flex-direction:column;overflow:hidden}
-  .modal-body{display:grid;grid-template-columns:1.1fr .9fr;gap:0 32px;align-items:stretch}
-  /* Title and the action row stay put; only the columns (and the items list) scroll. */
-  #project-modal .modal-title,#project-modal .modal-actions{flex:none}
-  #project-modal .modal-body{flex:1 1 auto;min-height:0;overflow:hidden;grid-template-rows:minmax(0,1fr)}
-  #project-modal .modal-col{min-height:0;overflow-y:auto;padding-right:8px}
-  #project-modal .modal-col:last-child{display:flex;flex-direction:column}
-  #project-modal #items-field{flex:1 1 0;min-height:210px;display:flex;flex-direction:column}
-  #project-modal .items-list-edit{flex:1 1 0;min-height:0;overflow-y:auto;padding-right:4px}
-  #project-modal .add-item-btn{flex:none}
-  #project-modal .items-list-edit:empty::before{content:'No items yet — use “Add Item” below';display:block;padding:18px 4px;font-size:12.5px;color:var(--ink3)}
+  /* New / Edit order — one column (Option A): details, then a full-width items table, notes and status.
+     Title and the action row stay put; the body scrolls. DOM order = Tab order. */
+  #project-modal .modal{max-width:1180px;width:94vw;max-height:94dvh;padding:28px 36px 0;display:flex;flex-direction:column;overflow:hidden}
+  #project-modal .modal-title{flex:none}
+  #project-modal .modal-body{flex:1 1 auto;min-height:0;overflow-y:auto;margin-right:-12px;padding-right:12px}
+  #project-modal .modal-actions{flex:none;margin-top:0;padding:16px 0 24px;border-top:1px solid var(--border)}
+  #project-modal .type-grid{display:flex;flex-wrap:wrap;gap:8px}
+  #project-modal .type-opt{display:flex;align-items:center;gap:7px;padding:8px 14px;border-radius:20px}
+  #project-modal .type-opt .t-icon{margin:0}
+  #project-modal .type-opt svg{width:16px;height:16px}
+  #project-modal .type-opt .t-lbl{font-size:13px}
   .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
   .field-grid .field.full{grid-column:1/-1}
+  .field-grid.details{grid-template-columns:repeat(4,1fr)}
+  .field-grid .field.wide{grid-column:span 2}
+  .toggle-row{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
+  #project-modal .status-selector{flex-direction:row;flex-wrap:wrap;gap:8px}
+  #project-modal .status-opt{border-radius:20px;padding:8px 15px}
+  /* Items: one row per item — # · Item · L · B · W · Qty · Unit · Note · × */
+  .items-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 14px}
+  .items-head,#project-modal .item-edit-row{display:grid;grid-template-columns:30px minmax(0,2fr) 64px 64px 64px 60px 84px minmax(0,2.2fr) 30px;gap:8px;align-items:center}
+  .items-head{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);padding-bottom:6px}
+  .items-head span{text-align:center} .items-head span:nth-child(2),.items-head span:nth-child(8){text-align:left}
+  #items-field:has(.items-list-edit:empty) .items-head{display:none}
+  #project-modal .items-list-edit{gap:7px}
+  #project-modal .item-edit-row{padding:0;border:none;background:none;border-radius:0}
+  #project-modal .item-edit-row-top,#project-modal .item-edit-row-dims{display:contents}
+  #project-modal .item-dim-label{display:none}
+  #project-modal .item-del-btn{order:1}
+  #project-modal .item-note-inp{margin-top:0}
+  #project-modal .item-name-inp,#project-modal .item-dim-inp,#project-modal .item-unit-sel,#project-modal .item-note-inp{height:36px;padding-top:0;padding-bottom:0}
+  #project-modal .items-list-edit:empty::before{content:'No items yet — use “Add Item” below';display:block;padding:10px 4px;font-size:12.5px;color:var(--ink3)}
   .modal-actions{flex-direction:row-reverse;flex-wrap:wrap}
   .modal-actions .btn{width:auto;flex:1 1 auto;min-width:160px}
   .install-banner{left:50%;right:auto;max-width:520px;width:calc(100% - 28px);transform:translateX(-50%) translateY(20px)}
@@ -501,7 +523,7 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.77.0</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.78.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -617,7 +639,6 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
     <div class="modal-title spaced" id="modal-title">New Order</div>
 
     <div class="modal-body">
-      <div class="modal-col">
         <div class="field">
           <label>Project Type *</label>
           <div class="type-grid">
@@ -634,16 +655,17 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
           </div>
         </div>
 
-        <div class="field-grid">
+        <div class="field-grid details">
           <div class="field ac-wrap"><label>Project / Client Name *</label><input type="text" id="f-client" placeholder="e.g. Sharma ji — Bedroom Set" autocomplete="off"><div class="ac-list" id="ac-list" role="listbox"></div></div>
           <div class="field"><label>Client Phone</label><input type="tel" id="f-phone" placeholder="9XXXXXXXXX"></div>
-          <div class="field full"><label>Project Description</label><input type="text" id="f-item" placeholder="Brief description of the work"></div>
           <div class="field"><label>Order Date *</label><input type="date" id="f-date"></div>
           <div class="field"><label>Deadline Date *</label><input type="date" id="f-deadline"></div>
+          <div class="field wide"><label>Project Description</label><input type="text" id="f-item" placeholder="Brief description of the work"></div>
           <div class="field"><label>Total Amount (₹)</label><input type="number" id="f-amount" placeholder="0"></div>
           <div class="field"><label>Advance Received (₹)</label><input type="number" id="f-advance" placeholder="0"></div>
         </div>
 
+        <div class="toggle-row">
         <div class="on-hold-toggle" tabindex="0" role="button" id="on-hold-toggle" onclick="toggleOnHold()">
           <div class="on-hold-toggle-left">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
@@ -659,6 +681,16 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
           </div>
           <div class="toggle-switch"></div>
         </div>
+        </div>
+
+        <div class="field" id="items-field">
+          <label>Items &amp; Qty <span class="items-sum" id="items-sum"></span></label>
+          <div class="items-box" oninput="updateItemsSum()" onchange="updateItemsSum()">
+            <div class="items-head"><span>#</span><span>Item</span><span>L (in)</span><span>B (in)</span><span>W (in)</span><span>Qty</span><span>Unit</span><span>Note for this item</span><span></span></div>
+            <div class="items-list-edit" id="items-edit-list"></div>
+            <button class="add-item-btn" title="Tip: press Enter in an item row to add the next item" onclick="addItemRow()">＋ Add Item</button>
+          </div>
+        </div>
 
         <div class="field-grid">
           <div class="field"><label>Notes / Specs</label><textarea id="f-notes" placeholder="Material, measurements, design details…"></textarea></div>
@@ -666,20 +698,11 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
         </div>
 
         <div class="field" id="f-drive-field" style="display:none"><label>Drive folder link</label><input type="url" id="f-drive" placeholder="Paste Drive folder link (empty = none)" autocomplete="off"></div>
-      </div>
-
-      <div class="modal-col">
-        <div class="field" id="items-field">
-          <label>Items &amp; Qty</label>
-          <div class="items-list-edit" id="items-edit-list"></div>
-          <button class="add-item-btn" title="Tip: press Enter in an item row to add the next item" onclick="addItemRow()">＋ Add Item</button>
-        </div>
 
         <div class="field">
           <label>Status</label>
           <div class="status-selector" id="status-selector-opts"></div>
         </div>
-      </div>
     </div>
 
     <div class="modal-actions">
@@ -1003,7 +1026,8 @@ window.saveProject = async function() {
       const w    = row.querySelector('.item-w-inp').value.trim();
       const qty  = row.querySelector('.item-qty-inp').value.trim();
       const unit = row.querySelector('.item-unit-sel').value;
-      if (name) items.push({ name, l, b, w, qty: qty || '1', unit: unit || 'Nos' });
+      const note = row.querySelector('.item-note-inp').value.trim();
+      if (name) items.push({ name, l, b, w, qty: qty || '1', unit: unit || 'Nos', ...(note ? { note } : {}) });
     });
   }
   const data = {
@@ -1111,7 +1135,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.77.0';
+const APP_VERSION = 'v3.78.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -1588,7 +1612,7 @@ function buildCard(p) {
   if (p.items?.length) {
     items = `<div><div class="dt-lbl">${T('itemsHdr')} (${p.items.length})</div>` + p.items.map(it => {
       const dims = [it.l, it.b, it.w].filter(Boolean).map(fmtSize).join(' × ');
-      return `<div class="dt-item"><div class="dt-item-n">${escHtml(it.name)}</div>${dims ? `<div class="dt-item-d">${escHtml(dims)}</div>` : ''}<div class="dt-item-q">${escHtml(it.qty)} ${escHtml(it.unit || 'Nos')}</div></div>`;
+      return `<div class="dt-item"><div class="dt-item-n">${escHtml(it.name)}${it.note ? `<span class="dt-note">${escHtml(it.note)}</span>` : ''}</div>${dims ? `<div class="dt-item-d">${escHtml(dims)}</div>` : ''}<div class="dt-item-q">${escHtml(it.qty)} ${escHtml(it.unit || 'Nos')}</div></div>`;
     }).join('') + '</div>';
   }
   // Cut list progress, piece by piece (what the workshop has ticked on the tablet)
@@ -1596,7 +1620,7 @@ function buildCard(p) {
   const cutRows = cutPcs.length ? `<div><div class="dt-lbl">Cut list (${cutN} Nos)</div>` + cutPcs.map(pc => {
     const dims = [pc.l, pc.w, pc.t].filter(Boolean).map(fmtSize).join(' × ');
     const held = pc.hold && !fin(pc);
-    return `<div class="dt-item"><div class="dt-item-n">${escHtml(pc.name || 'Piece')}</div>${dims ? `<div class="dt-item-d">${escHtml(dims)}</div>` : ''}<div class="dt-item-q">${escHtml(pc.qty || '1')} Nos</div>`
+    return `<div class="dt-item"><div class="dt-item-n">${escHtml(pc.name || 'Piece')}${pc.note ? `<span class="dt-note">${escHtml(pc.note)}</span>` : ''}</div>${dims ? `<div class="dt-item-d">${escHtml(dims)}</div>` : ''}<div class="dt-item-q">${escHtml(pc.qty || '1')} Nos</div>`
       + `<div class="cp-sts">${held ? '<span class="cp-st held">On hold</span>' : st(pc.done, pc.doneBy, 'Cut') + (isLathe ? st(pc[step2.f], pc[step2.by], step2.lbl) : '')}</div></div>`;
   }).join('') + '</div>' : '';
   const specs = p.notes ? `<div><div class="dt-lbl">Specs</div><div class="dt-specs">${escHtml(p.notes)}</div></div>` : '';
@@ -2094,7 +2118,7 @@ function renderOrderModal() {
   const fact = (k, v) => `<div><div class="od-k">${k}</div><div class="od-v">${v}</div></div>`;
   const items = p.items?.length ? `<div class="od-sec"><div class="dt-lbl">${T('itemsHdr')} (${p.items.length})</div>` + p.items.map(it => {
       const dims = [it.l, it.b, it.w].filter(Boolean).map(fmtSize).join(' × ');
-      return `<div class="dt-item"><div class="dt-item-n">${escHtml(it.name)}</div>${dims ? `<div class="dt-item-d">${escHtml(dims)}</div>` : ''}<div class="dt-item-q">${escHtml(it.qty)} ${escHtml(it.unit || 'Nos')}</div></div>`;
+      return `<div class="dt-item"><div class="dt-item-n">${escHtml(it.name)}${it.note ? `<span class="dt-note">${escHtml(it.note)}</span>` : ''}</div>${dims ? `<div class="dt-item-d">${escHtml(dims)}</div>` : ''}<div class="dt-item-q">${escHtml(it.qty)} ${escHtml(it.unit || 'Nos')}</div></div>`;
     }).join('') + '</div>' : '';
   const specs = p.notes ? `<div class="od-sec"><div class="dt-lbl">Specs</div><div class="dt-specs">${escHtml(p.notes)}</div></div>` : '';
   const internal = p.internalNotes ? `<div class="od-sec"><div class="dt-lbl">Internal notes</div><div class="dt-specs">${escHtml(p.internalNotes)}</div></div>` : '';
@@ -2464,7 +2488,7 @@ function openEditModal(id) {
   if (folderTog) folderTog.style.display = 'none';
   document.getElementById('other-label-inp').value     = p.otherLabel || '';
   document.getElementById('items-edit-list').innerHTML = '';
-  (p.items || []).forEach(it => addItemRow(it.name, it.l||'', it.b||'', it.w||'', it.qty, it.unit||'Nos'));
+  (p.items || []).forEach(it => addItemRow(it.name, it.l||'', it.b||'', it.w||'', it.qty, it.unit||'Nos', it.note||''));
   selectType(p.projectType || 'woodwork');
   window._editStatus = p.status ?? 0;
   renderStatusSel('status-selector-opts', p.status ?? 0, false);
@@ -2508,7 +2532,7 @@ function selectUpdateSt(v) {
   document.querySelectorAll('#status-update-opts .status-opt').forEach(el => el.classList.toggle('selected', +el.dataset.v === v));
 }
 
-function addItemRow(name='', l='', b='', w='', qty='', unit='Nos') {
+function addItemRow(name='', l='', b='', w='', qty='', unit='Nos', note='') {
   const list = document.getElementById('items-edit-list');
   const sr   = list.children.length + 1;
   const row  = document.createElement('div');
@@ -2527,15 +2551,25 @@ function addItemRow(name='', l='', b='', w='', qty='', unit='Nos') {
       <div class="item-dim-wrap"><div class="item-dim-label">W (in)</div><input class="item-dim-inp item-w-inp" type="text" autocomplete="off" placeholder="—" value="${escHtml(w)}"></div>
       <div class="item-dim-wrap"><div class="item-dim-label">Qty</div><input class="item-dim-inp item-qty-inp" type="text" inputmode="decimal" autocomplete="off" placeholder="1" value="${escHtml(qty)}"></div>
       <div class="item-dim-wrap"><div class="item-dim-label">Unit</div><select class="item-unit-sel">${unitOpts}</select></div>
-    </div>`;
+    </div>
+    <input class="item-note-inp" type="text" autocomplete="off" placeholder="Note for this item (optional)" value="${escHtml(note)}">`;
   list.appendChild(row);
+  updateItemsSum();
   if (!name) row.querySelector('.item-name-inp').focus();
+}
+// "6 items · 13 Nos" next to the Items heading (rows without a name don't count).
+function updateItemsSum() {
+  const rows = [...document.querySelectorAll('#items-edit-list .item-edit-row')].filter(r => r.querySelector('.item-name-inp').value.trim());
+  const nos = Math.round(rows.filter(r => r.querySelector('.item-unit-sel').value === 'Nos')
+    .reduce((t, r) => t + (parseFloat(r.querySelector('.item-qty-inp').value) || 1), 0) * 100) / 100;
+  document.getElementById('items-sum').textContent = rows.length ? `${rows.length} item${rows.length === 1 ? '' : 's'}${nos ? ' · ' + nos + ' Nos' : ''}` : '';
 }
 
 function removeItemRow(btn) {
   const list = btn.closest('.items-list-edit');
   btn.closest('.item-edit-row').remove();
   list.querySelectorAll('.item-sr-badge').forEach((el, i) => el.textContent = i + 1);
+  updateItemsSum();
 }
 
 function openModal(id) {
@@ -2674,7 +2708,7 @@ function copyItemsToCut() {
   let n = 0;
   p.items.forEach(it => {
     if (have.has(key(it.name, it.l, it.b, it.w))) return;
-    addCutRow({ id: Math.random().toString(36).slice(2, 10), name: it.name, l: it.l, w: it.b, t: it.w, qty: it.qty });
+    addCutRow({ id: Math.random().toString(36).slice(2, 10), name: it.name, l: it.l, w: it.b, t: it.w, qty: it.qty, note: it.note || '' });
     n++;
   });
   showToast(n ? `Copied ${n} item${n === 1 ? '' : 's'} \u2014 check and save` : 'All order items are already on the cut list');
@@ -2702,6 +2736,7 @@ function addCutRow(pc = {}) {
       ${dim('L (in)', 'cut-l', pc.l, '—', 'l')}${dim('W (in)', 'cut-w', pc.w, '—', 'w')}${dim('T (in)', 'cut-t', pc.t, '—', 't')}${dim('Qty', 'cut-q', pc.qty, '1')}
       <div class="item-dim-wrap"><div class="item-dim-label">Wood</div><input class="item-dim-inp cut-wood" type="text" placeholder="e.g. Teak" value="${escHtml(pc.wood || '')}"></div>
     </div>
+    <input class="item-note-inp cut-note" type="text" autocomplete="off" placeholder="Note for the workshop (optional)" value="${escHtml(pc.note || '')}">
     ${pc.done ? `<div class="cut-done">\u2713 Cut${pc.doneBy ? ' by ' + escHtml(pc.doneBy) : ''}${pc.doneAt ? ' · ' + fmtStamp(pc.doneAt) : ''}</div>` : ''}
     ${pc.turned ? `<div class="cut-done">\u2713 Turned${pc.turnedBy ? ' by ' + escHtml(pc.turnedBy) : ''}${pc.turnedAt ? ' · ' + fmtStamp(pc.turnedAt) : ''}</div>` : ''}`;
   list.appendChild(row);
@@ -2725,6 +2760,7 @@ async function saveCutList() {
   const val = (row, cls) => row.querySelector('.' + cls).value.trim().replace(/["\u201D]+$/, '').trim();
   const pieces = [...document.querySelectorAll('#cut-list-edit .item-edit-row')]
     .map(row => ({ id: row.dataset.id, name: val(row, 'cut-name'), l: val(row, 'cut-l'), w: val(row, 'cut-w'), t: val(row, 'cut-t'), qty: val(row, 'cut-q') || '1', wood: val(row, 'cut-wood'),
+      note: row.querySelector('.cut-note').value.trim(),
       cs: ['l', 'w', 't'].filter(k => val(row, 'cut-' + k) && row.querySelector(`.cs-tg[data-k="${k}"]`).classList.contains('on')),
       hold: row.classList.contains('hold') }))
     .filter(x => x.name || x.l || x.w || x.t);
