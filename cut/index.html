@@ -10,7 +10,7 @@
 <title>Amar Furniture — Cutting List</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.87.1 — Workshop cutting list (tablet); UI is Concept A ── */
+/* ── v3.88.0 — Workshop cutting list (tablet); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -106,6 +106,10 @@ input{font-family:inherit}
 .pc.held .tick{border:none;background:#E8CFA0;color:var(--amber)}
 .pc.held .pc-n,.pc.held .pc-size,.pc.held .pc-q{color:#9A8A6A}
 .pc-hold{font-size:16px;color:var(--amber);font-weight:800;margin-top:4px}
+/* A product made of parts (sofa, zula…): its pieces under one heading with its own count */
+.grp-h{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:18px;font-weight:800;color:#7A3A17;background:var(--clay-soft);border-radius:10px;padding:8px 14px;margin:16px 0 8px}
+.grp-h.lo{background:#EFEAE0;color:var(--ink2)}
+.grp-h b{font-size:15px;white-space:nowrap}
 .hold-h{font-size:19px;font-weight:800;color:var(--amber);margin:20px 4px 10px}
 .hcnt{color:var(--amber);font-weight:800;margin-left:10px}
 .prog .hcnt{margin:0;padding-left:14px;border-left:2px solid var(--border);font-size:20px;color:var(--amber)}
@@ -157,6 +161,7 @@ input{font-family:inherit}
   #slip .s-sub{font-size:9pt}
   #slip .s-rule{border-top:1px dashed #000;margin:2mm 0}
   #slip .s-notes{font-size:9pt;white-space:pre-wrap}
+  #slip .s-g{font-weight:800;font-size:10pt;margin-top:2.5mm;padding-bottom:.5mm;border-bottom:1px solid #000}
   #slip .s-pc{display:flex;gap:2mm;padding:1.2mm 0;border-bottom:1px dotted #000;break-inside:avoid}
   #slip .s-box{flex:0 0 auto;width:3.4mm;height:3.4mm;border:1.5px solid #000;margin-top:.6mm;font-size:8pt;line-height:3mm;text-align:center;font-weight:800}
   #slip .s-pc>div:last-child{flex:1;min-width:0}
@@ -215,7 +220,7 @@ input{font-family:inherit}
 <div id="auth-screen">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Cutting List · v3.87.1</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Cutting List · v3.88.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Workshop Sign In</h2>
@@ -276,7 +281,7 @@ const firebaseConfig = {
   messagingSenderId: "460562943530",
   appId:             "1:460562943530:web:d89b913ec8e6ecd85e7d53"
 };
-const CUT_VERSION = 'v3.87.1';
+const CUT_VERSION = 'v3.88.0';
 
 document.getElementById('tb-ver').textContent = CUT_VERSION;
 const app  = initializeApp(firebaseConfig);
@@ -318,6 +323,8 @@ const TX = {
     showAll: n => `Show all ${n} done`,
     left: (n, p) => `${n} Nos to ${dept === 'lathe' ? 'turn' : dept === 'cnc' ? 'do on CNC' : 'cut'} · ${p} project${p === 1 ? '' : 's'}`,
     allDone: w => `All ${w.cut}`,
+    loose: 'Separate pieces',
+    grpCnt: (d, n, w) => `${d} / ${n} ${w.cut}`,
     markAs: w => `Mark as ${w.cut}`,
     selected: n => `${n} selected`,
     by: (w, who) => `${w.Cut}${who ? ' by ' + who : ''}`,
@@ -347,6 +354,8 @@ const TX = {
     showAll: n => `सभी ${n} पूरे देखें`,
     left: (n, p) => `${n} Nos ${dept === 'lathe' ? 'लेथ' : dept === 'cnc' ? 'CNC' : 'कटना'} बाकी · ${p} प्रोजेक्ट`,
     allDone: w => `सब ${w.cut}`,
+    loose: 'अलग पीस',
+    grpCnt: (d, n, w) => `${d} / ${n} ${w.cut}`,
     markAs: w => `${w.cut} मार्क करें`,
     selected: n => `${n} चुने`,
     by: (w, who) => `${w.Cut}${who ? ' — ' + who : ''}`,
@@ -433,6 +442,19 @@ const heldOf = c => nosOf(c.pieces.filter(isHeld));
 const workOf = c => nosOf(c.pieces.filter(p => !isHeld(p)));   // Nos to cut now
 const doneOf = c => nosOf(c.pieces.filter(isP));
 const isDone = c => c.pieces.every(isP);
+// Pieces under their product headings (c.groups, "Made of parts" in the office), then the separate pieces.
+// Lists without products show as before.
+function grouped(c, ps, head, row) {
+  const gs = [...(c.groups || [])].sort((a, b) => (a.pos ?? 0) - (b.pos ?? 0));
+  if (!gs.length) return ps.map(row).join('');
+  const ids = new Set(gs.map(g => g.id));
+  let h = '';
+  gs.forEach(g => { const gp = ps.filter(p => p.group === g.id); if (gp.length) h += head(g.name, gp, false) + gp.map(row).join(''); });
+  const loose = ps.filter(p => !ids.has(p.group));
+  if (loose.length) h += (h ? head(L().loose, loose, true) : '') + loose.map(row).join('');
+  return h;
+}
+const groupName = (c, p) => (c.groups || []).find(g => g.id === p.group)?.name || '';
 const daysLeft = d => { const t = new Date(); t.setHours(0,0,0,0); return Math.round((new Date(d + 'T00:00:00') - t) / 86400000); };
 // The office's priority order (rank, set by dragging cards in the orders app), then due date.
 const byDue = (a, b) => (a.rank ?? 1e12) - (b.rank ?? 1e12) || (a.deadline || '9999').localeCompare(b.deadline || '9999') || (a.orderNo || 0) - (b.orderNo || 0);
@@ -583,18 +605,21 @@ function renderDetail() {
     </div>
     ${c.notes ? `<div class="notes"><b>${L().notes}</b>${esc(c.notes)}</div>` : ''}
     <div class="prog"><div class="bar ${isDone(c) ? 'full' : ''}"><i style="width:${n ? Math.round(d / n * 100) : 0}%"></i></div><span>${L().ofCut(d, n, W())}</span>${h ? `<span class="hcnt">${L().heldN(h)}</span>` : ''}</div>
-    <div class="${selecting ? 'selecting' : ''}">${c.pieces.filter(p => !isHeld(p)).map(pieceRow).join('')}
-      ${h ? `<div class="hold-h">${L().holdSec(W())}</div>` + c.pieces.filter(isHeld).map(pieceRow).join('') : ''}
+    <div class="${selecting ? 'selecting' : ''}">${grouped(c, c.pieces.filter(p => !isHeld(p)),
+        (name, gp, lo) => `<div class="grp-h${lo ? ' lo' : ''}"><span>${esc(name)}</span><b>${L().grpCnt(nosOf(gp.filter(isP)), nosOf(gp), W())}</b></div>`, p => pieceRow(p))}
+      ${h ? `<div class="hold-h">${L().holdSec(W())}</div>` + c.pieces.filter(isHeld).map(p => pieceRow(p, groupName(c, p))).join('') : ''}
     </div>`;
   $('sel-count').textContent = L().selected(picked.size);
 }
-function pieceRow(p) {
+// `gname`: the product a held piece belongs to (held pieces are listed apart, at the end).
+function pieceRow(p, gname) {
   const held = isHeld(p);
   return `
       <button class="pc ${isP(p) ? 'done' : ''} ${held ? 'held' : ''} ${picked.has(p.id) ? 'picked' : ''}" onclick="tapPiece('${p.id}')">
         <span class="tick">${held ? svgPause : svgTick}</span>
         <span class="pc-info">
           <div class="pc-n">${esc(p.name) || L().piece}${dept === 'wood' && stepOf(p, lists.find(x => x.id === selId) || {}) ? ` <span class="tag">→ ${W(stepOf(p, lists.find(x => x.id === selId) || {})).label}</span>` : ''}</div>
+          ${gname ? `<div class="pc-w">${esc(gname)}</div>` : ''}
           ${p.wood ? `<div class="pc-w">${esc(p.wood)}</div>` : ''}
           ${p.note ? `<div class="pc-note">${esc(p.note)}</div>` : ''}
           ${isP(p) ? `<div class="pc-by">${esc(L().by(W(), p[K().by]))}${p[K().at] ? ' · ' + fmtStamp(p[K().at]) : ''}</div>`
@@ -684,12 +709,13 @@ window.printSlip = () => {
     ${c.deadline ? `<div class="s-c s-sub">${L().due(fmtDay(new Date(c.deadline + 'T00:00:00')))}</div>` : ''}
     <div class="s-rule"></div>
     ${c.notes ? `<div class="s-notes"><b>${L().notes}:</b> ${esc(c.notes)}</div><div class="s-rule"></div>` : ''}
-    ${[...c.pieces.filter(p => !isHeld(p)), ...c.pieces.filter(isHeld)].map(p => `<div class="s-pc ${isHeld(p) ? 's-held' : ''}"><div class="s-box">${isHeld(p) ? L().hold : isP(p) ? '✓' : ''}</div><div>
-      <div class="s-n">${esc(p.name) || L().piece}</div>
+    ${(() => { const sp = p => `<div class="s-pc ${isHeld(p) ? 's-held' : ''}"><div class="s-box">${isHeld(p) ? L().hold : isP(p) ? '✓' : ''}</div><div>
+      <div class="s-n">${esc(p.name) || L().piece}${isHeld(p) && groupName(c, p) ? ' · ' + esc(groupName(c, p)) : ''}</div>
       <div class="s-sz">${sizeHtml(p)}${sizeOf(p) ? ' ' : ''}<span class="s-q">× ${esc(p.qty || '1')} Nos</span></div>
       ${p.wood ? `<div class="s-w">${esc(p.wood)}</div>` : ''}
       ${p.note ? `<div class="s-w">${esc(p.note)}</div>` : ''}
-    </div></div>`).join('')}
+    </div></div>`;
+      return grouped(c, c.pieces.filter(p => !isHeld(p)), name => `<div class="s-g">${esc(name)}</div>`, sp) + c.pieces.filter(isHeld).map(sp).join(''); })()}
     <div class="s-tot">${L().total}: ${nosOf(c.pieces)} Nos</div>
     <div class="s-foot">${L().ofCut(doneOf(c), workOf(c), W())}${heldOf(c) ? ' · ' + L().heldN(heldOf(c)) : ''} · ${L().printed} ${fmtStamp(now)}</div>`;
   window.print();
