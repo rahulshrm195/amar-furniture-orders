@@ -79,6 +79,10 @@ A single-page PWA for tracking furniture orders. It is hosted on GitHub Pages (s
   - Cards show a clay "BIG" chip or a plain "Small" chip.
   - Dragging and the Move buttons only reorder cards of the same size (`sectionPeers`, `dropSpot`).
 - **Merged section** (v3.85.0): Plywood / Home, Modular Kitchen and Other orders share one section, "Plywood, Modular & Others" (`sec-ply`), and one KPI card, "Plywood & Others" (`kpi-ply`). The order types themselves stay separate, and Modular / Other cards show their type as a plain chip.
+- **Board view** (v3.86.0): a "View: List | Board" switch beside Sort, remembered per device (`af-view`, `setViewMode`). The Board shows each group as a column, side by side and scrolling sideways: Woodwork, Plywood & Others, Lathe, Timber, CNC, Ready, On Hold.
+  - The same full cards, headers, folding, size order, "Small jobs" and linked cards as the List view. `renderProjects` builds `groups` of header + cards, then stacks them (List) or wraps them in `.bcol` columns (Board).
+  - The Ready column shows the first `READY_PEEK` cards and a "Show all N" button (`_readyAll`). On Hold starts folded to its header.
+  - Dragging in a column drops above / below a card (vertical), and KPI cards and linked cards scroll the board to the column.
 - **Section ribbons** (v3.76.0): each section header on the list (`sectionHeader`) is a band in its type's soft colour with a 4px left stripe in the strong colour (`--sb` / `--sc`), so the sections are easy to tell apart while scrolling.
 - **Folding sections** (v3.83.0): tapping a section header (Woodwork … Ready) folds its cards away; a chevron shows the state. Folded ids are remembered per device in localStorage (`af-collapsed`, `toggleSection`, `isFolded`). The On Hold header is its View / Hide toggle (`_showHold`) and shows "N orders on hold"; there is no separate banner (v3.84.0). While searching every section stays open, and jumping to a section from a KPI card opens it.
 - **Priority order** (v3.73.0): each project has a numeric `rank`; within a section, lower ranks are shown first.
@@ -103,4 +107,5 @@ A single-page PWA for tracking furniture orders. It is hosted on GitHub Pages (s
 2. **"Paste items" box.** Fill an order's item rows from a pasted list.
 3. **Order numbers.** Confirm the existing orders were numbered from #1001.
 4. **Cut-list workflow change.** The owner will explain it later.
-5. **Firestore rules.** `isAdmin()` lists only rahulshrm195@gmail.com. Add rahul@ and father@amarfurniture.in if they should create orders.
+5. **Stage board.** A second board with one column per status (Order Taken → In Progress → Finishing → Ready), dragging a card to change status. A mock-up was made; the owner wants it later.
+6. **Firestore rules.** `isAdmin()` lists only rahulshrm195@gmail.com. Add rahul@ and father@amarfurniture.in if they should create orders.

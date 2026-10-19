@@ -12,7 +12,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.85.1 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
+/* ── v3.86.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -263,6 +263,19 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .sort-opt{padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--ink2);font-size:12px;font-weight:700}
 .sort-opt.on{background:var(--clay-soft);border-color:var(--clay);color:var(--clay)}
 .sort-hint{font-size:11.5px;color:var(--ink3);margin-left:6px}
+.sort-gap{width:14px}
+.view-seg{display:inline-flex;background:#EFEAE0;border-radius:20px;padding:3px}
+.view-seg button{padding:4px 13px;border-radius:16px;border:none;background:none;color:var(--ink2);font-size:12px;font-weight:800}
+.view-seg button.on{background:var(--surface);color:var(--clay);box-shadow:0 1px 3px rgba(26,24,18,.12)}
+/* Board view: one column per project type (full cards), scrolling sideways when they don't fit */
+.board{grid-column:1/-1;display:flex;gap:14px;align-items:flex-start;overflow-x:auto;padding-bottom:10px;scroll-snap-type:x proximity}
+.bcol{flex:0 0 min(360px,86vw);min-width:0;scroll-snap-align:start;background:#F2EEE4;border-radius:16px;padding:0 0 10px}
+.bcol>.section-header{margin:0 0 4px;border-radius:16px 16px 10px 10px}
+.bcol-body{display:flex;flex-direction:column;gap:12px;padding:6px 8px 0}
+.bcol-body:empty{display:none}
+.bcol-body>*{min-width:0;max-width:100%}
+.bcol-body .size-divider{margin:2px 0 -4px}
+.col-more{border:1.5px dashed var(--border);background:none;border-radius:10px;padding:10px;color:var(--clay);font-weight:700;font-size:13px}
 .order-card.movable{cursor:grab}
 .order-card.dragging{opacity:.45}
 .order-card.drop-before,.order-card.drop-after{outline:2px dashed var(--clay);outline-offset:4px}
@@ -549,7 +562,7 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.85.1</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.86.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -1169,7 +1182,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.85.1';
+const APP_VERSION = 'v3.86.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -1740,6 +1753,7 @@ function jumpToCard(id) {
   if (sec && window._collapsed.has(sec.id)) toggleSection(sec.id);
   const el = document.getElementById('card-' + id); if (!el) return;
   scrollToEl(el);
+  el.closest('.board')?.scrollTo({ left: el.closest('.bcol').offsetLeft - 4, behavior: 'smooth' });
   el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
 }
 
@@ -1805,8 +1819,18 @@ function setSortMode(m) {
 }
 function sortBar() {
   const b = (m, lbl) => `<button class="sort-opt ${window._sortMode === m ? 'on' : ''}" onclick="setSortMode('${m}')">${lbl}</button>`;
+  const v = (m, lbl) => `<button class="${window._viewMode === m ? 'on' : ''}" onclick="setViewMode('${m}')">${lbl}</button>`;
   const hint = window._isAdmin && window._sortMode === 'mine' ? `<span class="sort-hint">Drag cards to set priority</span>` : '';
-  return `<div class="sort-bar"><span class="sort-lbl">Sort</span>${b('mine', 'My order')}${b('due', 'Due date')}${b('order', 'Order date')}${hint}</div>`;
+  return `<div class="sort-bar"><span class="sort-lbl">View</span><span class="view-seg">${v('list', 'List')}${v('board', 'Board')}</span><span class="sort-gap"></span><span class="sort-lbl">Sort</span>${b('mine', 'My order')}${b('due', 'Due date')}${b('order', 'Order date')}${hint}</div>`;
+}
+// List (sections stacked) or Board (one column per project type, then Ready and On Hold). Remembered per device.
+const READY_PEEK = 4;
+window._viewMode = 'list';
+try { if (localStorage.getItem('af-view') === 'board') window._viewMode = 'board'; } catch {}
+function setViewMode(m) {
+  window._viewMode = m;
+  try { localStorage.setItem('af-view', m); } catch {}
+  renderProjects();
 }
 
 // ── Moving cards (admins, "My order" only): drag on desktop, Move buttons in the card details on phones ──
@@ -1861,7 +1885,8 @@ function dropSpot(e) {
   const a = (window._projects || []).find(x => x.id === _dragId), b = (window._projects || []).find(x => x.id === card.id.slice(5));
   if (!a || !b || sectionOf(a) !== sectionOf(b) || jobSize(a) !== jobSize(b)) return null;   // only within the same section and size
   const r = card.getBoundingClientRect();
-  return { card, target: b, after: e.clientX > r.left + r.width / 2 };
+  // Board columns stack cards top to bottom; the List view's grid runs left to right
+  return { card, target: b, after: card.closest('.bcol') ? e.clientY > r.top + r.height / 2 : e.clientX > r.left + r.width / 2 };
 }
 document.addEventListener('dragover', e => {
   if (!_dragId) return;
@@ -1942,27 +1967,37 @@ function renderProjects() {
       return;
     }
 
+    // Each group is a header + its cards: stacked in the List view, side by side as columns in the Board view.
+    const board = window._viewMode === 'board';
+    const groups = [];
     SECTIONS.forEach(sec => {
       const ps = bySize(activeAll.filter(sec.match));
       const links = sortList(linkedFor(sec.id, activeAll));
       if (!ps.length && !links.length && q) return;   // while searching, hide empty sections
-      html += sectionHeader(sec.ico, sec.bg, sec.color, sec.label, ps.length + ' running' + (links.length ? ` \u00B7 ${links.length} linked` : ''), !ps.length && !links.length, sec.id);
-      if (!q && isFolded(sec.id)) return;
+      const h = sectionHeader(sec.ico, sec.bg, sec.color, sec.label, ps.length + ' running' + (links.length ? ` \u00B7 ${links.length} linked` : ''), !ps.length && !links.length, sec.id);
+      if (!q && isFolded(sec.id)) { groups.push({ h, b: '' }); return; }
       const firstSmall = ps.findIndex(x => jobSize(x) === 's');
-      html += ps.length ? ps.map((x, i) => (i === firstSmall && i > 0 ? '<div class="size-divider">Small jobs</div>' : '') + buildCard(x)).join('') : links.length ? '' : `<div class="section-empty">${sec.empty}</div>`;
-      if (links.length) html += (ps.length ? '<div class="size-divider">Linked from other orders</div>' : '') + links.map(x => linkedCard(x, sec.id)).join('');
+      let b = ps.length ? ps.map((x, i) => (i === firstSmall && i > 0 ? '<div class="size-divider">Small jobs</div>' : '') + buildCard(x)).join('') : links.length ? '' : `<div class="section-empty">${sec.empty}</div>`;
+      if (links.length) b += (ps.length ? '<div class="size-divider">Linked from other orders</div>' : '') + links.map(x => linkedCard(x, sec.id)).join('');
+      groups.push({ h, b });
     });
 
     if (readyAll.length) {
-      html += sectionHeader('box', '#F2E7CE', '#8B6B2E', T('groupReady'), readyAll.length + (readyAll.length === 1 ? ' order' : ' orders'), false, 'sec-ready');
-      if (q || !isFolded('sec-ready')) html += readyAll.map(buildCard).join('');
+      const h = sectionHeader('box', '#F2E7CE', '#8B6B2E', T('groupReady'), readyAll.length + (readyAll.length === 1 ? ' order' : ' orders'), false, 'sec-ready');
+      // On the board the Ready column shows the first few, with "Show all" for the rest
+      const cut = board && !q && !window._readyAll && readyAll.length > READY_PEEK;
+      const b = q || !isFolded('sec-ready') ? (cut ? readyAll.slice(0, READY_PEEK) : readyAll).map(buildCard).join('')
+        + (cut ? `<button class="col-more" onclick="window._readyAll=true;renderProjects()">Show all ${readyAll.length} \u2192</button>` : '') : '';
+      groups.push({ h, b });
     }
     if (onHoldAll.length) {
       const n = onHoldAll.length, open = window._showHold || !!q;
       // The header itself folds / opens the group (no separate banner)
-      html += sectionHeader('hold', '#F2E7CE', '#9C7A1E', T('groupOnHold'), n + (n === 1 ? ' order' : ' orders') + ' on hold', false, 'sec-hold');
-      if (open) html += onHoldAll.map(buildCard).join('');
+      groups.push({ h: sectionHeader('hold', '#F2E7CE', '#9C7A1E', T('groupOnHold'), n + (n === 1 ? ' order' : ' orders') + ' on hold', false, 'sec-hold'),
+        b: open ? onHoldAll.map(buildCard).join('') : '' });
     }
+    html += board ? `<div class="board">${groups.map(g => `<div class="bcol">${g.h}<div class="bcol-body">${g.b}</div></div>`).join('')}</div>`
+      : groups.map(g => g.h + g.b).join('');
     list.innerHTML = html;
     return;
   }
@@ -2034,6 +2069,7 @@ function goKpi(key) {
   const el = document.getElementById(ids[key]);
   if (!el) { showToast(key === 'ready' ? 'No orders are ready to deliver' : 'No orders on hold'); return; }
   scrollToEl(el);
+  el.closest('.board')?.scrollTo({ left: el.closest('.bcol').offsetLeft - 4, behavior: 'smooth' });   // Board: bring the column into view
   el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
 }
 
