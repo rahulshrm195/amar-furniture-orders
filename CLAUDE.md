@@ -78,6 +78,7 @@ A single-page PWA for tracking furniture orders. It is hosted on GitHub Pages (s
   - Cards show a clay "BIG" chip or a plain "Small" chip.
   - Dragging and the Move buttons only reorder cards of the same size (`sectionPeers`, `dropSpot`).
 - **Section ribbons** (v3.76.0): each section header on the list (`sectionHeader`) is a band in its type's soft colour with a 4px left stripe in the strong colour (`--sb` / `--sc`), so the sections are easy to tell apart while scrolling.
+- **Folding sections** (v3.83.0): tapping a section header (Woodwork … Ready) folds its cards away; a chevron shows the state. Folded ids are remembered per device in localStorage (`af-collapsed`, `toggleSection`, `isFolded`). The On Hold header works the same View / Hide toggle as its banner (`_showHold`). While searching every section stays open, and jumping to a section from a KPI card opens it.
 - **Priority order** (v3.73.0): each project has a numeric `rank`; within a section, lower ranks are shown first.
   - Ranks were backfilled once in due-date order (`backfillRanks`). New orders get `_nextRank()`, which puts them at the end.
   - The sort switch above the list offers "My order" (rank), "Due date" or "Order date". It is remembered in localStorage (`af-sort`).
