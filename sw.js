@@ -1,5 +1,5 @@
-// AF Orders Service Worker — v1.3.95
-const CACHE = 'af-orders-v1.3.95';
+// AF Orders Service Worker — v1.3.96
+const CACHE = 'af-orders-v1.3.96';
 const ASSETS = ['/', '/index.html', '/cut/', '/cut/manifest.json', '/manifest.json', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png'];
 
 // ── INSTALL ──
