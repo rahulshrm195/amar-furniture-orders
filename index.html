@@ -12,7 +12,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.86.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
+/* ── v3.86.1 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -562,7 +562,7 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.86.0</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.86.1</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -1068,9 +1068,9 @@ window.saveProject = async function() {
   {
     document.querySelectorAll('#items-edit-list .item-edit-row').forEach(row => {
       const name = row.querySelector('.item-name-inp').value.trim();
-      const l    = row.querySelector('.item-l-inp').value.trim();
-      const b    = row.querySelector('.item-b-inp').value.trim();
-      const w    = row.querySelector('.item-w-inp').value.trim();
+      const l    = tidySize(row.querySelector('.item-l-inp').value);
+      const b    = tidySize(row.querySelector('.item-b-inp').value);
+      const w    = tidySize(row.querySelector('.item-w-inp').value);
       const qty  = row.querySelector('.item-qty-inp').value.trim();
       const unit = row.querySelector('.item-unit-sel').value;
       const note = row.querySelector('.item-note-inp').value.trim();
@@ -1182,7 +1182,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.86.0';
+const APP_VERSION = 'v3.86.1';
 
 // -- LANGUAGE --
 const LANG = {
@@ -1538,12 +1538,31 @@ function fracStr(n, d) {
 }
 function fmtSize(v) {
   const s = String(v ?? '').trim();
-  let m = s.match(/^(\d+)?\s*(?:(\d+)\/(\d+))$/) || s.match(/^(\d+)[\s-]+(\d+)\/(\d+)$/);
+  let m = s.match(/^(?:(\d+)\s+)?(\d+)\/(\d+)$/) || s.match(/^(\d+)[\s-]+(\d+)\/(\d+)$/);
   if (m && +m[3]) return fracStr((+m[1] || 0) * +m[3] + +m[2], +m[3]);
   m = s.match(/^(\d*)\.(\d+)$/);
   if (m) { const x = parseFloat(s), sixteenths = Math.round(x * 16); if (Math.abs(x * 16 - sixteenths) < 1e-6) return fracStr(sixteenths, 16); }
   return s;
 }
+
+// The size boxes tidy what was typed into the same plain form, so 34.5, 69/2 and 34-1/2 are all saved as "34 1/2"
+// (only for exact sixteenths; anything else, like 34.3, is left as typed). Applied when a box is left, when a
+// form opens and on save. fmtSize still turns it into 34 ½ on screen.
+function tidySize(v) {
+  const s = String(v ?? '').trim();
+  let n, d = 16;
+  let m = s.match(/^(?:(\d+)\s+)?(\d+)\/(\d+)$/) || s.match(/^(\d+)[\s-]+(\d+)\/(\d+)$/);
+  if (m && +m[3]) { d = +m[3]; n = (+m[1] || 0) * d + +m[2]; }
+  else if ((m = s.match(/^(\d*)\.(\d+)$/))) { const x = parseFloat(s); n = Math.round(x * 16); if (Math.abs(x * 16 - n) > 1e-6) return s; }
+  else return s;
+  const g = (a, b) => b ? g(b, a % b) : a, k = g(n, d); n /= k; d /= k;
+  const whole = Math.floor(n / d), r = n - whole * d;
+  return r ? (whole ? whole + ' ' : '') + r + '/' + d : String(whole);
+}
+const SIZE_BOXES = '.item-l-inp, .item-b-inp, .item-w-inp, .cut-l, .cut-w, .cut-t';
+document.addEventListener('change', e => {
+  if (e.target.matches?.(SIZE_BOXES)) e.target.value = tidySize(e.target.value);
+});
 
 function escHtml(s) {
   if (!s) return '';
@@ -2640,7 +2659,7 @@ function openEditModal(id) {
   if (folderTog) folderTog.style.display = 'none';
   document.getElementById('other-label-inp').value     = p.otherLabel || '';
   document.getElementById('items-edit-list').innerHTML = '';
-  (p.items || []).forEach(it => addItemRow(it.name, it.l||'', it.b||'', it.w||'', it.qty, it.unit||'Nos', it.note||''));
+  (p.items || []).forEach(it => addItemRow(it.name, tidySize(it.l), tidySize(it.b), tidySize(it.w), it.qty, it.unit||'Nos', it.note||''));
   selectType(p.projectType || 'woodwork');
   window._editStatus = p.status ?? 0;
   renderStatusSel('status-selector-opts', p.status ?? 0, false);
@@ -2874,7 +2893,7 @@ function openCutModal(id) {
 function copyItemsToCut() {
   const p = (window._projects || []).find(x => x.id === window._cutId); if (!p?.items?.length) return;
   const list = document.getElementById('cut-list-edit');
-  const key = (n, l, w, t) => [n, l, w, t].map(v => String(v || '').trim().toLowerCase()).join('|');
+  const key = (n, l, w, t) => [n, l, w, t].map(v => tidySize(v).toLowerCase()).join('|');
   const have = new Set();
   [...list.querySelectorAll('.item-edit-row')].forEach(row => {
     const v = cls => row.querySelector('.' + cls).value.trim();
@@ -2885,7 +2904,7 @@ function copyItemsToCut() {
   let n = 0;
   p.items.forEach(it => {
     if (have.has(key(it.name, it.l, it.b, it.w))) return;
-    addCutRow({ id: Math.random().toString(36).slice(2, 10), name: it.name, l: it.l, w: it.b, t: it.w, qty: it.qty, note: it.note || '' });
+    addCutRow({ id: Math.random().toString(36).slice(2, 10), name: it.name, l: tidySize(it.l), w: tidySize(it.b), t: tidySize(it.w), qty: it.qty, note: it.note || '' });
     n++;
   });
   showToast(n ? `Copied ${n} item${n === 1 ? '' : 's'} \u2014 check and save` : 'All order items are already on the cut list');
@@ -2911,7 +2930,7 @@ function addCutRow(pc = {}) {
       <button class="item-del-btn" aria-label="Remove piece" onclick="removeItemRow(this)">${svgi('close', 13, 2)}</button>
     </div>
     <div class="item-edit-row-dims">
-      ${dim('L (in)', 'cut-l', pc.l, '—', 'l')}${dim('W (in)', 'cut-w', pc.w, '—', 'w')}${dim('T (in)', 'cut-t', pc.t, '—', 't')}${dim('Qty', 'cut-q', pc.qty, '1')}
+      ${dim('L (in)', 'cut-l', tidySize(pc.l), '—', 'l')}${dim('W (in)', 'cut-w', tidySize(pc.w), '—', 'w')}${dim('T (in)', 'cut-t', tidySize(pc.t), '—', 't')}${dim('Qty', 'cut-q', pc.qty, '1')}
       <div class="item-dim-wrap"><div class="item-dim-label">Wood</div><input class="item-dim-inp cut-wood" type="text" placeholder="e.g. Teak" value="${escHtml(pc.wood || '')}"></div>
     </div>
     <input class="item-note-inp cut-note" type="text" autocomplete="off" placeholder="Note for the workshop (optional)" value="${escHtml(pc.note || '')}">
@@ -2938,7 +2957,7 @@ async function saveCutList() {
   const p = (window._projects || []).find(x => x.id === id); if (!p) return;
   const val = (row, cls) => row.querySelector('.' + cls).value.trim().replace(/["\u201D]+$/, '').trim();
   const pieces = [...document.querySelectorAll('#cut-list-edit .item-edit-row')]
-    .map(row => ({ id: row.dataset.id, name: val(row, 'cut-name'), l: val(row, 'cut-l'), w: val(row, 'cut-w'), t: val(row, 'cut-t'), qty: val(row, 'cut-q') || '1', wood: val(row, 'cut-wood'),
+    .map(row => ({ id: row.dataset.id, name: val(row, 'cut-name'), l: tidySize(val(row, 'cut-l')), w: tidySize(val(row, 'cut-w')), t: tidySize(val(row, 'cut-t')), qty: val(row, 'cut-q') || '1', wood: val(row, 'cut-wood'),
       note: row.querySelector('.cut-note').value.trim(),
       // Only a step that differs from the order's type is stored, so the rest keep following the type.
       ...(row.querySelector('.cut-step').value !== defaultStep(p) ? { step: row.querySelector('.cut-step').value } : {}),
