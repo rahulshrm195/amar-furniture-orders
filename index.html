@@ -12,7 +12,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.87.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
+/* ── v3.87.1 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -422,6 +422,9 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
 .item-note-inp{width:100%;margin-top:8px;background:var(--ivory);border:1px solid var(--border);border-radius:8px;padding:7px 11px;color:var(--ink);font-size:12.5px;outline:none}
 .item-note-inp:focus{border-color:var(--clay)}
 .items-head{display:none}
+.items-lbl{display:flex;align-items:baseline}
+.items-link{margin-left:auto;border:none;background:none;padding:0;color:var(--clay);font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;cursor:pointer}
+.items-link:hover{text-decoration:underline}
 .items-sum{text-transform:none;letter-spacing:0;font-weight:700;color:var(--ink3);margin-left:6px}
 .toggle-row:has(#create-folder-toggle[style*="none"]) #on-hold-toggle{grid-column:1/-1}
 .dt-note{display:block;font-weight:500;font-size:11.5px;color:var(--ink2);margin-top:1px}
@@ -562,7 +565,7 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.87.0</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.87.1</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -725,12 +728,11 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
         </div>
 
         <div class="field" id="items-field">
-          <label>Items &amp; Qty <span class="items-sum" id="items-sum"></span></label>
+          <div class="items-lbl"><label>Items &amp; Qty <span class="items-sum" id="items-sum"></span></label><button type="button" class="items-link" id="items-from-cut" style="display:none" onclick="copyCutToItems()">Copy items from cut list</button></div>
           <div class="items-box" oninput="updateItemsSum()" onchange="updateItemsSum()">
             <div class="items-head"><span>#</span><span>Item</span><span>L (in)</span><span>B (in)</span><span>W (in)</span><span>Qty</span><span>Unit</span><span>Note for this item</span><span></span></div>
             <div class="items-list-edit" id="items-edit-list"></div>
             <button class="add-item-btn" title="Tip: press Enter in an item row to add the next item" onclick="addItemRow()">＋ Add Item</button>
-            <button class="add-item-btn" id="items-from-cut" style="display:none;margin-top:8px" onclick="copyCutToItems()">Copy items from cut list</button>
           </div>
         </div>
 
@@ -811,6 +813,13 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
       <div class="on-hold-toggle-left">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4.2l2 2.2H19a1.5 1.5 0 0 1 1.5 1.5v7.8A1.5 1.5 0 0 1 19 19H5a1.5 1.5 0 0 1-1.5-1.5v-10Z"/></svg>
         <div class="on-hold-toggle-text"><strong>Auto-create Drive folders</strong><span>Copy the project template folder for every new order</span></div>
+      </div>
+      <div class="toggle-switch"></div>
+    </div>
+    <div class="on-hold-toggle" id="copyback-toggle" onclick="toggleCopyBack()" style="margin-top:10px">
+      <div class="on-hold-toggle-left">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 15 14 4.5h5.5V10L9 20.5H3.5Z"/><path d="M6.5 15.5l1.5 1.5M9 13l1.5 1.5M11.5 10.5 13 12M14 8l1.5 1.5"/></svg>
+        <div class="on-hold-toggle-text"><strong>Copy items from cut list</strong><span>Show the link in the order form that replaces an order's items with its cut list</span></div>
       </div>
       <div class="toggle-switch"></div>
     </div>
@@ -1183,7 +1192,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.87.0';
+const APP_VERSION = 'v3.87.1';
 
 // -- LANGUAGE --
 const LANG = {
@@ -1326,6 +1335,15 @@ const DRIVE_FOLDER_WEBHOOK = 'https://script.google.com/macros/s/AKfycbwZxNY2brg
 // stored in Firestore so it applies everywhere immediately, without editing
 // or redeploying the app. Defaults to on when the settings doc doesn't exist
 // yet or hasn't loaded.
+// "Copy items from cut list" in the order form can be switched off in Settings (on unless turned off).
+const isCopyBackOn = () => window._settings?.copyItemsFromCut !== false;
+window.toggleCopyBack = async function() {
+  const next = !isCopyBackOn();
+  try {
+    await _setDoc(_doc(_db, 'settings', 'app'), { copyItemsFromCut: next }, { merge: true });
+    showToast(next ? '"Copy items from cut list" shown' : '"Copy items from cut list" hidden');
+  } catch (err) { showToast('Could not save setting: ' + (err?.code || err?.message || 'unknown error')); }
+};
 function isDriveAutomationOn() {
   return window._settings?.driveFolderAutomation !== false;
 }
@@ -2671,7 +2689,7 @@ function openEditModal(id) {
   if (folderTog) folderTog.style.display = 'none';
   document.getElementById('other-label-inp').value     = p.otherLabel || '';
   document.getElementById('items-edit-list').innerHTML = '';
-  document.getElementById('items-from-cut').style.display = window._isAdmin && window._cutlists[id]?.pieces?.length ? '' : 'none';
+  document.getElementById('items-from-cut').style.display = window._isAdmin && isCopyBackOn() && window._cutlists[id]?.pieces?.length ? '' : 'none';
   (p.items || []).forEach(it => addItemRow(it.name, prettySize(it.l), prettySize(it.b), prettySize(it.w), it.qty, it.unit||'Nos', it.note||''));
   selectType(p.projectType || 'woodwork');
   window._editStatus = p.status ?? 0;
@@ -3012,6 +3030,7 @@ window.closeSettingsModal = function() { document.getElementById('settings-modal
 
 function updateSettingsModalUI() {
   document.getElementById('drive-automation-toggle')?.classList.toggle('active', isDriveAutomationOn());
+  document.getElementById('copyback-toggle')?.classList.toggle('active', isCopyBackOn());
   const cp = document.getElementById('cp-list');
   if (cp) cp.innerHTML = (window._carpenters || []).map((n, i) =>
     `<span class="cp-chip">${escHtml(n)}<button aria-label="Remove ${escHtml(n)}" onclick="removeCarpenter(${i})">${svgi('close', 11, 2)}</button></span>`).join('');
