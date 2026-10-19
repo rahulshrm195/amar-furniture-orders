@@ -12,7 +12,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.83.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
+/* ── v3.84.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -280,6 +280,12 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 /* ── Order card ── */
 .order-card{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--tone);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:9px}
 .order-card.archived{opacity:.65}
+.order-card.linked{background:var(--ivory);border:1.5px dashed var(--tone);border-left:4px dashed var(--tone);cursor:pointer;gap:7px}
+.order-card.linked:hover{background:var(--surface)}
+.order-card.linked:focus-visible{outline:2px solid var(--clay);outline-offset:2px}
+.lk-tag{align-self:flex-start;font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--tone);background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:2px 9px}
+.lk-pcs{border-top:1px dashed var(--border);padding-top:2px}
+.order-card.flash{animation:secflash 1.6s ease-out}
 .oc-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
 .oc-top>div:first-child{min-width:0}
 .ono{color:var(--ink3);font-weight:600;font-size:12px;margin-right:6px;font-variant-numeric:tabular-nums}
@@ -543,7 +549,7 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.83.0</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.84.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -1164,7 +1170,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.83.0';
+const APP_VERSION = 'v3.84.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -1693,6 +1699,49 @@ function buildCard(p) {
   </div>`;
 }
 
+// ── Linked cards: a Woodwork (or other) order whose pieces go on to Lathe / CNC also shows, as a dashed
+// "part of #…" card, at the end of the Lathe / CNC section, with only that department's pieces. It is a pointer,
+// not a second order: no actions, a tap jumps to the main card, and it goes once that department's pieces are done.
+const LINK_STEP = { 'sec-lathe': { step: 'lathe', f: 'turned', by: 'turnedBy', lbl: 'Turned' }, 'sec-cnc': { step: 'cnc', f: 'cnc', by: 'cncBy', lbl: 'CNC' } };
+function linkedFor(secId, active) {
+  const k = LINK_STEP[secId]; if (!k) return [];
+  return active.filter(p => defaultStep(p) !== k.step && (window._cutlists[p.id]?.pieces || []).some(pc => pieceStep(pc, p) === k.step && !pc[k.f]));
+}
+function linkedCard(p, secId) {
+  const k = LINK_STEP[secId], sec = SECTIONS.find(x => x.id === secId);
+  const pcs = (window._cutlists[p.id]?.pieces || []).filter(pc => pieceStep(pc, p) === k.step);
+  const nos = ps => Math.round(ps.reduce((t, x) => t + (parseFloat(x.qty) || 1), 0) * 100) / 100;
+  const days = daysLeft(p.deadline);
+  const daysText = days < 0 ? Math.abs(days) + 'd' : days === 0 ? 'Today' : days + 'd';
+  const daysLbl  = days < 0 ? T('daysOverdue') : days === 0 ? T('daysDue') : T('daysLeft');
+  const d = nos(pcs.filter(x => x[k.f])), n = nos(pcs);
+  const st = (ok, by, lbl) => `<span class="cp-st${ok ? ' ok' : ''}" title="${ok && by ? escHtml(lbl + ' by ' + by) : ''}">${ok ? '\u2713 ' : ''}${lbl}</span>`;
+  const rows = pcs.map(pc => {
+    const dims = [pc.l, pc.w, pc.t].filter(Boolean).map(fmtSize).join(' × ');
+    return `<div class="dt-item"><div class="dt-item-n">${escHtml(pc.name || 'Piece')}</div>${dims ? `<div class="dt-item-d">${escHtml(dims)}</div>` : ''}<div class="dt-item-q">${escHtml(pc.qty || '1')} Nos</div>`
+      + `<div class="cp-sts">${pc.hold && !pc[k.f] ? '<span class="cp-st held">On hold</span>' : st(pc.done, pc.doneBy, 'Cut') + st(pc[k.f], pc[k.by], k.lbl)}</div></div>`;
+  }).join('');
+  return `<div class="order-card linked" style="--tone:${sec.color}" role="button" tabindex="0" title="Open the main order" onclick="jumpToCard('${p.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();jumpToCard('${p.id}')}">
+    <div class="lk-tag">\u21B3 Part of ${p.orderNo ? '#' + p.orderNo : 'order'} \u00B7 ${escHtml(typeLabelOf(p))}</div>
+    <div class="oc-top">
+      <div><div class="oc-name">${p.orderNo ? `<span class="ono">#${p.orderNo}</span>` : ''}${escHtml(p.client)}</div>
+        <div class="oc-desc ${p.item ? '' : 'none'}">${p.item ? escHtml(p.item) : 'No description'}</div></div>
+      <div class="oc-days"><div class="oc-days-n">${daysText}</div><div class="oc-days-l">${daysLbl}</div></div>
+    </div>
+    <div class="oc-chips"><div class="chip plain">Due ${p.deadline ? fmtDay(new Date(p.deadline + 'T00:00:00')) : ''}</div><div class="chip cut${d === n ? ' full' : ''}">${svgi('saw', 11, 2)} ${k.lbl} ${d}/${n}</div></div>
+    <div class="lk-pcs">${rows}</div>
+  </div>`;
+}
+// Linked card → the main order's card: opens its section if folded, scrolls to it and flashes it.
+function jumpToCard(id) {
+  const p = (window._projects || []).find(x => x.id === id); if (!p) return;
+  const sec = sectionOf(p);
+  if (sec && window._collapsed.has(sec.id)) toggleSection(sec.id);
+  const el = document.getElementById('card-' + id); if (!el) return;
+  scrollToEl(el);
+  el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+}
+
 // ── SECTIONS ──
 // Tapping a section header folds it away (remembered per device in af-collapsed); On Hold uses its own View / Hide.
 window._collapsed = new Set();
@@ -1894,11 +1943,13 @@ function renderProjects() {
 
     SECTIONS.forEach(sec => {
       const ps = bySize(activeAll.filter(sec.match));
-      if (!ps.length && q) return;            // while searching, hide empty sections
-      html += sectionHeader(sec.ico, sec.bg, sec.color, sec.label, ps.length + ' running', !ps.length, sec.id);
+      const links = sortList(linkedFor(sec.id, activeAll));
+      if (!ps.length && !links.length && q) return;   // while searching, hide empty sections
+      html += sectionHeader(sec.ico, sec.bg, sec.color, sec.label, ps.length + ' running' + (links.length ? ` \u00B7 ${links.length} linked` : ''), !ps.length && !links.length, sec.id);
       if (!q && isFolded(sec.id)) return;
       const firstSmall = ps.findIndex(x => jobSize(x) === 's');
-      html += ps.length ? ps.map((x, i) => (i === firstSmall && i > 0 ? '<div class="size-divider">Small jobs</div>' : '') + buildCard(x)).join('') : `<div class="section-empty">${sec.empty}</div>`;
+      html += ps.length ? ps.map((x, i) => (i === firstSmall && i > 0 ? '<div class="size-divider">Small jobs</div>' : '') + buildCard(x)).join('') : links.length ? '' : `<div class="section-empty">${sec.empty}</div>`;
+      if (links.length) html += (ps.length ? '<div class="size-divider">Linked from other orders</div>' : '') + links.map(x => linkedCard(x, sec.id)).join('');
     });
 
     if (readyAll.length) {
@@ -1907,8 +1958,8 @@ function renderProjects() {
     }
     if (onHoldAll.length) {
       const n = onHoldAll.length, open = window._showHold || !!q;
-      html += sectionHeader('hold', '#F2E7CE', '#9C7A1E', T('groupOnHold'), n + (n === 1 ? ' order' : ' orders'), false, 'sec-hold');
-      html += `<div class="section-banner">${svgi('hold', 16, 1.9)}<div class="sb-text">${n} ${n === 1 ? 'order is' : 'orders are'} currently on hold</div>${q ? '' : `<button onclick="toggleHold()">${open ? 'Hide ↑' : 'View →'}</button>`}</div>`;
+      // The header itself folds / opens the group (no separate banner)
+      html += sectionHeader('hold', '#F2E7CE', '#9C7A1E', T('groupOnHold'), n + (n === 1 ? ' order' : ' orders') + ' on hold', false, 'sec-hold');
       if (open) html += onHoldAll.map(buildCard).join('');
     }
     list.innerHTML = html;
