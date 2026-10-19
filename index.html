@@ -12,7 +12,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.84.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
+/* ── v3.85.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -549,7 +549,7 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.84.0</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.85.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -605,11 +605,10 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
   <!-- KPI strip -->
   <div class="kpi-strip">
     <div class="kpi kpi-link" role="button" tabindex="0" onclick="goKpi('wood')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goKpi('wood')}" style="--kc:var(--clay)"><div class="kpi-head"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg><span class="kpi-lbl">Woodwork</span></div><div class="kpi-num" id="kpi-wood">0</div></div>
-    <div class="kpi kpi-link" role="button" tabindex="0" onclick="goKpi('ply')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goKpi('ply')}" style="--kc:#4E7DB5"><div class="kpi-head"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10.5V20h12v-9.5"/></svg><span class="kpi-lbl">Plywood</span></div><div class="kpi-num" id="kpi-ply">0</div></div>
+    <div class="kpi kpi-link" role="button" tabindex="0" onclick="goKpi('ply')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goKpi('ply')}" style="--kc:#4E7DB5"><div class="kpi-head"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10.5V20h12v-9.5"/></svg><span class="kpi-lbl">Plywood &amp; Others</span></div><div class="kpi-num" id="kpi-ply">0</div></div>
     <div class="kpi kpi-link" role="button" tabindex="0" onclick="goKpi('lathe')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goKpi('lathe')}" style="--kc:#5C8A6B"><div class="kpi-head"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M21.5 12h-3M5.5 12h-3M18.5 5.5l-2.1 2.1M7.6 16.4l-2.1 2.1M18.5 18.5l-2.1-2.1M7.6 7.6 5.5 5.5"/></svg><span class="kpi-lbl">Lathe</span></div><div class="kpi-num" id="kpi-lathe">0</div></div>
     <div class="kpi kpi-link" role="button" tabindex="0" onclick="goKpi('timber')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goKpi('timber')}" style="--kc:#8A5A2B"><div class="kpi-head"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7.5" r="3.5"/><circle cx="7" cy="16" r="3.5"/><circle cx="17" cy="16" r="3.5"/><circle cx="12" cy="7.5" r=".9"/><circle cx="7" cy="16" r=".9"/><circle cx="17" cy="16" r=".9"/></svg><span class="kpi-lbl">Timber</span></div><div class="kpi-num" id="kpi-timber">0</div></div>
     <div class="kpi kpi-link" role="button" tabindex="0" onclick="goKpi('cnc')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goKpi('cnc')}" style="--kc:#3F6E8C"><div class="kpi-head"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="15" width="17" height="5" rx="1.2"/><path d="M9 3.5h6v4H9Z"/><path d="M12 7.5v3.5"/><path d="m10.5 11 1.5 2.5 1.5-2.5"/></svg><span class="kpi-lbl">CNC</span></div><div class="kpi-num" id="kpi-cnc">0</div></div>
-    <div class="kpi kpi-link" role="button" tabindex="0" onclick="goKpi('modular')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goKpi('modular')}" style="--kc:var(--ink3)"><div class="kpi-head"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.2"/></svg><span class="kpi-lbl">Modular &amp; Others</span></div><div class="kpi-num" id="kpi-modular">0</div></div>
     <div class="kpi kpi-link" role="button" tabindex="0" onclick="goKpi('ready')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goKpi('ready')}" style="--kc:#8B6B2E"><div class="kpi-head"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8 12 3.5 20.5 8 12 12.5 3.5 8Z"/><path d="M3.5 8v9L12 21l8.5-4V8"/><path d="M12 12.5V21"/></svg><span class="kpi-lbl">Ready</span></div><div class="kpi-num" id="kpi-ready">0</div></div>
     <div class="kpi kpi-link" role="button" tabindex="0" onclick="goKpi('hold')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goKpi('hold')}" style="--kc:#9C7A1E"><div class="kpi-head"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg><span class="kpi-lbl">On Hold</span></div><div class="kpi-num" id="kpi-hold">0</div></div>
     <div class="kpi kpi-link" role="button" tabindex="0" onclick="goKpi('drawing')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goKpi('drawing')}" style="--kc:#6E3F94"><div class="kpi-head"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20 4.8 16.2 15.6 5.4a1.8 1.8 0 0 1 2.5 0l0.5 0.5a1.8 1.8 0 0 1 0 2.5L7.8 19.2 4 20Z"/></svg><span class="kpi-lbl">Drawing pending</span></div><div class="kpi-num" id="kpi-drawing">0</div></div>
@@ -1170,7 +1169,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.84.0';
+const APP_VERSION = 'v3.85.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -1581,6 +1580,8 @@ function buildCard(p) {
       : `<div class="chip warn">${svgi('clock', 11, 2)} Folder pending</div>`;
   }
   const archChip = p.archived ? `<div class="chip plain">Archived</div>` : '';
+  // Modular / Other orders share the Plywood section, so their cards say which they are
+  const typeChip = !(ready || hold) && (p.projectType === 'modular' || p.projectType === 'other') ? `<div class="chip plain">${escHtml(typeLabelOf(p))}</div>` : '';
   const sizeChip = jobSize(p) === 'b' ? '<div class="chip size-b">BIG</div>' : jobSize(p) === 's' ? '<div class="chip plain">Small</div>' : '';
   const cpChip = p.carpenter && !isDelivered(p) ? `<div class="chip plain" title="Carpenter">${svgi('user', 11, 2)} ${escHtml(p.carpenter)}</div>` : '';
   // Cut list progress (pieces ticked off on the workshop tablet)
@@ -1684,7 +1685,7 @@ function buildCard(p) {
       </div>
       <div class="oc-days"><div class="oc-days-n">${daysText}</div><div class="oc-days-l">${daysLbl}</div></div>
     </div>
-    <div class="oc-stage">${lead}<div class="chip s${stageIdx}">${stage.label}</div>${sizeChip}${cpChip}${holdChip}${folderChip}${archChip}</div>
+    <div class="oc-stage">${lead}<div class="chip s${stageIdx}">${stage.label}</div>${typeChip}${sizeChip}${cpChip}${holdChip}${folderChip}${archChip}</div>
     <div class="oc-chips"><div class="chip plain">Due ${date}</div>${cutChip}${money}</div>
     <div class="note-block">
       <div class="note-row">${svgi('note', 13)}<div class="note-text ${latest ? 'has' : ''}">${latest || T('noActivity')}</div></div>
@@ -1900,11 +1901,11 @@ function resetView() {
 
 const SECTIONS = [
   { id:'sec-wood',    label:'Woodwork',         ico:'wood',  bg:'#F5E3D5', color:'#C1602F', match:p => p.projectType === 'woodwork', empty:'No woodwork orders right now' },
-  { id:'sec-ply',     label:'Plywood / Home',   ico:'home',  bg:'#E4EDF6', color:'#4E7DB5', match:p => p.projectType === 'plywood',  empty:'No plywood orders right now' },
+  // Plywood / Home, Modular Kitchen and Other share one section (the order types stay separate)
+  { id:'sec-ply',     label:'Plywood, Modular & Others', ico:'home', bg:'#E4EDF6', color:'#4E7DB5', match:p => p.projectType === 'plywood' || p.projectType === 'modular' || p.projectType === 'other', empty:'No plywood, modular or other orders right now' },
   { id:'sec-lathe',   label:'Lathe Work',       ico:'lathe', bg:'#E3EDE6', color:'#5C8A6B', match:p => p.projectType === 'lathe',    empty:'No lathe orders right now' },
   { id:'sec-timber',  label:'Timber Supply',    ico:'timber', bg:'#F1E6D8', color:'#8A5A2B', match:p => p.projectType === 'timber', empty:'No timber supply orders right now' },
   { id:'sec-cnc',     label:'CNC Work',         ico:'cnc',   bg:'#E2ECF2', color:'#3F6E8C', match:p => p.projectType === 'cnc',      empty:'No CNC orders right now' },
-  { id:'sec-modular', label:'Modular & Others', ico:'grid',  bg:'#EFECE4', color:'#9C9483', match:p => p.projectType === 'modular' || p.projectType === 'other', empty:'No modular kitchen or other-type orders right now' },
 ];
 
 // Amounts on the order cards are hidden by default on every load (screen-share / customer-safe);
@@ -2028,7 +2029,7 @@ function goKpi(key) {
   if (key === 'hold') window._showHold = true;
   if (needReset || key === 'hold') renderProjects();
 
-  const ids = { wood:'sec-wood', ply:'sec-ply', lathe:'sec-lathe', timber:'sec-timber', cnc:'sec-cnc', modular:'sec-modular', ready:'sec-ready', hold:'sec-hold' };
+  const ids = { wood:'sec-wood', ply:'sec-ply', lathe:'sec-lathe', timber:'sec-timber', cnc:'sec-cnc', modular:'sec-ply', ready:'sec-ready', hold:'sec-hold' };
   if (window._collapsed.has(ids[key])) toggleSection(ids[key]);   // jumping to a folded section opens it
   const el = document.getElementById(ids[key]);
   if (!el) { showToast(key === 'ready' ? 'No orders are ready to deliver' : 'No orders on hold'); return; }
@@ -2042,11 +2043,10 @@ function updateKpiStrip() {
   const byType = t => all.filter(p => isActive(p) && p.projectType === t).length;
   const vals = {
     'kpi-wood':    byType('woodwork'),
-    'kpi-ply':     byType('plywood'),
+    'kpi-ply':     all.filter(p => isActive(p) && (p.projectType === 'plywood' || p.projectType === 'modular' || p.projectType === 'other')).length,
     'kpi-lathe':   byType('lathe'),
     'kpi-timber':  byType('timber'),
     'kpi-cnc':     byType('cnc'),
-    'kpi-modular': all.filter(p => isActive(p) && (p.projectType === 'modular' || p.projectType === 'other')).length,
     'kpi-ready':   all.filter(p => isReady(p)).length,
     'kpi-hold':    all.filter(p => isOnHold(p) && !isDelivered(p)).length,
     'kpi-drawing': all.filter(needsDrawing).length,

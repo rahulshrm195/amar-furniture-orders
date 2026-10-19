@@ -78,6 +78,7 @@ A single-page PWA for tracking furniture orders. It is hosted on GitHub Pages (s
   - In each running section, big jobs come first, then medium, then small ones under a dashed "Small jobs" line (`bySize`, stable, so the chosen sort still applies inside each size).
   - Cards show a clay "BIG" chip or a plain "Small" chip.
   - Dragging and the Move buttons only reorder cards of the same size (`sectionPeers`, `dropSpot`).
+- **Merged section** (v3.85.0): Plywood / Home, Modular Kitchen and Other orders share one section, "Plywood, Modular & Others" (`sec-ply`), and one KPI card, "Plywood & Others" (`kpi-ply`). The order types themselves stay separate, and Modular / Other cards show their type as a plain chip.
 - **Section ribbons** (v3.76.0): each section header on the list (`sectionHeader`) is a band in its type's soft colour with a 4px left stripe in the strong colour (`--sb` / `--sc`), so the sections are easy to tell apart while scrolling.
 - **Folding sections** (v3.83.0): tapping a section header (Woodwork … Ready) folds its cards away; a chevron shows the state. Folded ids are remembered per device in localStorage (`af-collapsed`, `toggleSection`, `isFolded`). The On Hold header is its View / Hide toggle (`_showHold`) and shows "N orders on hold"; there is no separate banner (v3.84.0). While searching every section stays open, and jumping to a section from a KPI card opens it.
 - **Priority order** (v3.73.0): each project has a numeric `rank`; within a section, lower ranks are shown first.
