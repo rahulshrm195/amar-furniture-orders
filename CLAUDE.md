@@ -112,6 +112,9 @@ A single-page PWA for tracking furniture orders. It is hosted on GitHub Pages (s
 
 ## Backlog (noted by the owner, not started)
 1. **Drive folder script.** Put `orderNo` in the folder names. The owner will paste the Apps Script.
+   - Agreed plan (to build once the script is pasted): when an order is marked Delivered, the app asks the script to move its folder (`driveFolderUrl`) from Ongoing Projects to Archived Projects; reopening moves it back; nothing moves while Drive automation is off.
+   - A one-time "Tidy Drive folders" button in Settings sends every delivered order's folder in batches of about 25, shows progress and a summary (moved / already archived / not found), can be re-run safely and never deletes. Every folder was made by the app's Create button, so every order has its link; no folder-name guessing is needed.
+   - Still needed from the owner: the Apps Script code, and the archive folder's exact name and location.
 2. **"Paste items" box.** Fill an order's item rows from a pasted list.
 3. **Order numbers.** Confirm the existing orders were numbered from #1001.
 4. **Cut-list workflow change.** The owner will explain it later.
