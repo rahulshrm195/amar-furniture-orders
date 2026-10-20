@@ -12,7 +12,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.88.2 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
+/* ── v3.89.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -462,6 +462,8 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
 .add-part{margin:8px 0 0 18px;width:calc(100% - 18px);padding:7px 12px}
 .cut-cols{display:none}
 .dt-grp{font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--clay);margin:8px 0 2px}
+.paste-opt{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink2);margin:4px 0;cursor:pointer}
+.paste-opt input{width:16px;height:16px;accent-color:var(--clay)}
 #cut-modal .items-list-edit:empty::before{content:'No pieces yet — use “Add Piece” below';display:block;padding:14px 4px;font-size:12.5px;color:var(--ink3)}
 .cp-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
 .cp-list:empty::before{content:'No names yet';font-size:12.5px;color:var(--ink3)}
@@ -614,7 +616,7 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.88.2</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.89.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -895,11 +897,29 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
       <div class="items-list-edit" id="cut-list-edit"></div>
       <button class="add-item-btn" onclick="addCutRow()">＋ Add Piece</button>
       <button class="add-item-btn" id="cut-copy-btn" style="margin-top:8px" onclick="copyItemsToCut()">Copy sizes from order items</button>
+      <button class="add-item-btn" style="margin-top:8px" onclick="openPasteCut()">Paste cut list (from Excel / ChatGPT)</button>
     </div>
     <div class="field"><label>Notes for the workshop</label><textarea id="cut-notes" placeholder="Grain direction, joints, which pieces first…"></textarea></div>
     <div class="modal-actions">
       <button class="btn btn-primary" onclick="saveCutList()">Save List</button>
       <button class="btn btn-ghost" onclick="closeCutModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- PASTE CUT LIST — sits on top of the cut list dialog -->
+<div class="modal-backdrop" id="paste-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Paste cut list</div>
+    <div class="modal-sub">Copy the table from Excel, Google Sheets or ChatGPT (with its heading row: Part, Qty, Length, Face/Width, Thick…) and paste it here. Rows without a size, like totals, are skipped.</div>
+    <div class="field"><textarea id="paste-text" rows="9" placeholder="Paste here" oninput="previewPasteCut()" style="font-family:ui-monospace,Menlo,monospace;font-size:12px;white-space:pre;min-height:180px"></textarea></div>
+    <label class="paste-opt"><input type="checkbox" id="paste-round" checked onchange="previewPasteCut()"> Round sizes to the nearest ⅛″</label>
+    <label class="paste-opt" id="paste-grp-wrap" style="display:none"><input type="checkbox" id="paste-grp" checked onchange="previewPasteCut()"> <span id="paste-grp-lbl"></span></label>
+    <div class="modal-sub" id="paste-info" style="margin-top:8px"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="paste-go" onclick="applyPasteCut()">Add pieces</button>
+      <button class="btn btn-ghost" onclick="closePasteCut()">Cancel</button>
     </div>
   </div>
 </div>
@@ -1242,7 +1262,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.88.2';
+const APP_VERSION = 'v3.89.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -2890,7 +2910,8 @@ document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
   if (document.getElementById('project-modal')?.classList.contains('open')) return;
   const open = id => document.getElementById(id)?.classList.contains('open');
-  if (open('pay-modal'))                 closePayModal();
+  if (open('paste-modal'))               closePasteCut();
+  else if (open('pay-modal'))            closePayModal();
   else if (open('order-modal'))          closeOrderModal();
   else if (open('status-modal'))         closeStatusModal();
   else if (open('settings-modal'))       closeSettingsModal();
@@ -3047,6 +3068,86 @@ function copyItemsToCut() {
     n++;
   });
   showToast(n ? `Copied ${n} item${n === 1 ? '' : 's'} \u2014 check and save` : 'All order items are already on the cut list');
+}
+// Paste a cut list made elsewhere (Excel, Google Sheets, a ChatGPT table). Columns are found from the heading row
+// (Part / Qty / Length / Face or Width / Thick / Wood / Note / Mark); without one they are taken as
+// Name, L, W, T, Qty, Wood, Note. A line starting with "#" is a product made of parts, with the lines under it as its parts.
+// Rows without a name or a size (titles, totals) are skipped, and a second table without a Part column (e.g. glass) is ignored.
+const PASTE_COLS = { name: /^(part|piece|name|item|description|component)/, mark: /^(mark|code|ref)\b/, qty: /^(qty|quantity|nos|pcs|count)\b/,
+  l: /^(l|len|length)\b/, w: /^(w|b|width|face|breadth)\b/, t: /^(t|thick|thickness|thk|h)\b/, wood: /^(wood|timber|species)\b/, note: /(note|remark|machining)/ };
+function parsePasteCut(text, round) {
+  const lines = text.split(/\r?\n/).filter(x => x.trim());
+  const split = x => (/\t/.test(x) ? x.split('\t') : /,/.test(x) ? x.split(',') : /\|/.test(x) ? x.split('|') : x.split(/\s{2,}/))
+    .map(c => c.trim().replace(/^"|"$/g, '').trim());
+  const headOf = cells => {
+    const m = {};
+    cells.forEach((c, i) => { const k = Object.keys(PASTE_COLS).find(k => !(k in m) && PASTE_COLS[k].test(c.toLowerCase())); if (k) m[k] = i; });
+    return Object.keys(m).length >= 3 && ('l' in m || 'qty' in m) ? m : null;
+  };
+  const anyHead = lines.some(x => headOf(split(x.replace(/^\|/, ''))));
+  let map = anyHead ? null : { name: 0, l: 1, w: 2, t: 3, qty: 4, wood: 5, note: 6 };
+  let rounded = 0;
+  const size = v => {
+    v = tidySize(String(v ?? '').replace(/["\u201D\u2033]|\bin(ch(es)?)?\b/gi, '').trim());
+    const m = v.match(/^(?:(\d+) )?(?:(\d+)\/(\d+))?$/) || [], x = /^\d*\.?\d+$/.test(v) ? +v : m[3] ? (+m[1] || 0) + m[2] / m[3] : m[1] ? +m[1] : NaN;
+    if (!round || isNaN(x) || Number.isInteger(x * 8)) return v;
+    rounded++;
+    return tidySize(String(Math.round(x * 8) / 8));   // half-way (an odd 1/16) rounds up
+  };
+  const out = [];
+  lines.forEach(x => {
+    const prod = /^\s*#/.test(x), cells = split(x.replace(/^\s*#\s*/, '').replace(/^\|/, ''));
+    const h = headOf(cells);
+    if (h) { map = 'name' in h ? h : null; return; }
+    if (!map && !prod) return;
+    const m = prod ? { name: 0, l: 1, w: 2, t: 3, qty: 4 } : map, get = k => k in m ? cells[m[k]] || '' : '';
+    const pc = { name: get('name'), l: size(get('l')), w: size(get('w')), t: size(get('t')), qty: get('qty').replace(/\s*(nos|pcs)\.?$/i, ''), wood: get('wood'),
+      note: [get('mark'), get('note')].filter(Boolean).join(' · '), mark: get('mark'), prod };
+    if (pc.name && (prod || /\d/.test(pc.l + pc.w + pc.t))) out.push(pc);
+  });
+  return { rows: out, rounded };
+}
+// Marks like W1-FJ, W2-S: when they start with two or more different codes, offer one product per code (W1, W2).
+const pasteGroups = rows => [...new Set(rows.filter(r => !r.prod && /^[^-\s]+-./.test(r.mark)).map(r => r.mark.split('-')[0]))];
+function openPasteCut() {
+  document.getElementById('paste-text').value = '';
+  previewPasteCut();
+  openModal('paste-modal');
+  document.getElementById('paste-modal').onclick = e => { if (e.target.id === 'paste-modal') closePasteCut(); };
+  document.getElementById('paste-text').focus();
+}
+function closePasteCut() { document.getElementById('paste-modal').classList.remove('open'); }
+function previewPasteCut() {
+  const { rows, rounded } = parsePasteCut(document.getElementById('paste-text').value, document.getElementById('paste-round').checked);
+  const codes = rows.some(r => r.prod) ? [] : pasteGroups(rows), byCode = codes.length > 1 && rows.every(r => codes.includes(r.mark.split('-')[0]));
+  document.getElementById('paste-grp-wrap').style.display = byCode ? 'flex' : 'none';
+  document.getElementById('paste-grp-lbl').textContent = 'Make each of ' + codes.join(', ') + ' a product made of parts';
+  const n = rows.filter(r => !r.prod).length, g = rows.length - n || (byCode && document.getElementById('paste-grp').checked ? codes.length : 0);
+  document.getElementById('paste-info').textContent = !document.getElementById('paste-text').value.trim() ? '' : !n ? 'No pieces found — paste the table with its heading row.'
+    : `Found ${n} piece${n === 1 ? '' : 's'}${g ? ` in ${g} product${g === 1 ? '' : 's'}` : ''}${rounded ? ` · ${rounded} size${rounded === 1 ? '' : 's'} rounded to ⅛″` : ''}. They are added below the current pieces; check them and press Save List.`;
+  document.getElementById('paste-go').disabled = !n;
+}
+function applyPasteCut() {
+  const { rows } = parsePasteCut(document.getElementById('paste-text').value, document.getElementById('paste-round').checked);
+  if (!rows.some(r => !r.prod)) return;
+  const list = document.getElementById('cut-list-edit');
+  [...list.querySelectorAll(':scope > .item-edit-row')].forEach(row => {
+    if (!['cut-name', 'cut-l', 'cut-w', 'cut-t'].some(c => row.querySelector('.' + c).value.trim())) row.remove();
+  });
+  const codes = pasteGroups(rows), byCode = !rows.some(r => r.prod) && codes.length > 1 && document.getElementById('paste-grp').checked
+    && rows.every(r => codes.includes(r.mark.split('-')[0]));
+  const parts = {};
+  let into = null;
+  rows.forEach(r => {
+    if (r.prod) { into = addCutGroup({ name: r.name, l: r.l, w: r.w, t: r.t, qty: r.qty }).querySelector('.cut-parts'); return; }
+    const pc = { id: rid(), name: r.name, l: prettySize(r.l), w: prettySize(r.w), t: prettySize(r.t), qty: r.qty, wood: r.wood, note: r.note };
+    if (byCode) { const c = r.mark.split('-')[0]; into = parts[c] ||= addCutGroup({ name: c, qty: '1' }).querySelector('.cut-parts'); }
+    addCutRow(pc, into || undefined);
+  });
+  renumberCut();
+  closePasteCut();
+  const n = rows.filter(r => !r.prod).length;
+  showToast(`Added ${n} piece${n === 1 ? '' : 's'} \u2014 check and save`);
 }
 function closeCutModal() { document.getElementById('cut-modal').classList.remove('open'); }
 
