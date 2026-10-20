@@ -12,7 +12,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.89.1 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
+/* ── v3.90.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -459,7 +459,9 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
 .cut-parts{display:flex;flex-direction:column;gap:8px;margin:10px 0 0 4px;padding-left:12px;border-left:2px dashed #F0CDB4}
 .cut-parts:empty{display:none}
 .cut-parts .item-edit-row{background:var(--ivory)}
-.add-part{margin:8px 0 0 18px;width:calc(100% - 18px);padding:7px 12px}
+.part-btns{display:flex;gap:8px;margin:8px 0 0 18px}
+.part-btns .add-part{flex:1;width:auto;padding:7px 12px}
+#cut-list-edit .copy-parts{flex:0 0 auto;width:auto;min-height:0;height:auto;padding:7px 12px;border-radius:10px;box-shadow:none;border:1.5px dashed var(--border);background:transparent;color:var(--clay);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
 .cut-cols{display:none}
 .dt-grp{font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--clay);margin:8px 0 2px}
 #cut-modal .items-list-edit:empty::before{content:'No pieces yet — use “Add Piece” below';display:block;padding:14px 4px;font-size:12.5px;color:var(--ink3)}
@@ -614,7 +616,7 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.89.1</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.90.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -1242,7 +1244,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.89.1';
+const APP_VERSION = 'v3.90.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -3111,7 +3113,10 @@ function addCutGroup(g = {}, before) {
       <button class="item-del-btn" tabindex="-1" aria-label="Remove product" onclick="removeCutGroup(this)">${svgi('close', 13, 2)}</button>
     </div>
     <div class="cut-parts"></div>
-    <button type="button" class="add-item-btn add-part" onclick="addCutRow({}, this.previousElementSibling)">＋ Add part</button>`;
+    <div class="part-btns">
+      <button type="button" class="add-item-btn add-part" onclick="addCutRow({}, this.closest('.cut-grp').querySelector('.cut-parts'))">＋ Add part</button>
+      <select class="copy-parts" title="Copy the parts of another product in this list (then change the sizes)" onfocus="fillCopyParts(this)" onmousedown="fillCopyParts(this)" onchange="copyPartsFrom(this)"><option value="">Copy parts from…</option></select>
+    </div>`;
   list.insertBefore(el, before || null);
   renumberCut();
   return el;
@@ -3121,6 +3126,36 @@ function renumberCut() {
   const list = document.getElementById('cut-list-edit');
   [...list.children].forEach((el, i) => { const b = el.querySelector('.item-sr-badge'); if (b) b.textContent = i + 1; });
   list.querySelectorAll('.cut-parts').forEach(ps => [...ps.children].forEach((r, i) => r.querySelector('.item-sr-badge').textContent = i + 1));
+  // "Copy parts from…" shows only when another product in the list has parts to copy.
+  const grps = [...list.querySelectorAll(':scope > .cut-grp')];
+  grps.forEach(g => g.querySelector('.copy-parts').style.display = grps.some(o => o !== g && namedParts(o).length) ? '' : 'none');
+}
+const namedParts = g => [...g.querySelectorAll('.cut-parts > .item-edit-row')].filter(r => r.querySelector('.cut-name').value.trim());
+// Copy parts from another product (e.g. Window 2 has the same parts as Window 1, only the sizes differ):
+// names, sizes, qty, wood, next step, "=" and notes are copied as they are on screen; holds and ticks are not.
+const grpLabel = (g, i) => g.querySelector('.grp-name').value.trim() || 'Product ' + (i + 1);
+function fillCopyParts(sel) {
+  const me = sel.closest('.cut-grp'), list = document.getElementById('cut-list-edit');
+  const opts = [...list.children].map((g, i) => g.matches('.cut-grp') && g !== me && namedParts(g).length
+    ? `<option value="${g.dataset.gid}">${escHtml(grpLabel(g, i))} (${namedParts(g).length} parts)</option>` : '').join('');
+  sel.innerHTML = '<option value="">Copy parts from…</option>' + opts;
+}
+function copyPartsFrom(sel) {
+  const me = sel.closest('.cut-grp'), list = document.getElementById('cut-list-edit');
+  const src = [...list.children].find(g => g.dataset.gid === sel.value);
+  sel.value = '';
+  if (!src) return;
+  const into = me.querySelector('.cut-parts');
+  [...into.children].forEach(r => { if (!['cut-name', 'cut-l', 'cut-w', 'cut-t'].some(c => r.querySelector('.' + c).value.trim())) r.remove(); });
+  const rows = namedParts(src);
+  rows.forEach(r => {
+    const v = cls => r.querySelector('.' + cls).value.trim();
+    addCutRow({ id: rid(), name: v('cut-name'), l: v('cut-l'), w: v('cut-w'), t: v('cut-t'), qty: v('cut-q'), wood: v('cut-wood'), note: v('cut-note'),
+      step: r.querySelector('.cut-step').value, cs: ['l', 'w', 't'].filter(k => r.querySelector(`.cs-tg[data-k="${k}"]`).classList.contains('on')) }, into);
+  });
+  renumberCut();
+  into.querySelector('.cut-l')?.focus();
+  showToast(`Copied ${rows.length} part${rows.length === 1 ? '' : 's'} from ${grpLabel(src, [...list.children].indexOf(src))} \u2014 change the sizes and save`);
 }
 // One piece → Made of parts: the piece becomes the product heading (its size as the overall size), ready for parts.
 function pieceToGroup(btn) {
