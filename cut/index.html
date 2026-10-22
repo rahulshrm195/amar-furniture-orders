@@ -10,7 +10,7 @@
 <title>Amar Furniture — Cutting List</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.91.1 — Workshop cutting list (tablet); UI is Concept A ── */
+/* ── v3.92.0 — Workshop cutting list (tablet); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -49,14 +49,20 @@ input{font-family:inherit}
 .btn-ghost{background:var(--surface);color:var(--ink2);border-color:var(--border)}
 
 /* ── Topbar ── */
+/* Text size: the A− / A+ buttons set --z (0.8 = normal; the tablet can go bigger). The printed slip is not zoomed. */
+:root{--z:.8}
+#app,.sheet-bg,.toast{zoom:var(--z)}
+.sheet-bg{height:calc(100dvh / var(--z))}
 #app{display:none}
 .topbar{position:sticky;top:0;z-index:50;background:var(--slate);display:flex;align-items:center;gap:12px;padding:0 20px;height:70px}
 .tb-sum{margin-left:auto;color:#EDE9DD;font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tb-lang{width:auto!important;min-width:52px;padding:0 12px;font-weight:800;font-size:17px}
+.tb-az{width:auto!important;min-width:46px;padding:0 10px;font-weight:800;font-size:17px}
+.tb-az:disabled{opacity:.35;cursor:default}
 .tb-btn{width:46px;height:46px;border-radius:10px;border:1px solid #34322A;background:#211F18;color:#D8D2C2;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
 
 /* ── Two panes: projects on the left, the selected project's pieces on the right ── */
-.wrap{display:grid;grid-template-columns:minmax(300px,380px) minmax(0,1fr);height:calc(100dvh - 70px)}
+.wrap{display:grid;grid-template-columns:minmax(300px,380px) minmax(0,1fr);height:calc(100dvh / var(--z) - 70px)}
 .side{overflow-y:auto;border-right:1px solid var(--border);padding:6px 16px 24px}
 .main{overflow-y:auto;padding:22px 26px 120px}
 .back{display:none}
@@ -136,14 +142,31 @@ input{font-family:inherit}
 /* "Who cut this?" sheet */
 .sheet-bg{position:fixed;inset:0;z-index:500;background:rgba(23,22,15,.5);display:none;align-items:center;justify-content:center;padding:16px}
 .sheet-bg.open{display:flex}
-.sheet{background:var(--ivory);border:1px solid var(--border);border-radius:18px;padding:24px;width:100%;max-width:600px;max-height:90dvh;overflow-y:auto}
+.sheet{background:var(--ivory);border:1px solid var(--border);border-radius:18px;padding:24px;width:100%;max-width:600px;max-height:calc(90dvh / var(--z));overflow-y:auto}
 .sheet h3{font-family:var(--serif);font-weight:700;font-size:26px;line-height:1.2}
 .sheet p{color:var(--ink2);font-size:17px;margin-top:6px}
 .names{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:18px 0}
+.names.pick{display:block;margin:0}
 .name-btn{min-height:72px;border-radius:14px;border:1px solid var(--border);background:var(--surface);font-weight:800;font-size:20px;color:var(--ink);padding:8px}
 .name-btn:active{background:var(--clay-soft);border-color:var(--clay)}
 .name-btn.go{background:var(--green);border-color:var(--green);color:#fff}
 .name-btn.no{background:var(--red-soft);border-color:#EBC3BA;color:var(--red)}
+
+/* "Print several": tick projects, then one slip each on the roll */
+.pr-many{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin:12px 0 2px;padding:12px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--ink);font-weight:800;font-size:17px}
+.pk-quick{display:flex;gap:8px;margin:16px 0 8px}
+.pk-quick button{flex:1;height:48px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--ink2);font-weight:800;font-size:17px}
+.pk-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.pk-h{font-size:15px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink3);margin:8px 2px 0}
+.pk{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;color:var(--ink)}
+.pk .tick{width:32px;height:32px;border-radius:9px;border:2.5px solid #CFC6B2;flex:0 0 auto;display:flex;align-items:center;justify-content:center;color:transparent}
+.pk.on{border-color:var(--clay);box-shadow:0 0 0 2px var(--clay-soft)}
+.pk.on .tick{background:var(--clay);border-color:var(--clay);color:#fff}
+.pk-n{font-weight:800;font-size:18px;min-width:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pk-c{font-weight:700;font-size:15px;color:var(--ink2);white-space:nowrap}
+.pk-go{display:flex;gap:10px}
+.pk-go .btn{font-size:17px}
+.pk-go .btn-primary:disabled{opacity:.45}
 
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--slate);color:#FAF9F5;padding:14px 24px;border-radius:12px;font-size:18px;font-weight:700;opacity:0;transition:all .3s;z-index:1000;white-space:nowrap;pointer-events:none}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -175,6 +198,8 @@ input{font-family:inherit}
   #slip .s-w{font-size:8.5pt}
   #slip .s-tot{font-size:12pt;font-weight:800;margin-top:2mm}
   #slip .s-foot{font-size:8pt;margin-top:2mm}
+  #slip .s-tear{border-top:1.5px dashed #000;margin:7mm 0 5mm;text-align:center;font-size:8pt;line-height:0}
+  #slip .s-tear span{background:#fff;padding:0 2mm}
 }
 
 /* Woodwork / Lathe switch */
@@ -220,7 +245,7 @@ input{font-family:inherit}
 <div id="auth-screen">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Cutting List · v3.91.1</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Cutting List · v3.92.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Workshop Sign In</h2>
@@ -239,6 +264,8 @@ input{font-family:inherit}
       <div><div class="brand-name" id="tb-title">Cutting List</div><div class="brand-sub"><span id="tb-dept">Amar Furniture · Woodwork</span><span class="brand-ver" id="tb-ver"></span></div></div>
     </div>
     <div class="tb-sum" id="tb-sum"></div>
+    <button class="tb-btn tb-az" id="az-dn" aria-label="Smaller text" title="Smaller text" onclick="textSize(-1)">A−</button>
+    <button class="tb-btn tb-az" id="az-up" aria-label="Bigger text" title="Bigger text" onclick="textSize(1)">A+</button>
     <button class="tb-btn tb-lang" id="tb-lang" aria-label="Language / भाषा" title="Language / भाषा" onclick="toggleLang()">EN</button>
     <a class="tb-btn" id="home-btn" href="/" aria-label="Orders" title="Back to Orders" style="display:none"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10.5V20h12v-9.5"/></svg></a>
     <button class="tb-btn" aria-label="Sign out" title="Sign out" onclick="askSignOut()"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4.5H6A1.5 1.5 0 0 0 4.5 6v12A1.5 1.5 0 0 0 6 19.5h4"/><path d="M14.5 8 19 12l-4.5 4M19 12H9.5"/></svg></button>
@@ -281,7 +308,7 @@ const firebaseConfig = {
   messagingSenderId: "460562943530",
   appId:             "1:460562943530:web:d89b913ec8e6ecd85e7d53"
 };
-const CUT_VERSION = 'v3.91.1';
+const CUT_VERSION = 'v3.92.0';
 
 document.getElementById('tb-ver').textContent = CUT_VERSION;
 const app  = initializeApp(firebaseConfig);
@@ -297,6 +324,19 @@ try { const d = localStorage.getItem('af-cut-dept'); if (d === 'lathe' || d === 
 let lang = 'hi';
 try { if (localStorage.getItem('af-cut-lang') === 'en') lang = 'en'; } catch {}
 // Words that change with the department (and language).
+// Text size (A− / A+): 0.8 is the normal size; each device remembers its own (the workshop tablet can go bigger).
+const ZOOMS = [.65, .7, .8, .9, 1, 1.1];
+let zoomAt = 2;
+try { const z = +localStorage.getItem('af-cut-zoom'); if (ZOOMS.includes(z)) zoomAt = ZOOMS.indexOf(z); } catch {}
+function applyZoom() {
+  document.documentElement.style.setProperty('--z', ZOOMS[zoomAt]);
+  $('az-dn').disabled = zoomAt === 0; $('az-up').disabled = zoomAt === ZOOMS.length - 1;
+}
+window.textSize = d => {
+  zoomAt = Math.max(0, Math.min(ZOOMS.length - 1, zoomAt + d));
+  try { localStorage.setItem('af-cut-zoom', ZOOMS[zoomAt]); } catch {}
+  applyZoom();
+};
 const WORDS = {
   en: {
     wood:  { label: 'Woodwork', cut: 'cut',    Cut: 'Cut',    now: 'Cutting now', start: 'Start cutting', todo: 'To cut',  list: 'Cut List',   who: 'Who cut' },
@@ -342,6 +382,9 @@ const TX = {
     heldN: n => `${n} Nos on hold`,
     holdSec: w => `On hold — do not ${w === WORDS.en.lathe ? 'turn' : w === WORDS.en.cnc ? 'do on CNC' : 'cut'} yet`,
     due: d => `Due ${d}`,
+    printMany: 'Print several projects', printWhich: 'Which projects to print?',
+    printHint: 'Each ticked project prints as its own slip, one after another.',
+    allPending: 'All pending', none: 'None', printN: n => n ? `Print ${n}` : 'Print',
   },
   hi: {
     title: 'कटिंग लिस्ट', total: 'कुल', done: 'पूरा हुआ', piece: 'पीस', notes: 'नोट्स', print: 'प्रिंट', select: 'चुनें',
@@ -373,6 +416,9 @@ const TX = {
     heldN: n => `${n} Nos होल्ड`,
     holdSec: w => w === WORDS.hi.lathe ? 'होल्ड — अभी लेथ मत करो' : w === WORDS.hi.cnc ? 'होल्ड — अभी CNC मत करो' : 'होल्ड — अभी मत काटो',
     due: d => `${d} तक`,
+    printMany: 'कई प्रोजेक्ट प्रिंट करें', printWhich: 'कौन से प्रोजेक्ट प्रिंट करें?',
+    printHint: 'हर चुना हुआ प्रोजेक्ट अपनी अलग स्लिप पर, एक के बाद एक प्रिंट होगा।',
+    allPending: 'सब बाकी', none: 'कोई नहीं', printN: n => n ? `प्रिंट (${n})` : 'प्रिंट',
   },
 };
 const L = () => TX[lang];
@@ -405,6 +451,7 @@ let showAllDone = false;
 let unsubs = [];
 
 const $ = id => document.getElementById(id);
+applyZoom();
 const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const fmtDay = d => d.getDate() + ' ' + MONTHS[d.getMonth()];
@@ -539,7 +586,7 @@ function render() {
     return `<button class="tab ${d === dept ? 'on' : ''}" onclick="setDept('${d}')">${W(d).label}${k ? ` <b>${k}</b>` : ''}</button>`; };
   $('side').innerHTML = `<div class="tabs">${tab('wood')}${tab('lathe')}${tab('cnc')}</div>` + (!lists.length
     ? `<div class="empty">${L().empty(W())}</div>`
-    : sec(W().now, pinned) + sec(W().todo, todo) + sec(L().done, doneShown))
+    : `<button class="pr-many" onclick="printMany()">${svgPrint} ${L().printMany}</button>` + sec(W().now, pinned) + sec(W().todo, todo) + sec(L().done, doneShown))
       + (done.length > doneShown.length ? `<button class="more" onclick="moreDone()">${L().showAll(done.length)}</button>` : '');
   const left = open.reduce((s, c) => s + workOf(c) - doneOf(c), 0);
   const heldAll = open.reduce((s, c) => s + heldOf(c), 0);
@@ -699,10 +746,7 @@ async function setCut(ids, done, by = '') {
 
 // ── Print: a 2-inch slip of the open project, through Android's Print screen ──
 // Done pieces are ticked, pending ones get an empty box to tick by hand.
-window.printSlip = () => {
-  const c = lists.find(x => x.id === selId); if (!c) return;
-  const now = new Date().toISOString();
-  $('slip').innerHTML = `
+const slipHtml = (c, now) => `
     <div class="s-c s-h">Amar Furniture · ${W().list}</div>
     <div class="s-c s-name">${c.orderNo ? '#' + c.orderNo + ' ' : ''}${esc(c.client)}</div>
     ${c.title ? `<div class="s-c s-sub">${esc(c.title)}</div>` : ''}
@@ -718,6 +762,45 @@ window.printSlip = () => {
       return grouped(c, c.pieces.filter(p => !isHeld(p)), name => `<div class="s-g">${esc(name)}</div>`, sp) + c.pieces.filter(isHeld).map(sp).join(''); })()}
     <div class="s-tot">${L().total}: ${nosOf(c.pieces)} Nos</div>
     <div class="s-foot">${L().ofCut(doneOf(c), workOf(c), W())}${heldOf(c) ? ' · ' + L().heldN(heldOf(c)) : ''} · ${L().printed} ${fmtStamp(now)}</div>`;
+window.printSlip = () => {
+  const c = lists.find(x => x.id === selId); if (!c) return;
+  $('slip').innerHTML = slipHtml(c, new Date().toISOString());
+  window.print();
+};
+// "Print several": tick projects on this tab (none ticked to start; "All pending" / "None" to fill or clear),
+// then each prints as its own slip, one after another on the roll, with a tear line between.
+let pickIds = new Set();
+const pickOrder = () => { const open = lists.filter(c => !isDone(c)); return [...open.filter(c => c[K().pin]).sort(byDue), ...open.filter(c => !c[K().pin]).sort(byDue), ...lists.filter(isDone).sort((a, b) => lastCut(b) - lastCut(a))]; };
+function renderPick() {
+  const row = c => `<button class="pk ${pickIds.has(c.id) ? 'on' : ''}" onclick="pickToggle('${c.id}')"><span class="tick">${svgTick}</span>
+    <span class="pk-n"><span class="ono">${c.orderNo ? '#' + c.orderNo : ''}</span>${esc(c.client)}</span><span class="pk-c">${L().ofCut(doneOf(c), workOf(c), W())}</span></button>`;
+  const all = pickOrder(), open = all.filter(c => !isDone(c)), done = all.filter(isDone);
+  $('sheet-btns').innerHTML = `
+    <div class="pk-quick"><button onclick="pickAll()">${L().allPending}</button><button onclick="pickNone()">${L().none}</button></div>
+    <div class="pk-list">${open.map(row).join('')}${done.length ? `<div class="pk-h">${L().done}</div>` + done.map(row).join('') : ''}</div>
+    <div class="pk-go"><button class="btn btn-ghost" onclick="closeSheet(null)">${L().cancel}</button>
+      <button class="btn btn-primary" ${pickIds.size ? '' : 'disabled'} onclick="printPicked()">${svgPrint} ${L().printN(pickIds.size)}</button></div>`;
+}
+window.printMany = () => {
+  pickIds = new Set();
+  $('sheet-title').textContent = L().printWhich;
+  $('sheet-sub').textContent = L().printHint;
+  renderPick();
+  $('sheet-btns').classList.add('pick');
+  $('sheet-cancel').style.display = 'none';
+  $('sheet').classList.add('open');
+  openLayer('sheet');
+  sheetResolve = () => { $('sheet-btns').classList.remove('pick'); $('sheet-cancel').style.display = ''; };
+};
+window.pickToggle = id => { pickIds.has(id) ? pickIds.delete(id) : pickIds.add(id); renderPick(); };
+window.pickAll = () => { lists.filter(c => !isDone(c)).forEach(c => pickIds.add(c.id)); renderPick(); };
+window.pickNone = () => { pickIds = new Set(); renderPick(); };
+window.printPicked = () => {
+  const now = new Date().toISOString();
+  const cs = pickOrder().filter(c => pickIds.has(c.id));
+  if (!cs.length) return;
+  closeSheet(null);
+  $('slip').innerHTML = cs.map(c => slipHtml(c, now)).join('<div class="s-tear"><span>✂</span></div>');
   window.print();
 };
 
