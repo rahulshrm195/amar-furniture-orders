@@ -12,7 +12,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.92.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
+/* ── v3.93.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -67,6 +67,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .btn-primary{background:var(--clay);color:#FAF9F5}
 .btn-primary:hover{background:#A9521F}
 .btn-ghost{background:var(--surface);color:var(--ink2);border-color:var(--border)}
+.btn-cut{color:var(--clay);border-color:#E7B99D}
 .btn-ghost:hover{background:#F1EDE1}
 .btn-archive{background:var(--surface);color:var(--ink2);border-color:var(--border)}
 .btn-danger{background:var(--red-soft);color:var(--red);border-color:#EBC3BA}
@@ -621,7 +622,7 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.92.0</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.93.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -812,6 +813,7 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
 
     <div class="modal-actions">
       <button class="btn btn-primary" onclick="saveProject()">Save Order</button>
+      <button class="btn btn-ghost btn-cut" id="save-cut-btn" onclick="saveProject(true)" title="Save, then open this order's cut list (Cmd/Ctrl+Shift+S)">Save &amp; open cut list</button>
       <button class="btn btn-ghost"   onclick="closeModal()">Cancel</button>
       <button class="btn btn-archive" id="archive-btn" style="display:none" onclick="archiveProject()">Archive Order</button>
       <button class="btn btn-danger"  id="delete-btn"  style="display:none" onclick="deleteProject()">Delete Forever</button>
@@ -1125,12 +1127,14 @@ window.signOut = async () => { if (confirm('Sign out?')) await _fbSignOut(_auth)
 // Local calendar date (YYYY-MM-DD) — used to stamp the delivery day.
 function _todayStr() { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
 
-window.saveProject = async function() {
+// openCut: "Save & open cut list" — after saving, the order's cut list opens (a new one starts from the items).
+window.saveProject = async function(openCut) {
   const client   = document.getElementById('f-client').value.trim();
   const date     = document.getElementById('f-date').value;
   const deadline = document.getElementById('f-deadline').value;
   if (!client || !date || !deadline) { showToast('Fill required fields'); return; }
   const type      = window._editType || 'woodwork';
+  let savedId = null;
   const items = [];
   {
     document.querySelectorAll('#items-edit-list .item-edit-row').forEach(row => {
@@ -1172,6 +1176,7 @@ window.saveProject = async function() {
       data.driveFolderStatus = newLink ? 'done' : '';
     }
     await _updateDoc(_doc(_db, 'projects', window._editId), data);
+    savedId = window._editId;
     showToast('Order updated');
   } else {
     data.createdAt = _serverTimestamp();
@@ -1191,6 +1196,7 @@ window.saveProject = async function() {
       data.driveFolderStatus = 'pending';
     }
     const docRef = await _addDoc(_collection(_db, 'projects'), data);
+    savedId = docRef.id;
     if (wantsFolder) {
       showToast('Order added — creating Drive folder…');
       runFolderCreation(docRef.id, data);
@@ -1199,6 +1205,12 @@ window.saveProject = async function() {
     }
   }
   closeModal();
+  if (openCut && savedId && hasCutList(type)) {
+    // Wait for the live list to carry the saved order (and its new items), so a new cut list copies the right ones.
+    const same = p => p && JSON.stringify(p.items || []) === JSON.stringify(items);
+    for (let i = 0; i < 40 && !same((window._projects || []).find(x => x.id === savedId)); i++) await new Promise(r => setTimeout(r, 100));
+    openCutModal(savedId);
+  }
 };
 
 window.deleteProject = async function() {
@@ -1249,7 +1261,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.92.0';
+const APP_VERSION = 'v3.93.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -2799,6 +2811,8 @@ function pickCarpenter(isUpdate, i) {
   else renderStatusSel('status-selector-opts', window._editStatus, false);
 }
 
+// Order types that have a cut list (the card's saw button, the form's "Save & open cut list").
+function hasCutList(type) { return type === 'woodwork' || type === 'timber' || type === 'lathe' || type === 'cnc'; }
 function selectType(type) {
   const keepStatus = window._editStatus;
   window._editType = type;
@@ -2806,6 +2820,7 @@ function selectType(type) {
     document.getElementById('pt-' + k).className = 'type-opt' + (k === type ? ' sel' : '');
   });
   document.getElementById('other-label-wrap').style.display = type === 'other' ? 'block' : 'none';
+  document.getElementById('save-cut-btn').style.display = hasCutList(type) ? '' : 'none';
   window._editStatus = keepStatus ?? 0;
   renderStatusSel('status-selector-opts', window._editStatus, false);
 }
@@ -2931,11 +2946,13 @@ document.addEventListener('keydown', e => {
 });
 // Cmd/Ctrl+S saves the order form or the cut list (and stops Safari's "Save page" dialog).
 document.addEventListener('keydown', e => {
-  if (!(e.metaKey || e.ctrlKey) || e.altKey || e.shiftKey || e.key.toLowerCase() !== 's') return;
+  if (!(e.metaKey || e.ctrlKey) || e.altKey || e.key.toLowerCase() !== 's') return;
   const m = document.querySelector('#project-modal.open, #cut-modal.open');
   if (!m) return;
   e.preventDefault();
   if (e.repeat) return;
+  // Cmd/Ctrl+Shift+S in the order form = Save & open cut list (where the order type has one).
+  if (e.shiftKey) { if (m.id === 'project-modal' && hasCutList(window._editType)) saveProject(true); return; }
   m.querySelector('.modal-actions .btn-primary')?.click();
 });
 // Cmd/Ctrl+F jumps to the search bar (only when no dialog is open; otherwise the browser's Find works as usual).

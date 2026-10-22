@@ -84,6 +84,7 @@ A single-page PWA for tracking furniture orders. It is hosted on GitHub Pages (s
 - **Order form** (v3.78.0): one column on desktop (no side-by-side columns): project type chips, then client / phone / dates in one row, description and amounts, the Hold and Drive Folder switches, the items table, the two notes boxes and Status as a row of chips. The title and the Save/Cancel row stay put while the body scrolls.
   - Items are a table on desktop: # · Item · L · B · W · Qty · Unit · Note · × (`.items-head`, and the row's wrappers are `display:contents`). On phones each item stays a small card with the note box underneath.
   - The Items heading shows "6 items · 13 Nos" (`updateItemsSum`).
+  - Save & open cut list (v3.93.0): a second button between Cancel and Save Order (`#save-cut-btn`, `saveProject(true)`, Cmd/Ctrl+Shift+S) for new and edited orders of the types with a cut list (`hasCutList`: Woodwork, Timber, Lathe, CNC). It saves, waits for the live list to carry the saved items, then opens the order's cut list editor; a new list starts from the items.
 - **Carpenter on an order** (v3.79.0): when "In Progress" is selected in the Update Status dialog or the order form, the carpenter names from Settings show as chips in that same row (`renderStatusSel`, `pickCarpenter`). Tapping the chosen name again clears it. It is saved as `carpenter` and shown on the card as a chip with a person icon until the order is delivered.
 - **Job size** (v3.80.0): `size` is `'s'`, `'m'` or `'b'` (blank counts as medium, `jobSize`). It is set with the Small / Medium / Big chips in the order form, or the "Job size" row in the card details (admins).
   - In each running section, big jobs come first, then medium, then small ones under a dashed "Small jobs" line (`bySize`, stable, so the chosen sort still applies inside each size).
@@ -106,7 +107,7 @@ A single-page PWA for tracking furniture orders. It is hosted on GitHub Pages (s
   - `N` opens a new order (admins only).
   - `R` opens or closes Reports (admins only).
   - `H` goes Home.
-  - Cmd/Ctrl+S saves the order form or the cut list.
+  - Cmd/Ctrl+S saves the order form or the cut list. Cmd/Ctrl+Shift+S in the order form is Save & open cut list (v3.93.0).
   - Cmd/Ctrl+F jumps to search.
   - Esc closes the small dialogs, but never the order form.
   - Tab stays inside the open dialog. The app moves focus itself, so buttons and dropdowns are reached in every browser (Safari's own Tab skips them). Tabbing into a text box selects its text, so typing replaces it (v3.86.2).
