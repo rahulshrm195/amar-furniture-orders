@@ -10,7 +10,7 @@
 <title>Amar Furniture — Cutting List</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.94.0 — Workshop cutting list (tablet); UI is Concept A ── */
+/* ── v3.94.1 — Workshop cutting list (tablet); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -245,7 +245,7 @@ input{font-family:inherit}
 <div id="auth-screen">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Cutting List · v3.94.0</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Cutting List · v3.94.1</div></div>
   </div>
   <div class="auth-card">
     <h2>Workshop Sign In</h2>
@@ -308,7 +308,7 @@ const firebaseConfig = {
   messagingSenderId: "460562943530",
   appId:             "1:460562943530:web:d89b913ec8e6ecd85e7d53"
 };
-const CUT_VERSION = 'v3.94.0';
+const CUT_VERSION = 'v3.94.1';
 
 document.getElementById('tb-ver').textContent = CUT_VERSION;
 const app  = initializeApp(firebaseConfig);
@@ -734,7 +734,10 @@ async function setCut(ids, done, by = '') {
       const pieces = (snap.data().pieces || []).map(p => !ids.includes(p.id) || !!p[k.f] === done ? p
         : { ...p, [k.f]: done, [k.by]: done ? by : '', [k.at]: done ? now : '' });
       const patch = { pieces, updatedAt: serverTimestamp() };
-      if (pieces.every(p => p[k.f])) patch[k.pin] = false;
+      // When this tab's pieces are all done, drop its pin — only if it is on, so nothing else is written
+      // (a Lathe / CNC tab looks only at its own pieces; the rest of a mixed order never gets turned / CNC).
+      const c = { ...snap.data(), pieces };
+      if (snap.data()[k.pin] && forTab(c, dept).pieces.every(p => p[k.f])) patch[k.pin] = false;
       tx.update(ref, patch);
     });
     toast(done ? L().marked(nosOf((lists.find(x => x.id === id)?.pieces || []).filter(p => ids.includes(p.id))), W()) : L().unmarked(W()));
