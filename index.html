@@ -12,7 +12,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.97.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
+/* ── v3.97.1 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -627,7 +627,7 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.97.0</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.97.1</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -1266,7 +1266,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.97.0';
+const APP_VERSION = 'v3.97.1';
 
 // -- LANGUAGE --
 const LANG = {
@@ -2081,7 +2081,7 @@ function setMoneyBtn() {
   const label = window._showMoney ? 'Hide amounts' : 'Show amounts';
   btn.title = label; btn.setAttribute('aria-label', label);
 }
-function toggleMoney() { window._showMoney = !window._showMoney; setMoneyBtn(); renderProjects(); showToast(window._showMoney ? 'Amounts shown' : 'Amounts hidden'); }
+function toggleMoney() { window._showMoney = !window._showMoney; setMoneyBtn(); renderProjects(); if (window._odId) renderOrderModal(); showToast(window._showMoney ? 'Amounts shown' : 'Amounts hidden'); }
 setMoneyBtn();
 
 function renderProjects() {
@@ -2388,9 +2388,10 @@ function historyHtml(p) {
 // ── Order details dialog (read-only) ──
 window._odId = null;
 const fmtFull = d => d ? fmtDay(new Date(d + 'T00:00:00')) + ' ' + new Date(d + 'T00:00:00').getFullYear() : '—';
-function openOrderModal(id) {
+// fromCard: opened by clicking a card, so amounts follow the header's Show amounts eye (Reports always shows them).
+function openOrderModal(id, fromCard) {
   if (!(window._projects || []).some(x => x.id === id)) return;
-  window._odId = id;
+  window._odId = id; window._odFromCard = !!fromCard;
   renderOrderModal();
   const el = document.getElementById('order-modal');
   el.classList.add('open');
@@ -2402,6 +2403,7 @@ function renderOrderModal() {
   if (!p) { closeOrderModal(); return; }
   document.getElementById('od-title').textContent = (p.orderNo ? '#' + p.orderNo + ' ' : '') + (p.client || '');
   const admin = !!window._isAdmin;   // money, internal notes and Edit are for admins only
+  const money = admin && (!window._odFromCard || window._showMoney);
   const stage = getPipeline()[Math.min(p.status || 0, 4)].label;
   const bal = balOf(p);
   const fact = (k, v) => `<div><div class="od-k">${k}</div><div class="od-v">${v}</div></div>`;
@@ -2421,12 +2423,12 @@ function renderOrderModal() {
       ${p.deliveredAt ? fact('Delivered on', fmtFull(p.deliveredAt)) : ''}
       ${p.carpenter ? fact('Carpenter', escHtml(p.carpenter)) : ''}
     </div>
-    ${admin ? `<div class="pay-sum od-sec"><div><small>Total</small><b>${rupee(Number(p.amount) || 0)}</b></div><div><small>Received</small><b>${rupee(Number(p.advance) || 0)}</b></div><div><small>Balance</small><b>${bal ? rupee(bal) : 'Paid'}</b></div></div>
+    ${money ? `<div class="pay-sum od-sec"><div><small>Total</small><b>${rupee(Number(p.amount) || 0)}</b></div><div><small>Received</small><b>${rupee(Number(p.advance) || 0)}</b></div><div><small>Balance</small><b>${bal ? rupee(bal) : 'Paid'}</b></div></div>
     <div class="od-sec"><div class="dt-lbl">Payments</div>${historyHtml(p)}</div>` : ''}
     ${items}${specs}${admin ? internal : ''}
     <div class="od-sec"><div class="dt-lbl">${T('activityHdr')}</div><div class="tl">${timelineHtml(p.activityLog || [])}</div></div>
     <div class="od-acts">
-      ${admin && bal ? `<button class="btn btn-primary" onclick="openPayModal('${p.id}')">Add payment</button>` : ''}
+      ${money && bal ? `<button class="btn btn-primary" onclick="openPayModal('${p.id}')">Add payment</button>` : ''}
       ${admin ? `<button class="btn btn-ghost" onclick="openEditFromDetails('${p.id}')">Edit order</button>` : ''}
       ${p.driveFolderUrl ? `<a class="btn btn-ghost" href="${escHtml(p.driveFolderUrl)}" target="_blank" rel="noopener">Drive folder</a>` : ''}
       <button class="btn btn-ghost" onclick="closeOrderModal()">Close</button>
@@ -2439,7 +2441,7 @@ document.addEventListener('click', e => {
   if (!card || !card.id.startsWith('card-')) return;
   if (e.target.closest('button, a, input, textarea, select, label, [onclick], [role="button"], .oc-details')) return;
   if (String(window.getSelection?.() || '').trim()) return;   // selecting text to copy it
-  openOrderModal(card.id.slice(5));
+  openOrderModal(card.id.slice(5), true);
 });
 
 // ── Add payment ──
