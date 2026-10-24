@@ -126,4 +126,5 @@ A single-page PWA for tracking furniture orders. It is hosted on GitHub Pages (s
 3. **Order numbers.** Confirm the existing orders were numbered from #1001.
 4. **Cut-list workflow change.** The owner will explain it later.
 5. **Stage board.** A second board with one column per status (Order Taken → In Progress → Finishing → Ready), dragging a card to change status. A mock-up was made; the owner wants it later.
+7. **No unticking on the tablet** (discussed, kept as is for now). The owner worries a worker and an office employee could together untick, edit and re-tick pieces. The option is to remove "Mark as not cut?" from the tablet and let only the owner untick from the editor, recorded in the order's notes. Wrong sizes are handled by adding a new piece with a "Re-cut" note; the wrong piece stays ticked with a note. A "Wasted" mark was offered and declined.
 6. **Firestore rules.** `isAdmin()` lists only rahulshrm195@gmail.com. Add rahul@ and father@amarfurniture.in if they should create orders.
