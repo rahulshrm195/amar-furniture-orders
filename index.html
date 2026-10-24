@@ -12,7 +12,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.94.1 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
+/* ── v3.95.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -622,7 +622,7 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.94.1</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.95.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -1261,7 +1261,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.94.1';
+const APP_VERSION = 'v3.95.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -3079,25 +3079,43 @@ function openCutModal(id) {
 }
 
 // Order items → cut pieces: L → L, B → W, W → T, same qty. Skips items already on the list; blank rows are replaced.
+// An item already on the list whose qty went up in the order (e.g. Side Mehrab 1 → 2 after the first was cut) gets
+// a new pending line for the extra Nos, with the same next step / "=" / wood, so the cut line keeps its tick.
+// A qty that went down is only reported, never removed.
 function copyItemsToCut() {
   const p = (window._projects || []).find(x => x.id === window._cutId); if (!p?.items?.length) return;
   const list = document.getElementById('cut-list-edit');
   const key = (n, l, w, t) => [n, l, w, t].map(v => tidySize(v).toLowerCase()).join('|');
-  const have = new Set();
+  const nos = v => parseFloat(v) || 1;
+  const have = new Map();   // key → { q: Nos on the list, row: first matching piece row }
+  const note = (k, q, row) => { const h = have.get(k); if (h) h.q += q; else have.set(k, { q, row }); };
   [...list.querySelectorAll(':scope > .item-edit-row')].forEach(row => {
     const v = cls => row.querySelector('.' + cls).value.trim();
     if (!v('cut-name') && !v('cut-l') && !v('cut-w') && !v('cut-t')) row.remove();
-    else have.add(key(v('cut-name'), v('cut-l'), v('cut-w'), v('cut-t')));
   });
-  list.querySelectorAll(':scope > .cut-grp').forEach(g => { const v = cls => g.querySelector('.cut-grp-h .' + cls).value; have.add(key(v('grp-name'), v('grp-l'), v('grp-w'), v('grp-t'))); });
+  list.querySelectorAll('.item-edit-row').forEach(row => {
+    const v = cls => row.querySelector('.' + cls).value.trim();
+    note(key(v('cut-name'), v('cut-l'), v('cut-w'), v('cut-t')), nos(v('cut-q')), row);
+  });
+  list.querySelectorAll(':scope > .cut-grp').forEach(g => { const v = cls => g.querySelector('.cut-grp-h .' + cls).value; note(key(v('grp-name'), v('grp-l'), v('grp-w'), v('grp-t')), nos(v('grp-q')), null); });
   renumberCut();
-  let n = 0;
+  let n = 0, extra = 0;
+  const less = [];
   p.items.forEach(it => {
-    if (have.has(key(it.name, it.l, it.b, it.w))) return;
-    addCutRow({ id: Math.random().toString(36).slice(2, 10), name: it.name, l: prettySize(it.l), w: prettySize(it.b), t: prettySize(it.w), qty: it.qty, note: it.note || '' });
-    n++;
+    const k = key(it.name, it.l, it.b, it.w), h = have.get(k), want = nos(it.qty);
+    const pc = { id: rid(), name: it.name, l: prettySize(it.l), w: prettySize(it.b), t: prettySize(it.w), qty: it.qty, note: it.note || '' };
+    if (!h) { addCutRow(pc); n++; return; }
+    if (want > h.q) {
+      const r = h.row;   // the extra follows the line already there: same next step, "=" marks and wood
+      addCutRow({ ...pc, qty: String(Math.round((want - h.q) * 100) / 100), note: (it.note ? it.note + ' · ' : '') + 'Extra',
+        ...(r ? { step: r.querySelector('.cut-step').value, wood: r.querySelector('.cut-wood').value.trim(),
+          cs: ['l', 'w', 't'].filter(c => r.querySelector(`.cs-tg[data-k="${c}"]`).classList.contains('on')) } : {}) });
+      h.q = want; extra++;
+    } else if (want < h.q) less.push(`${it.name}: order has ${want}, cut list has ${h.q}`);
   });
-  showToast(n ? `Copied ${n} item${n === 1 ? '' : 's'} \u2014 check and save` : 'All order items are already on the cut list');
+  const done = [n && `Copied ${n} item${n === 1 ? '' : 's'}`, extra && `added ${extra} extra line${extra === 1 ? '' : 's'}`].filter(Boolean).join(', ');
+  showToast(less.length ? `${done ? done + ' \u2014 ' : ''}Check: ${less.join('; ')}`
+    : done ? `${done} \u2014 check and save` : 'All order items are already on the cut list');
 }
 function closeCutModal() { document.getElementById('cut-modal').classList.remove('open'); }
 
