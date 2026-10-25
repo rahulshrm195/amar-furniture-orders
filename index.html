@@ -12,7 +12,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.98.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
+/* ── v3.99.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -377,6 +377,35 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
 .dt-item:last-child{border-bottom:none}
 .dt-item-n{font-weight:600;flex:1;min-width:0}
 .dt-item-d{color:var(--ink2);font-size:11.5px;white-space:nowrap}
+.dlv{flex:0 0 auto;font-size:11px;font-weight:800;padding:3px 9px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--ink2);white-space:nowrap;cursor:pointer}
+span.dlv{cursor:default}
+.dlv.on{background:#E3EFE6;border-color:#BFD9C6;color:var(--green)}
+.dt-item.dlvd .dt-item-n{color:var(--ink2)}
+.od-items-h{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.od-link{background:none;border:none;color:var(--clay);font:inherit;font-weight:800;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;padding:0 0 0 12px}
+#challan{display:none}
+@media print{
+  @page{size:A5;margin:12mm}
+  body{background:#fff}
+  body>*:not(#challan){display:none!important}
+  #challan{display:block;color:#000;font-family:var(--sans);font-size:10.5pt}
+  .ch-top{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #000;padding-bottom:3mm;margin-bottom:4mm}
+  .ch-brand{font-family:var(--serif);font-weight:700;font-size:18pt}
+  .ch-sub{font-size:9pt;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+  .ch-meta{text-align:right;font-size:9.5pt;line-height:1.5}
+  .ch-to{display:grid;grid-template-columns:1fr 1fr;gap:4mm;margin-bottom:4mm}
+  .ch-to small{display:block;font-size:8pt;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+  .ch-to b{display:block;font-size:11pt}
+  .ch-t{width:100%;border-collapse:collapse}
+  .ch-t th,.ch-t td{border-bottom:1px solid #999;padding:1.8mm 1.5mm;text-align:left;vertical-align:top}
+  .ch-t th{border-bottom:1.5px solid #000;font-size:8.5pt;text-transform:uppercase;letter-spacing:.04em}
+  .ch-t td small{display:block;font-size:8.5pt;color:#333}
+  .ch-t .r{text-align:right;white-space:nowrap}
+  .ch-t tfoot td{border-bottom:none;font-weight:800}
+  .ch-left{margin-top:4mm;font-size:9.5pt}
+  .ch-sign{display:flex;justify-content:space-between;margin-top:18mm;font-size:9pt}
+  .ch-sign div{border-top:1px solid #000;padding-top:1.5mm;width:45%}
+}
 .dt-item-q{font-weight:700;font-size:11px;background:var(--clay-soft);color:var(--clay);padding:2px 8px;border-radius:20px;white-space:nowrap}
 .dt-specs{font-size:12px;color:var(--ink2);line-height:1.5;white-space:pre-wrap;background:var(--ivory);border:1px solid var(--border);border-radius:8px;padding:8px 10px}
 .tl{display:flex;flex-direction:column;gap:8px}
@@ -631,7 +660,7 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.98.0</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.99.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -936,6 +965,7 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
   </div>
 </div>
 <div class="toast" id="toast"></div>
+<div id="challan"></div>
 
 <!-- FIREBASE -->
 <script type="module">
@@ -1157,7 +1187,7 @@ window.saveProject = async function(openCut) {
       const qty  = row.querySelector('.item-qty-inp').value.trim();
       const unit = row.querySelector('.item-unit-sel').value;
       const note = row.querySelector('.item-note-inp').value.trim();
-      if (name) items.push({ name, l, b, w, qty: qty || '1', unit: unit || 'Nos', ...(note ? { note } : {}) });
+      if (name) items.push({ name, l, b, w, qty: qty || '1', unit: unit || 'Nos', ...(note ? { note } : {}), ...(row.dataset.dlv ? { deliveredAt: row.dataset.dlv } : {}) });
     });
   }
   const data = {
@@ -1276,7 +1306,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.98.0';
+const APP_VERSION = 'v3.99.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -1729,6 +1759,8 @@ function buildCard(p) {
   const typeChip = !(ready || hold) && (p.projectType === 'modular' || p.projectType === 'other') ? `<div class="chip plain">${escHtml(typeLabelOf(p))}</div>` : '';
   const sizeChip = jobSize(p) === 'b' ? '<div class="chip size-b">BIG</div>' : jobSize(p) === 's' ? '<div class="chip plain">Small</div>' : '';
   const cpChip = p.carpenter && !isDelivered(p) ? `<div class="chip plain" title="Carpenter">${svgi('user', 11, 2)} ${escHtml(p.carpenter)}</div>` : '';
+  const dlvN = (p.items || []).filter(it => it.deliveredAt).length;
+  const dlvChip = dlvN && !isDelivered(p) ? `<div class="chip s4" title="Items delivered so far (tap the card to see which)">Part delivered · ${dlvN}/${p.items.length}</div>` : '';
   // Cut list progress (pieces ticked off on the workshop tablet)
   // Counted in Nos (a "Wood Panel × 12 Nos" line counts as 12); a blank qty counts as 1.
   const cutPcs = window._cutlists[p.id]?.pieces || [];
@@ -1830,7 +1862,7 @@ function buildCard(p) {
       </div>
       <div class="oc-days"><div class="oc-days-n">${daysText}</div><div class="oc-days-l">${daysLbl}</div></div>
     </div>
-    <div class="oc-stage">${lead}<div class="chip s${stageIdx}">${stage.label}</div>${typeChip}${sizeChip}${cpChip}${holdChip}${folderChip}${archChip}</div>
+    <div class="oc-stage">${lead}<div class="chip s${stageIdx}">${stage.label}</div>${typeChip}${sizeChip}${cpChip}${dlvChip}${holdChip}${folderChip}${archChip}</div>
     <div class="oc-chips"><div class="chip plain">Due ${date}</div>${cutChip}${money}</div>
     <div class="note-block">
       <div class="note-row">${svgi('note', 13)}<div class="note-text ${latest ? 'has' : ''}">${latest || T('noActivity')}</div></div>
@@ -2096,6 +2128,7 @@ setMoneyBtn();
 
 function renderProjects() {
   updateKpiStrip();
+  if (window._odId) renderOrderModal();   // an open order view follows live changes (e.g. a delivery tick)
   const list = document.getElementById('projects-list');
   const tf   = window._typeFilter;
   const q    = (document.getElementById('search-input')?.value || '').trim();
@@ -2458,9 +2491,14 @@ function renderOrderModal() {
   const stage = getPipeline()[Math.min(p.status || 0, 4)].label;
   const bal = balOf(p);
   const fact = (k, v) => `<div><div class="od-k">${k}</div><div class="od-v">${v}</div></div>`;
-  const items = p.items?.length ? `<div class="od-sec"><div class="dt-lbl">${T('itemsHdr')} (${p.items.length})</div>` + p.items.map(it => {
+  // Items: each one can be ticked Delivered (admins), with the day it went; delivered ones can go on a challan.
+  const dl = (p.items || []).filter(it => it.deliveredAt).length, nItems = (p.items || []).length;
+  const dlvCell = (it, i) => it.deliveredAt
+    ? (admin ? `<button class="dlv on" title="Delivered — tap to undo" onclick="toggleItemDelivered('${p.id}', ${i})">\u2713 ${fmtDay(new Date(it.deliveredAt + 'T00:00:00'))}</button>` : `<span class="dlv on">\u2713 ${fmtDay(new Date(it.deliveredAt + 'T00:00:00'))}</span>`)
+    : (admin ? `<button class="dlv" onclick="toggleItemDelivered('${p.id}', ${i})">Deliver</button>` : (dl ? '<span class="dlv">Pending</span>' : ''));
+  const items = nItems ? `<div class="od-sec"><div class="dt-lbl od-items-h"><span>${T('itemsHdr')} (${nItems})${dl ? ` \u00B7 ${dl} delivered` : ''}</span>${admin ? `<span>${dl < nItems ? `<button class="od-link" onclick="markAllDelivered('${p.id}')">Mark all delivered</button>` : ''}${dl ? `<button class="od-link" onclick="printChallan('${p.id}')">Print challan</button>` : ''}</span>` : ''}</div>` + p.items.map((it, i) => {
       const dims = [it.l, it.b, it.w].filter(Boolean).map(fmtSize).join(' × ');
-      return `<div class="dt-item"><div class="dt-item-n">${escHtml(it.name)}${it.note ? `<span class="dt-note">${escHtml(it.note)}</span>` : ''}</div>${dims ? `<div class="dt-item-d">${escHtml(dims)}</div>` : ''}<div class="dt-item-q">${escHtml(it.qty)} ${escHtml(it.unit || 'Nos')}</div></div>`;
+      return `<div class="dt-item ${it.deliveredAt ? 'dlvd' : ''}"><div class="dt-item-n">${escHtml(it.name)}${it.note ? `<span class="dt-note">${escHtml(it.note)}</span>` : ''}</div>${dims ? `<div class="dt-item-d">${escHtml(dims)}</div>` : ''}<div class="dt-item-q">${escHtml(it.qty)} ${escHtml(it.unit || 'Nos')}</div>${dlvCell(it, i)}</div>`;
     }).join('') + '</div>' : '';
   const specs = p.notes ? `<div class="od-sec"><div class="dt-lbl">Specs</div><div class="dt-specs">${escHtml(p.notes)}</div></div>` : '';
   const internal = p.internalNotes ? `<div class="od-sec"><div class="dt-lbl">Internal notes</div><div class="dt-specs">${escHtml(p.internalNotes)}</div></div>` : '';
@@ -2486,6 +2524,56 @@ function renderOrderModal() {
     </div>`;
 }
 function openEditFromDetails(id) { closeOrderModal(); openEditModal(id); }
+
+// ── Part delivery: order items (not the cut list) are ticked Delivered one by one, with today's date.
+// Each change goes in the order's notes; when the last item is ticked the app offers to mark the order Delivered.
+const todayYmd = () => new Date().toLocaleDateString('en-CA');
+async function saveDelivery(p, items, text) {
+  const log = [{ text, time: new Date().toISOString() }, ...(p.activityLog || [])];
+  const patch = { items, activityLog: log, updatedAt: _serverTimestamp() };
+  if (!isDelivered(p) && items.every(it => it.deliveredAt) && confirm('All items are delivered. Mark the order Delivered?')) {
+    patch.status = 4; patch.deliveredAt = todayYmd();
+  }
+  try { await _updateDoc(_doc(_db, 'projects', p.id), patch); showToast(patch.status === 4 ? 'Order marked Delivered' : 'Delivery saved'); }
+  catch (err) { showToast('Could not save: ' + (err?.code || err?.message || 'error')); }
+}
+function toggleItemDelivered(id, i) {
+  if (!window._isAdmin) return;
+  const p = (window._projects || []).find(x => x.id === id); const it = p?.items?.[i]; if (!it) return;
+  if (it.deliveredAt && !confirm(`Mark \u201C${it.name}\u201D as not delivered?`)) return;
+  const items = p.items.map((x, k) => k !== i ? x : (() => { const y = { ...x }; if (x.deliveredAt) delete y.deliveredAt; else y.deliveredAt = todayYmd(); return y; })());
+  saveDelivery(p, items, it.deliveredAt ? `Delivery undone: ${it.name}` : `Delivered: ${it.name} (${it.qty} ${it.unit || 'Nos'})`);
+}
+function markAllDelivered(id) {
+  if (!window._isAdmin) return;
+  const p = (window._projects || []).find(x => x.id === id); if (!p?.items?.length) return;
+  const left = p.items.filter(it => !it.deliveredAt);
+  if (!left.length || !confirm(`Mark ${left.length} item${left.length === 1 ? '' : 's'} delivered today?`)) return;
+  saveDelivery(p, p.items.map(it => it.deliveredAt ? it : { ...it, deliveredAt: todayYmd() }), `Delivered: ${left.map(it => it.name).join(', ')}`);
+}
+// Delivery challan (A5, no amounts): the items delivered today, or every delivered item when none went today;
+// the items still to come are listed under it.
+function printChallan(id) {
+  const p = (window._projects || []).find(x => x.id === id); if (!p) return;
+  const all = p.items || [], t = todayYmd();
+  let sent = all.filter(it => it.deliveredAt === t);
+  if (!sent.length) sent = all.filter(it => it.deliveredAt);
+  const day = sent.map(it => it.deliveredAt).sort().pop() || t;
+  const left = all.filter(it => !it.deliveredAt);
+  const nos = its => Math.round(its.filter(it => (it.unit || 'Nos') === 'Nos').reduce((s, it) => s + (parseFloat(it.qty) || 1), 0) * 100) / 100;
+  const dims = it => [it.l, it.b, it.w].filter(Boolean).map(fmtSize).join(' × ');
+  document.getElementById('challan').innerHTML = `
+    <div class="ch-top"><div><div class="ch-brand">Amar Furniture</div><div class="ch-sub">Delivery Challan</div></div>
+      <div class="ch-meta">Challan No. <b>${p.orderNo || ''}-${day.replace(/-/g, '').slice(2)}</b><br>Date <b>${fmtFull(day)}</b></div></div>
+    <div class="ch-to"><div><small>Client</small><b>${escHtml(p.client || '')}</b>${p.phone ? `<span>${escHtml(p.phone)}</span>` : ''}</div>
+      <div><small>Order</small><b>#${p.orderNo || ''}</b>${p.item ? `<span>${escHtml(p.item)}</span>` : ''}</div></div>
+    <table class="ch-t"><thead><tr><th>#</th><th>Item</th><th>Size (in)</th><th class="r">Qty</th></tr></thead><tbody>
+      ${sent.map((it, i) => `<tr><td>${i + 1}</td><td>${escHtml(it.name)}${it.note ? `<small>${escHtml(it.note)}</small>` : ''}</td><td>${escHtml(dims(it))}</td><td class="r">${escHtml(it.qty)} ${escHtml(it.unit || 'Nos')}</td></tr>`).join('')}
+    </tbody><tfoot><tr><td></td><td colspan="2">${sent.length} item${sent.length === 1 ? '' : 's'}</td><td class="r">${nos(sent) ? nos(sent) + ' Nos' : ''}</td></tr></tfoot></table>
+    ${left.length ? `<div class="ch-left"><b>Still to be delivered:</b> ${left.map(it => `${escHtml(it.name)} (${escHtml(it.qty)} ${escHtml(it.unit || 'Nos')})`).join(', ')}</div>` : ''}
+    <div class="ch-sign"><div>Received by (name &amp; sign)</div><div>For Amar Furniture</div></div>`;
+  window.print();
+}
 // A click on a card's empty space (not a button, link, chip, note box or its open details) shows the order read-only.
 document.addEventListener('click', e => {
   const card = e.target.closest?.('.order-card:not(.linked)');
@@ -2848,7 +2936,8 @@ function openEditModal(id) {
   document.getElementById('other-label-inp').value     = p.otherLabel || '';
   document.getElementById('items-edit-list').innerHTML = '';
   document.getElementById('items-from-cut').style.display = window._isAdmin && isCopyBackOn() && (window._cutlists[id]?.pieces?.length || window._cutlists[id]?.groups?.length) ? '' : 'none';
-  (p.items || []).forEach(it => addItemRow(it.name, prettySize(it.l), prettySize(it.b), prettySize(it.w), it.qty, it.unit||'Nos', it.note||''));
+  // An item's delivery tick (deliveredAt) rides along on its row, so editing the order keeps it.
+  (p.items || []).forEach(it => { const r = addItemRow(it.name, prettySize(it.l), prettySize(it.b), prettySize(it.w), it.qty, it.unit||'Nos', it.note||''); if (it.deliveredAt) r.dataset.dlv = it.deliveredAt; });
   selectType(p.projectType || 'woodwork');
   window._editStatus = p.status ?? 0;
   renderStatusSel('status-selector-opts', p.status ?? 0, false);
@@ -2942,6 +3031,7 @@ function addItemRow(name='', l='', b='', w='', qty='', unit='Nos', note='') {
   list.appendChild(row);
   updateItemsSum();
   if (!name) row.querySelector('.item-name-inp').focus();
+  return row;
 }
 // The reverse of "Copy sizes from order items": when the cut list was edited directly, bring its pieces
 // back as the order's items (L → L, W → B, T → W, qty and note). Nothing is saved until Save Order.
