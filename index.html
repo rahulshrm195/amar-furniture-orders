@@ -12,7 +12,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v3.97.1 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
+/* ── v3.98.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -68,6 +68,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .btn-primary:hover{background:#A9521F}
 .btn-ghost{background:var(--surface);color:var(--ink2);border-color:var(--border)}
 .btn-cut{color:var(--clay);border-color:#E7B99D}
+.mval-hint{font-size:11.5px;color:var(--ink3);line-height:1.4}
 .btn-ghost:hover{background:#F1EDE1}
 .btn-archive{background:var(--surface);color:var(--ink2);border-color:var(--border)}
 .btn-danger{background:var(--red-soft);color:var(--red);border-color:#EBC3BA}
@@ -174,6 +175,8 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .rp-row{grid-template-columns:minmax(0,2.2fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 34px}
 .rp-row.dp{grid-template-columns:minmax(0,2.2fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 34px}
 .rp-row .dt{color:var(--ink2);white-space:nowrap;font-variant-numeric:tabular-nums}
+.rp-row.mc{grid-template-columns:minmax(0,2.2fr) minmax(0,1fr) minmax(0,.8fr) minmax(0,1fr);cursor:pointer}
+.rp-row.hd.mc{cursor:default}
 .rp-row.hd .dt{justify-content:flex-start}
 .rp-ranges{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
 .rp-rg{font-size:12px;font-weight:700;color:var(--ink2);background:var(--surface);border:1px solid var(--border);padding:5px 10px;border-radius:16px}
@@ -589,6 +592,7 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
   .field-grid .field.full{grid-column:1/-1}
   .field-grid.details{grid-template-columns:repeat(4,1fr)}
   .field-grid .field.wide{grid-column:span 2}
+  .field-grid .mval-hint{align-self:center}
   .toggle-row{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
   #project-modal .status-selector{flex-direction:row;flex-wrap:wrap;gap:8px}
   #project-modal .status-opt{border-radius:20px;padding:8px 15px}
@@ -627,7 +631,7 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.97.1</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v3.98.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -769,6 +773,9 @@ button.chip.cut{border:none;cursor:pointer;font-family:inherit}
           <div class="field wide"><label>Project Description</label><input type="text" id="f-item" placeholder="Brief description of the work"></div>
           <div class="field"><label>Total Amount (₹)</label><input type="number" id="f-amount" placeholder="0"></div>
           <div class="field"><label>Advance Received (₹)</label><input type="number" id="f-advance" placeholder="0"></div>
+          <div class="field mval"><label>Lathe work (₹)</label><input type="number" id="f-lathe-val" placeholder="0"></div>
+          <div class="field mval"><label>CNC work (₹)</label><input type="number" id="f-cnc-val" placeholder="0"></div>
+          <div class="field wide mval mval-hint">Part of the total that is lathe / CNC work — for the machines' earnings in Reports; it is not added to the total. On a Lathe or CNC order, blank means the whole amount.</div>
         </div>
 
         <div class="toggle-row">
@@ -1160,6 +1167,9 @@ window.saveProject = async function(openCut) {
     phone:     document.getElementById('f-phone').value.trim(),
     orderDate: date, deadline,
     amount:    parseFloat(document.getElementById('f-amount').value) || 0,
+    // Lathe / CNC share of the amount (machine earnings in Reports; never added to the total). Only for types with a cut list.
+    latheValue: hasCutList(type) ? parseFloat(document.getElementById('f-lathe-val').value) || 0 : 0,
+    cncValue:   hasCutList(type) ? parseFloat(document.getElementById('f-cnc-val').value) || 0 : 0,
     advance:   parseFloat(document.getElementById('f-advance').value) || 0,
     items, status: window._editStatus ?? 0, carpenter: window._editCarpenter || '', size: window._editSize || 'm',
     notes:     document.getElementById('f-notes').value.trim(),
@@ -1266,7 +1276,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v3.97.1';
+const APP_VERSION = 'v3.98.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -2285,7 +2295,48 @@ const REPORTS = [
     note:'How each department has performed: delivered orders grouped by type (archived ones are not counted). The bar shows each department\'s share of the total value.',
     rows: () => (window._projects || []).filter(p => !isArchived(p) && isDelivered(p)),
     cards: ['Orders completed', 'Total value', 'Received'], countFirst:true, listTitle:'Performance by department', onlyDue:false, dept:true, ranged:true },
+  { id:'machines', label:'Lathe & CNC', machines:true, ranged:true, rows: () => [], cards: ['', '', ''], listTitle: '',
+    note:'What the Lathe and CNC machines did and earned, from their own orders and from pieces linked from other orders. Nos count by the day each piece was done on the tablet. Earnings count in the period the machine finished its last piece of an order (or the delivery date for orders without a cut list): a Lathe / CNC order earns its whole amount unless its Lathe / CNC work box is filled; other orders earn what is in those boxes. These are shares of the order value, not extra turnover.' },
 ];
+// One line per order and machine: Nos done in the period, and the earning if the machine finished that order's pieces in it.
+const MACHINES = { lathe: { label: 'Lathe', f: 'turned', at: 'turnedAt', val: 'latheValue', did: 'turned' }, cnc: { label: 'CNC', f: 'cnc', at: 'cncAt', val: 'cncValue', did: 'done' } };
+const localDay = s => { const d = new Date(s); return isNaN(d) ? '' : d.toLocaleDateString('en-CA'); };
+function machineRows(r) {
+  const inR = d => !!d && (!r || (d >= r[0] && d <= r[1]));
+  const out = [];
+  (window._projects || []).forEach(p => Object.entries(MACHINES).forEach(([k, m]) => {
+    const pcs = (window._cutlists?.[p.id]?.pieces || []).filter(pc => pieceStep(pc, p) === k);
+    const direct = p.projectType === k, share = Number(p[m.val]) || 0;
+    if (!direct && !share && !pcs.length) return;
+    const value = share || (direct ? Number(p.amount) || 0 : 0);
+    const nos = ps => Math.round(ps.reduce((t, x) => t + (parseFloat(x.qty) || 1), 0) * 100) / 100;
+    const doneP = pcs.filter(pc => pc[m.f]);
+    const nosIn = nos(doneP.filter(pc => inR(localDay(pc[m.at]))));
+    const finished = pcs.length ? (doneP.length === pcs.length ? doneP.map(pc => localDay(pc[m.at])).sort().pop() : '')
+      : (isDelivered(p) ? p.deliveredAt || p.deadline || '' : '');
+    const earned = inR(finished) ? value : 0;
+    if (!nosIn && !inR(finished)) return;
+    out.push({ p, k, direct, value, earned, nosIn, finished, all: nos(pcs), doneAll: nos(doneP) });
+  }));
+  return out;
+}
+function machinesHtml(rng) {
+  const rows = machineRows(rng.r);
+  const sum = (k, f) => rows.filter(x => x.k === k).reduce((t, x) => t + x[f], 0);
+  const cnt = k => { const xs = rows.filter(x => x.k === k && x.earned); return `${xs.filter(x => x.direct).length} own + ${xs.filter(x => !x.direct).length} linked orders finished`; };
+  const cards = Object.entries(MACHINES).map(([k, m]) => `<div class="rp-card" style="--kc:${TYPES[k].color}"><div class="rp-lbl">${m.label} earnings</div><div class="rp-num">${rupee(sum(k, 'earned'))}</div><div class="rp-sub">${cnt(k)}</div></div>`).join('')
+    + Object.entries(MACHINES).map(([k, m]) => `<div class="rp-card" style="--kc:${TYPES[k].color}"><div class="rp-lbl">${m.label} work</div><div class="rp-num">${Math.round(sum(k, 'nosIn') * 100) / 100} Nos</div><div class="rp-sub">${m.did} in this period</div></div>`).join('');
+  const table = k => {
+    const xs = rows.filter(x => x.k === k).sort((a, b) => (b.finished || '9').localeCompare(a.finished || '9') || b.nosIn - a.nosIn);
+    const body = xs.length ? xs.map(x => `<div class="rp-row mc" onclick="openOrderModal('${x.p.id}')"><div class="rp-who"><b>${x.p.orderNo ? '#' + x.p.orderNo + ' ' : ''}${escHtml(x.p.client)}</b><small>${x.direct ? escHtml(typeLabelOf(x.p)) + ' order' : '↳ Linked from ' + escHtml(typeLabelOf(x.p))}${x.all ? ` · ${x.doneAll} of ${x.all} Nos ${MACHINES[k].did}` : ' · no cut list'}</small></div>
+        <div class="dt">${x.finished ? fmtFull(x.finished) : 'In progress'}</div><div class="n">${x.nosIn ? x.nosIn + ' Nos' : '—'}</div>
+        <div class="n">${x.earned ? rupee(x.earned) : x.value ? `<small style="color:var(--ink3)">${rupee(x.value)} when done</small>` : '<small style="color:var(--ink3)">No value</small>'}</div></div>`).join('')
+      : `<div class="rp-empty">No ${MACHINES[k].label} work in this period.</div>`;
+    return `<div class="rp-table" style="margin-bottom:16px"><div class="rp-table-h">${MACHINES[k].label}<span>${xs.length} ${xs.length === 1 ? 'order' : 'orders'}</span></div>
+      <div class="rp-row hd mc"><div>Order</div><div class="dt">Finished</div><div class="n">Nos in period</div><div class="n">Earned</div></div>${body}</div>`;
+  };
+  return `<div class="rp-cards c4">${cards}</div>${table('lathe')}${table('cnc')}`;
+}
 
 // The Reports button is a real link (#reports), so Cmd/Ctrl+click or middle-click opens it in a new tab.
 function reportsClick(e) {
@@ -2677,6 +2728,11 @@ function renderReports() {
     return `<div class="${cls}"><button class="rp-th ${on ? 'on ' + window._rpSort.dir : ''}" onclick="sortBy('${key}')" title="Sort by ${label.toLowerCase()}" aria-label="Sort by ${label.toLowerCase()}">${label}${arrows}</button></div>`;
   };
 
+  if (rep.machines) {
+    document.getElementById('rp-body').innerHTML = `<div class="rp-filters">${rangeBar}${customBar}</div><div class="rp-info"><div class="rp-note">${rep.note}</div></div>${machinesHtml(rng)}`;
+    if (window._odId) renderOrderModal();
+    return;
+  }
   document.getElementById('rp-body').innerHTML = `
     <div class="rp-filters">${rangeBar}${deptBar}${customBar}</div>
     <div class="rp-info"><div class="rp-note">${rep.note}</div>${period}</div>
@@ -2750,7 +2806,7 @@ function openAddModal() {
   document.getElementById('modal-title').textContent = 'New Order';
   document.getElementById('delete-btn').style.display  = 'none';
   document.getElementById('archive-btn').style.display = 'none';
-  ['f-client','f-phone','f-item','f-amount','f-advance','f-notes','f-internal','other-label-inp','f-drive'].forEach(id => document.getElementById(id).value = '');
+  ['f-client','f-phone','f-item','f-amount','f-advance','f-lathe-val','f-cnc-val','f-notes','f-internal','other-label-inp','f-drive'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('f-drive-field').style.display = 'none';
   document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
   document.getElementById('f-deadline').value = '';
@@ -2775,6 +2831,8 @@ function openEditModal(id) {
   document.getElementById('f-date').value              = p.orderDate || '';
   document.getElementById('f-deadline').value          = p.deadline || '';
   document.getElementById('f-amount').value            = p.amount || '';
+  document.getElementById('f-lathe-val').value         = p.latheValue || '';
+  document.getElementById('f-cnc-val').value           = p.cncValue || '';
   document.getElementById('f-advance').value           = p.advance || '';
   document.getElementById('f-notes').value             = p.notes || '';
   document.getElementById('f-internal').value          = p.internalNotes || '';
@@ -2838,6 +2896,9 @@ function selectType(type) {
   });
   document.getElementById('other-label-wrap').style.display = type === 'other' ? 'block' : 'none';
   document.getElementById('save-cut-btn').style.display = hasCutList(type) ? '' : 'none';
+  document.querySelectorAll('#project-modal .mval').forEach(el => el.style.display = hasCutList(type) ? '' : 'none');
+  document.getElementById('f-lathe-val').placeholder = type === 'lathe' ? 'Whole amount' : '0';
+  document.getElementById('f-cnc-val').placeholder = type === 'cnc' ? 'Whole amount' : '0';
   window._editStatus = keepStatus ?? 0;
   renderStatusSel('status-selector-opts', window._editStatus, false);
 }
