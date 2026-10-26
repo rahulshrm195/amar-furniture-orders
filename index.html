@@ -12,7 +12,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v4.2.1 — Cut lists for the workshop tablet (/cut/); UI is Concept A with the liquid glass layer ── */
+/* ── v4.3.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A with the liquid glass layer ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -622,7 +622,7 @@ span.dlv{cursor:default}
   .install-banner.show{transform:translateX(-50%) translateY(0)}
 }
 
-/* ── Liquid glass (v4.2.1) — a visual layer over Concept A. Tune it here: ── */
+/* ── Liquid glass (v4.3.0) — a visual layer over Concept A. Tune it here: ── */
 :root{
   --glass-bg:rgba(255,255,255,.45);           /* header, KPI tiles, group headers, + button, small pills */
   --glass-bg-list:rgba(255,255,255,.58);      /* order cards: no blur on phones */
@@ -753,11 +753,59 @@ body::before{content:'';position:fixed;inset:-120px;z-index:-1;pointer-events:no
   .logout-btn{padding:0 9px;font-size:12.5px}
 }
 
-/* Polish pass (v4.2.1) */
+/* Polish pass (v4.3.0) */
 .tb-btn:not(.tb-new) svg circle[fill]{fill:currentColor}   /* Overview's dots follow the icon colour, like its lines */
 @media (pointer:coarse){
   .modal-backdrop{-webkit-backdrop-filter:none;backdrop-filter:none}   /* phones: the dim alone; the dialog keeps its own blur */
   body::before{filter:none}                                           /* phones: the soft gradients need no extra blur */
+}
+
+/* Phone layout (v4.3.0, ≤640px): one-row header (search + ⋯ menu), tiles as pills, view + sort on one row,
+   and calmer cards (note box behind the note row, all card buttons in one sideways-scrolling row). */
+.tb-m,.sort-m{display:none}
+.oc-tools{display:block}
+.m-sheet .m-sheet-head{display:flex;flex-direction:column;gap:3px;margin:0 6px 12px}
+.m-sheet .m-sheet-head b{font-family:var(--serif);font-size:19px;font-weight:700}
+.m-sheet .m-sheet-head span{font-family:var(--mono);font-size:11.5px;color:var(--ink2)}
+.m-sheet-list{display:flex;flex-direction:column;gap:2px;padding-bottom:env(safe-area-inset-bottom)}
+.m-row{display:flex;align-items:center;gap:14px;width:100%;min-height:52px;padding:0 10px;border:none;background:transparent;border-radius:16px;font:inherit;font-size:15px;font-weight:600;color:var(--ink);text-align:left;cursor:pointer}
+.m-row:active,.m-row:hover{background:rgba(255,255,255,.65)}
+.m-row.on{color:var(--clay)}
+.m-ico{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;background:rgba(255,255,255,.7);border:1px solid var(--glass-border);box-shadow:var(--glass-highlight)}
+.m-ico svg{stroke:currentColor}
+.m-ico svg circle[fill]{fill:currentColor}
+.m-tick{margin-left:auto;display:flex}
+@media (max-width:640px){
+  /* Header: logo + name, then search and ⋯; the + lives only in the floating button */
+  .topbar{padding:10px 12px;gap:8px}
+  .topbar .brand-sub{display:none}
+  .tb-right>:not(.tb-m){display:none!important}
+  .tb-m{display:flex}
+  .tb-search{display:none}
+  body.m-search .tb-search{display:block}
+  /* Summary tiles: one slim row of pills */
+  .kpi-strip{gap:8px;padding:10px 12px 4px}
+  .kpi{display:flex;align-items:center;gap:7px;min-width:0;padding:8px 14px;border-radius:999px}
+  .kpi::before{display:none}
+  .kpi-head{margin:0}
+  .kpi-lbl{font-size:11px}
+  .kpi-num{font-size:17px}
+  /* View and sort on one row; sort choices in a sheet */
+  .sort-bar{flex-wrap:nowrap}
+  .sort-lbl,.sort-opt,.sort-hint,.sort-gap{display:none}
+  .sort-m{display:inline-flex;align-items:center;gap:6px;margin-left:auto;min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--glass-border);background:var(--glass-bg);box-shadow:var(--glass-highlight),0 2px 8px rgba(0,0,0,.05);font:inherit;font-size:13px;font-weight:600;color:var(--ink2)}
+  .sort-m b{color:var(--ink);font-weight:800}
+  .view-seg button{min-height:38px}
+  /* Calmer cards */
+  .order-card{padding:14px 14px 12px;gap:8px}
+  .note-row{cursor:pointer}
+  .note-add-row{display:none}
+  .order-card.note-open .note-add-row{display:flex}
+  .oc-tools{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -14px;padding:2px 14px 4px}
+  .oc-tools::-webkit-scrollbar{display:none}
+  .oc-prep,.oc-actions{display:contents}
+  .oc-actions>*{order:0;flex:0 0 auto}
+  .oc-prep>*{order:1;flex:0 0 auto}
 }
 
 /* No backdrop-filter support (older Android WebViews): solid translucent white instead */
@@ -786,7 +834,7 @@ body::before{content:'';position:fixed;inset:-120px;z-index:-1;pointer-events:no
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v4.2.1</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v4.3.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -834,6 +882,9 @@ body::before{content:'';position:fixed;inset:-120px;z-index:-1;pointer-events:no
       </button>
       <div class="role-badge" id="role-badge">Admin</div>
       <button class="logout-btn" onclick="signOut()">Logout</button>
+      <!-- Phones: search and a ⋯ menu instead of the row of buttons -->
+      <button class="tb-btn tb-m" id="m-search-btn" aria-label="Search" title="Search" onclick="toggleMobileSearch()"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.5-4.5"/></svg></button>
+      <button class="tb-btn tb-m" id="m-menu-btn" aria-label="Menu" title="Menu" onclick="openMobileMenu()"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4" fill="currentColor"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/><circle cx="19" cy="12" r="1.4" fill="currentColor"/></svg></button>
     </div>
   </div>
 
@@ -1091,6 +1142,14 @@ body::before{content:'';position:fixed;inset:-120px;z-index:-1;pointer-events:no
   </div>
 </div>
 <div class="toast" id="toast"></div>
+<!-- Phone action sheet (menu, sort) -->
+<div class="modal-backdrop" id="sheet-modal">
+  <div class="modal m-sheet">
+    <div class="modal-handle"></div>
+    <div class="m-sheet-head" id="m-sheet-head"></div>
+    <div class="m-sheet-list" id="m-sheet-list"></div>
+  </div>
+</div>
 
 <!-- FIREBASE -->
 <script type="module">
@@ -1431,7 +1490,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v4.2.1';
+const APP_VERSION = 'v4.3.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -1689,6 +1748,8 @@ window.resolveStuckFolder = function(id) {
 // ── ICONS (Concept A set — 24px grid, round strokes) ──
 const IC = {
   chev:    '<path d="m6 9 6 6 6-6"/>',
+  check:   '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+  logout:  '<path d="M10 4.5H6A1.5 1.5 0 0 0 4.5 6v12A1.5 1.5 0 0 0 6 19.5h4"/><path d="M14.5 8 19 12l-4.5 4M19 12H9.5"/>',
   user:    '<circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c.8-3.8 3.8-6 7.5-6s6.7 2.2 7.5 6"/>',
   wood:    '<rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/>',
   home:    '<path d="M4 11.5 12 4l8 7.5"/><path d="M6 10.5V20h12v-9.5"/>',
@@ -1990,14 +2051,14 @@ function buildCard(p) {
     <div class="oc-stage">${lead}<div class="chip s${stageIdx}">${stage.label}</div>${typeChip}${sizeChip}${cpChip}${dlvChip}${holdChip}${folderChip}${archChip}</div>
     <div class="oc-chips"><div class="chip plain">Due ${date}</div>${cutChip}${money}</div>
     <div class="note-block">
-      <div class="note-row">${svgi('note', 13)}<div class="note-text ${latest ? 'has' : ''}">${latest || T('noActivity')}</div></div>
+      <div class="note-row" onclick="toggleNoteBox(this)">${svgi('note', 13)}<div class="note-text ${latest ? 'has' : ''}">${latest || T('noActivity')}</div></div>
       <div class="note-add-row">
         <input class="note-input" type="text" id="${noteId}" placeholder="${T('addNote')}" onkeydown="if(event.key==='Enter')addActivityLog('${p.id}')">
         <button class="note-send" aria-label="${T('add')}" onclick="addActivityLog('${p.id}')">${svgi('send', 13)}</button>
       </div>
     </div>
-    ${prep.length ? `<div class="oc-prep">${prep.join('')}</div>` : ''}
-    <div class="oc-actions">${acts.join('')}</div>
+    <div class="oc-tools">${prep.length ? `<div class="oc-prep">${prep.join('')}</div>` : ''}
+    <div class="oc-actions">${acts.join('')}</div></div>
     ${details}
   </div>`;
 }
@@ -2124,7 +2185,7 @@ function sortBar() {
   const b = (m, lbl) => `<button class="sort-opt ${window._sortMode === m ? 'on' : ''}" onclick="setSortMode('${m}')">${lbl}</button>`;
   const v = (m, lbl) => `<button class="${window._viewMode === m ? 'on' : ''}" onclick="setViewMode('${m}')">${lbl}</button>`;
   const hint = window._isAdmin && window._sortMode === 'mine' ? `<span class="sort-hint">Drag cards to set priority</span>` : '';
-  return `<div class="sort-bar"><span class="sort-lbl">View</span><span class="view-seg">${v('list', 'List')}${v('board', 'Board')}</span><span class="sort-gap"></span><span class="sort-lbl">Sort</span>${b('mine', 'My order')}${b('due', 'Due date')}${b('order', 'Order date')}${hint}</div>`;
+  return `<div class="sort-bar"><span class="sort-lbl">View</span><span class="view-seg">${v('list', 'List')}${v('board', 'Board')}</span><span class="sort-gap"></span><span class="sort-lbl">Sort</span>${b('mine', 'My order')}${b('due', 'Due date')}${b('order', 'Order date')}${hint}<button class="sort-m" onclick="openSortSheet()">Sort: <b>${SORT_LABELS[window._sortMode] || 'My order'}</b> ${svgi('chev', 12, 2)}</button></div>`;
 }
 // List (sections stacked) or Board (one column per project type, then Ready and On Hold). Remembered per device.
 const READY_PEEK = 4;
@@ -2338,6 +2399,47 @@ function toggleCard(id) {
   card.querySelector('.oc-actions .icon-btn[aria-label="Details"]')?.classList.toggle('on', open);
 }
 
+// ── Phone layout (≤640px): one-row header with search + ⋯ menu, sort in a sheet, note box behind the note row ──
+const PHONE = '(max-width:640px)';
+const SORT_LABELS = { mine: 'My order', due: 'Due date', order: 'Order date' };
+function toggleMobileSearch() {
+  const on = document.body.classList.toggle('m-search');
+  const si = document.getElementById('search-input');
+  if (on) si.focus(); else if (si.value) { si.value = ''; onSearchInput(); }
+}
+// A small sheet of big rows; each row runs its action and closes the sheet.
+function openSheet(head, items) {
+  document.getElementById('m-sheet-head').innerHTML = head;
+  document.getElementById('m-sheet-list').innerHTML = items.map((it, i) =>
+    `<button class="m-row ${it.on ? 'on' : ''}" onclick="pickSheetRow(${i})">${it.icon ? `<span class="m-ico">${it.icon}</span>` : ''}<span>${it.label}</span>${it.on ? `<span class="m-tick">${svgi('check', 16, 2.2)}</span>` : ''}</button>`).join('');
+  window._sheetItems = items;
+  openModal('sheet-modal');
+  document.getElementById('sheet-modal').onclick = e => { if (e.target.id === 'sheet-modal') closeSheet(); };
+}
+function closeSheet() { document.getElementById('sheet-modal').classList.remove('open'); }
+function pickSheetRow(i) { const it = window._sheetItems?.[i]; closeSheet(); it?.run(); }
+// The ⋯ menu lists the header's buttons that this user can see (same actions as on a computer).
+function openMobileMenu() {
+  const shown = id => { const el = document.getElementById(id); return el && el.style.display !== 'none'; };
+  const ico = id => (document.getElementById(id)?.querySelector('svg')?.outerHTML || '');
+  const items = [{ label: 'Overview', icon: document.querySelector('.tb-btn[aria-label="Overview"] svg')?.outerHTML, run: () => openStats() }];
+  if (shown('money-btn')) items.push({ label: window._showMoney ? 'Hide amounts' : 'Show amounts', icon: ico('money-btn'), run: () => toggleMoney() });
+  if (shown('reports-btn')) items.push({ label: 'Reports', icon: ico('reports-btn'), run: () => openReports() });
+  if (shown('cut-btn')) items.push({ label: 'Cutting list (workshop)', icon: ico('cut-btn'), run: () => { location.href = '/cut/'; } });
+  if (shown('settings-gear-btn')) items.push({ label: 'Settings', icon: ico('settings-gear-btn'), run: () => openSettingsModal() });
+  items.push({ label: 'Logout', icon: svgi('logout', 18, 1.9), run: () => signOut() });
+  openSheet(`<b>Amar Furniture</b><span>${escHtml(document.getElementById('role-badge')?.textContent || '')} · Order Tracker ${APP_VERSION}</span>`, items);
+}
+function openSortSheet() {
+  openSheet('<b>Sort orders</b>', Object.entries(SORT_LABELS).map(([m, label]) => ({ label, on: window._sortMode === m, run: () => setSortMode(m) })));
+}
+// Phones: the note row opens the note box (and focuses it); on a computer it shows the order like the rest of the card.
+function toggleNoteBox(el) {
+  const card = el.closest('.order-card'); if (!card) return;
+  if (!matchMedia(PHONE).matches) { if (card.id.startsWith('card-')) openOrderModal(card.id.slice(5), true); return; }
+  const open = card.classList.toggle('note-open');
+  if (open) card.querySelector('.note-input')?.focus();
+}
 function clearSearch() {
   const si = document.getElementById('search-input');
   if (!si) return;
@@ -3244,7 +3346,8 @@ document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
   if (document.getElementById('project-modal')?.classList.contains('open')) return;
   const open = id => document.getElementById(id)?.classList.contains('open');
-  if (open('pay-modal'))                 closePayModal();
+  if (open('sheet-modal'))              closeSheet();
+  else if (open('pay-modal'))            closePayModal();
   else if (open('order-modal'))          closeOrderModal();
   else if (open('status-modal'))         closeStatusModal();
   else if (open('settings-modal'))       closeSettingsModal();
