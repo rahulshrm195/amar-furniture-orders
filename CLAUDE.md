@@ -14,7 +14,12 @@ A single-page PWA for tracking furniture orders. It is hosted on GitHub Pages (s
 - `deployment-guide.docx`: the setup guide for the owner.
 
 ## Working rules
-1. **The UI must match the Concept A design.** Keep using the existing tokens (`--ivory`, `--clay`, `--ink*`, and so on), the Fraunces and Public Sans fonts, the rounded cards and chips, and the 24px round-stroke icons (`svgi(...)`). Do not introduce a new visual style.
+1. **The UI must match the Concept A design with the liquid glass layer (v4.0.0).** Keep using the existing tokens (`--ivory`, `--clay`, `--ink*`, and so on), the Fraunces and Public Sans fonts, the rounded cards and chips, and the 24px round-stroke icons (`svgi(...)`). Do not introduce a new visual style.
+   - The glass layer is one CSS block at the end of `index.html`'s `<style>` ("Liquid glass"), with its knobs as variables: `--glass-bg`, `--glass-bg-strong`, `--glass-modal`, `--glass-solid`, `--glass-line`, `--glass-edge`, `--glass-blur`, `--glass-sat`, `--glass-radius(-sm)`, `--glass-shadow(-sm/-lg)`, `--btn-dark`, `--mono`, `--spring`.
+   - A light frosted header (header icons use `currentColor`), frosted dialogs, glass cards, KPI tiles and buttons on a soft gradient with a faint dotted grid (`body::before`). Primary buttons, the + buttons, the FAB and the active sort chip are solid dark; secondary buttons are glass. Order numbers, day counts, times, section counts and versions are monospace.
+   - Performance: `backdrop-filter` only on the header, the docked KPI bar, dialogs and, on mouse devices only (`hover:hover and pointer:fine`), order cards; phones get the same look as a solid translucent fill. Without backdrop-filter support those surfaces fall back to `--glass-solid`.
+   - Touch screens (`pointer:coarse`) keep every tap target at least 44px; the phone header tightens its gaps instead of shrinking buttons. `--ink3` and `--clay` are a little deeper for AA contrast on glass. Presses use a small spring scale; `prefers-reduced-motion` turns motion off.
+   - The workshop tablet page (`cut/index.html`) is not glass-styled.
 2. **Every release bumps the version** in all of these places:
    - `index.html`: the comment at the top of `<style>` (`/* ── vX.Y.Z — …`), the sign-in brand line (`Order Tracker · vX.Y.Z`) and `const APP_VERSION = 'vX.Y.Z'`.
    - `cut/index.html`: the comment at the top of `<style>`, the sign-in brand line and `const CUT_VERSION`. These match the app version.
