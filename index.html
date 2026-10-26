@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#17160F">
+<meta name="theme-color" content="#F4F0EA">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="AF Orders">
@@ -12,7 +12,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v4.5.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A with the liquid glass layer ── */
+/* ── v4.6.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A with the liquid glass layer ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -622,7 +622,7 @@ span.dlv{cursor:default}
   .install-banner.show{transform:translateX(-50%) translateY(0)}
 }
 
-/* ── Liquid glass (v4.5.0) — a visual layer over Concept A. Tune it here: ── */
+/* ── Liquid glass (v4.6.0) — a visual layer over Concept A. Tune it here: ── */
 :root{
   --glass-bg:rgba(255,255,255,.45);           /* header, KPI tiles, group headers, + button, small pills */
   --glass-bg-list:rgba(255,255,255,.58);      /* order cards: no blur on phones */
@@ -753,14 +753,14 @@ body::before{content:'';position:fixed;inset:-120px;z-index:-1;pointer-events:no
   .logout-btn{padding:0 9px;font-size:12.5px}
 }
 
-/* Polish pass (v4.5.0) */
+/* Polish pass (v4.6.0) */
 .tb-btn:not(.tb-new) svg circle[fill]{fill:currentColor}   /* Overview's dots follow the icon colour, like its lines */
 @media (pointer:coarse){
   .modal-backdrop{-webkit-backdrop-filter:none;backdrop-filter:none}   /* phones: the dim alone; the dialog keeps its own blur */
   body::before{filter:none}                                           /* phones: the soft gradients need no extra blur */
 }
 
-/* Phone layout (v4.5.0, ≤640px): one-row header (search + ⋯ menu), tiles as pills, view + sort on one row,
+/* Phone layout (v4.6.0, ≤640px): one-row header (search + ⋯ menu), tiles as pills, view + sort on one row,
    and calmer cards (note box behind the note row, all card buttons in one sideways-scrolling row). */
 .tb-m,.tb-burger{display:none}
 /* Phone side drawer, the overdue badge and the ≡ hint on the logo */
@@ -821,6 +821,12 @@ body::before{content:'';position:fixed;inset:-120px;z-index:-1;pointer-events:no
   .oc-tools .prep-btn svg{width:17px;height:17px}
 }
 
+/* Native feel (v4.6.0): no double-tap zoom delay, no text selection or callout on buttons, a soft view change */
+html{touch-action:manipulation}
+:is(button,.chip,.icon-btn,.prep-btn,.tb-btn,.kpi,.section-header,.m-row,.m-kpi,.dlv,.sort-opt,.tb-home,.note-row){-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+@keyframes viewIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+#reports-view{animation:viewIn .3s cubic-bezier(.22,1,.36,1)}
+
 /* No backdrop-filter support (older Android WebViews): solid translucent white instead */
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
   .topbar,.kpi,.section-header,.modal,.kpi-dock{background:var(--glass-bg-fallback)}
@@ -847,7 +853,7 @@ body::before{content:'';position:fixed;inset:-120px;z-index:-1;pointer-events:no
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v4.5.0</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v4.6.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -1168,7 +1174,7 @@ body::before{content:'';position:fixed;inset:-120px;z-index:-1;pointer-events:no
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut as fbSignOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, updateDoc, setDoc, deleteDoc, doc,
+import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, addDoc, updateDoc, setDoc, deleteDoc, doc,
   onSnapshot, query, orderBy, serverTimestamp, runTransaction, writeBatch }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -1196,7 +1202,11 @@ const WORKSHOP_EMAIL = "workshop@amarfurniture.in";
 
 const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db   = getFirestore(app);
+// Orders are kept on the device (IndexedDB), so the app opens straight onto the last list and works offline;
+// live changes still arrive as soon as there is a connection. Falls back to the plain in-memory setup.
+let db;
+try { db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) }); }
+catch (err) { console.warn('Offline cache not available:', err); db = getFirestore(app); }
 
 Object.assign(window, {
   _auth:auth, _db:db, _ADMIN_EMAILS:ADMIN_EMAILS,
@@ -1502,7 +1512,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v4.5.0';
+const APP_VERSION = 'v4.6.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -2411,6 +2421,60 @@ function toggleCard(id) {
   card.querySelector('.oc-actions .icon-btn[aria-label="Details"]')?.classList.toggle('on', open);
 }
 
+// ── Native feel ──
+// A short vibration when something is saved or changed (Android phones; other devices ignore it).
+function haptic(ms = 12) { try { if (matchMedia('(pointer:coarse)').matches) navigator.vibrate?.(ms); } catch {} }
+// Android's Back closes the top dialog, sheet, drawer or Reports instead of leaving the app: while any of them
+// is open there is one extra history entry; Back pops it and closes the top one. The order form and the cut
+// list ask first, so a Back press never throws away typing.
+history.scrollRestoration = 'manual';
+const LAYERS = {
+  'drawer': () => closeDrawer(),
+  'project-modal': () => confirm('Close the order form without saving?') && (closeModal(), true),
+  'cut-modal': () => confirm('Close the cut list without saving?') && (closeCutModal(), true),
+  'pay-modal': () => closePayModal(), 'status-modal': () => closeStatusModal(), 'order-modal': () => closeOrderModal(),
+  'settings-modal': () => closeSettingsModal(), 'stats-sheet-backdrop': () => closeStats(),
+  'reports-view': () => closeReports(),
+};
+const layerOpen = id => { const el = document.getElementById(id); return !!el && (id === 'reports-view' ? el.style.display === 'block' : el.classList.contains('open')); };
+let layerStack = [], guardOn = false;
+function syncLayers() {
+  layerStack = layerStack.filter(layerOpen);
+  Object.keys(LAYERS).forEach(id => { if (layerOpen(id) && !layerStack.includes(id)) layerStack.push(id); });
+  if (layerStack.length && !guardOn) { history.pushState({ layer: 1 }, ''); guardOn = true; }
+  else if (!layerStack.length && guardOn) { guardOn = false; if (history.state?.layer) history.back(); }
+}
+addEventListener('popstate', () => {
+  if (!guardOn) return;
+  guardOn = false;
+  const top = layerStack[layerStack.length - 1];
+  const closed = top ? LAYERS[top]() !== false : true;
+  if (!closed) { history.pushState({ layer: 1 }, ''); guardOn = true; }   // they chose to stay in the form
+  setTimeout(syncLayers, 0);
+});
+addEventListener('DOMContentLoaded', () => {
+  const mo = new MutationObserver(() => queueMicrotask(syncLayers));
+  Object.keys(LAYERS).forEach(id => { const el = document.getElementById(id); if (el) mo.observe(el, { attributes: true, attributeFilter: ['class', 'style'] }); });
+});
+// Phones: drag a bottom sheet down by its top edge to close it (not the order form or the cut list).
+{
+  let m = null, y0 = 0, dy = 0;
+  document.addEventListener('touchstart', e => {
+    const modal = e.target.closest?.('.modal-backdrop.open .modal');
+    const bg = modal?.closest('.modal-backdrop');
+    if (!modal || !bg || bg.id === 'project-modal' || bg.id === 'cut-modal' || !LAYERS[bg.id] || modal.scrollTop > 0) return;
+    if (e.touches[0].clientY - modal.getBoundingClientRect().top > 70) return;   // only from the handle area
+    m = modal; y0 = e.touches[0].clientY; dy = 0; m.style.transition = 'none';
+  }, { passive: true });
+  document.addEventListener('touchmove', e => { if (!m) return; dy = Math.max(0, e.touches[0].clientY - y0); m.style.transform = `translateY(${dy}px)`; }, { passive: true });
+  document.addEventListener('touchend', () => {
+    if (!m) return;
+    const modal = m, id = m.closest('.modal-backdrop').id; m = null;
+    modal.style.transition = ''; modal.style.transform = '';
+    if (dy > 90) LAYERS[id]();
+  }, { passive: true });
+}
+
 // ── Phone layout (≤640px): one-row header with search + ⋯ menu, sort in a sheet, note box behind the note row ──
 const PHONE = '(max-width:640px)';
 const SORT_LABELS = { mine: 'My order', due: 'Due date', order: 'Order date' };
@@ -2446,20 +2510,11 @@ function openDrawer() {
   const d = document.getElementById('drawer');
   if (d.classList.contains('open')) return;
   d.classList.add('open');
-  history.pushState({ drawer: 1 }, '');   // Android's Back closes the drawer
 }
-// then(): runs after the drawer's history step is undone, so the browser's scroll restore can't undo a jump.
-function closeDrawer(fromBack, then) {
-  const d = document.getElementById('drawer');
-  if (!d.classList.contains('open')) { then?.(); return; }
-  d.classList.remove('open');
-  if (!fromBack && history.state?.drawer) { window._afterDrawer = then; history.back(); }
-  else then?.();
-}
-addEventListener('popstate', () => { const fn = window._afterDrawer; window._afterDrawer = null; closeDrawer(true); if (fn) setTimeout(fn, 0); });
-function pickDrawerRow(i) { const it = window._drawerItems?.[i]; closeDrawer(false, () => it?.run()); }
-function menuKpi(i) { closeDrawer(false, () => document.querySelectorAll('.kpi-strip .kpi')[i]?.click()); }
-function menuSet(fn) { closeDrawer(false, fn); }
+function closeDrawer() { document.getElementById('drawer').classList.remove('open'); }
+function pickDrawerRow(i) { const it = window._drawerItems?.[i]; closeDrawer(); it?.run(); }
+function menuKpi(i) { closeDrawer(); document.querySelectorAll('.kpi-strip .kpi')[i]?.click(); }
+function menuSet(fn) { closeDrawer(); fn(); }
 // Swipe the drawer to the left to close it.
 {
   let x0 = null;
@@ -3814,6 +3869,7 @@ window.toggleDriveAutomation = async function() {
 };
 
 function showToast(msg) {
+  haptic();
   const t = document.getElementById('toast');
   clearTimeout(window._undoT); window._undo = null; t.classList.remove('act');
   t.textContent = msg; t.classList.add('show');
