@@ -12,7 +12,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v4.6.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A with the liquid glass layer ── */
+/* ── v4.7.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A with the liquid glass layer ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -853,7 +853,7 @@ html{touch-action:manipulation}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v4.6.0</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v4.7.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -1230,7 +1230,8 @@ window._saveCutList = (id, meta, notes, edited, groups = []) => runTransaction(d
     const o = old[e.id] || {};
     return { ...e, done: !!o.done, doneBy: o.doneBy || '', doneAt: o.doneAt || '',
       turned: !!o.turned, turnedBy: o.turnedBy || '', turnedAt: o.turnedAt || '',
-      cnc: !!o.cnc, cncBy: o.cncBy || '', cncAt: o.cncAt || '', createdAt: o.createdAt || now };
+      cnc: !!o.cnc, cncBy: o.cncBy || '', cncAt: o.cncAt || '', createdAt: o.createdAt || now,
+      ...(o.byDlv ? { byDlv: o.byDlv } : {}), ...((e.from || o.from) ? { from: e.from || o.from } : {}) };
   });
   const data = { dept: 'wood', ...meta, notes, pieces, groups, updatedAt: serverTimestamp() };
   if (cur) tx.update(ref, data);
@@ -1512,7 +1513,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v4.6.0';
+const APP_VERSION = 'v4.7.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -2845,6 +2846,49 @@ function openEditFromDetails(id) { closeOrderModal(); openEditModal(id); }
 // ── Part delivery: order items (not the cut list) are ticked Delivered one by one, with today's date.
 // Each change goes in the order's notes; when the last item is ticked the app offers to mark the order Delivered.
 const todayYmd = () => new Date().toLocaleDateString('en-CA');
+// A delivered item's cut pieces count as done, even if nobody ticked them on the tablet: cut, and turned / CNC
+// for pieces going on to the lathe or CNC, "by Delivery" on the delivery day. Pieces belong to an item when they
+// were copied from it (`from`), carry its name, or are parts of a product with its name. Only what the delivery
+// itself marked (`byDlv`) is taken back when a delivery is undone.
+const nameKey = v => String(v || '').trim().toLowerCase();
+function piecesOfItem(c, items, it) {
+  const n = nameKey(it.name), gids = (c.groups || []).filter(g => nameKey(g.name) === n).map(g => g.id);
+  const twins = items.filter(x => nameKey(x.name) === n).length > 1;   // same name twice: the sizes decide
+  const sz = (a, b, d) => [a, b, d].map(v => tidySize(v || '')).join('|');
+  return (c.pieces || []).filter(pc => gids.includes(pc.group)
+    || ((pc.from ? nameKey(pc.from) : nameKey(pc.name)) === n && (!twins || sz(pc.l, pc.w, pc.t) === sz(it.l, it.b, it.w))));
+}
+const DLV_FLAGS = { done: ['doneBy', 'doneAt'], turned: ['turnedBy', 'turnedAt'], cnc: ['cncBy', 'cncAt'] };
+function markDelivered(pc, p, day) {
+  const at = new Date(day + 'T12:00:00').toISOString(), step = pieceStep(pc, p), set = [];
+  for (const f of ['done', ...(step === 'lathe' ? ['turned'] : step === 'cnc' ? ['cnc'] : [])])
+    if (!pc[f]) { pc[f] = true; pc[DLV_FLAGS[f][0]] = 'Delivery'; pc[DLV_FLAGS[f][1]] = at; set.push(f); }
+  if (set.length) pc.byDlv = [...(pc.byDlv || []), ...set];
+  return set.length > 0;
+}
+function unmarkDelivered(pc) {
+  if (!pc.byDlv?.length) return false;
+  for (const f of pc.byDlv) { pc[f] = false; pc[DLV_FLAGS[f][0]] = ''; pc[DLV_FLAGS[f][1]] = ''; }
+  delete pc.byDlv;
+  return true;
+}
+// Brings every cut list up to date with its order's delivered items (admins; writes only when something changes).
+function syncDeliveredPieces() {
+  if (!window._isAdmin) return;
+  for (const p of window._projects || []) {
+    const c = window._cutlists?.[p.id], items = p.items || [];
+    if (!c?.pieces?.length || !items.some(it => it.deliveredAt)) continue;
+    const pieces = c.pieces.map(pc => ({ ...pc }));
+    let changed = false;
+    for (const it of items.filter(x => x.deliveredAt)) {
+      const ids = new Set(piecesOfItem({ ...c, pieces }, items, it).map(pc => pc.id));
+      pieces.forEach(pc => { if (ids.has(pc.id) && markDelivered(pc, p, it.deliveredAt)) changed = true; });
+    }
+    if (!changed) continue;
+    c.pieces = pieces;
+    _updateDoc(_doc(_db, 'cutlists', c.id), { pieces, updatedAt: _serverTimestamp() }).catch(err => console.warn('Delivered pieces not marked:', err));
+  }
+}
 async function saveDelivery(p, items, text) {
   const log = [{ text, time: new Date().toISOString() }, ...(p.activityLog || [])];
   const patch = { items, activityLog: log, updatedAt: _serverTimestamp() };
@@ -2854,12 +2898,20 @@ async function saveDelivery(p, items, text) {
   try { await _updateDoc(_doc(_db, 'projects', p.id), patch); showToast(patch.status === 4 ? 'Order marked Delivered' : 'Delivery saved'); }
   catch (err) { showToast('Could not save: ' + (err?.code || err?.message || 'error')); }
 }
-function toggleItemDelivered(id, i) {
+async function toggleItemDelivered(id, i) {
   if (!window._isAdmin) return;
   const p = (window._projects || []).find(x => x.id === id); const it = p?.items?.[i]; if (!it) return;
   if (it.deliveredAt && !confirm(`Mark \u201C${it.name}\u201D as not delivered?`)) return;
   const items = p.items.map((x, k) => k !== i ? x : (() => { const y = { ...x }; if (x.deliveredAt) delete y.deliveredAt; else y.deliveredAt = todayYmd(); return y; })());
-  saveDelivery(p, items, it.deliveredAt ? `Delivery undone: ${it.name}` : `Delivered: ${it.name} (${it.qty} ${it.unit || 'Nos'})`);
+  await saveDelivery(p, items, it.deliveredAt ? `Delivery undone: ${it.name}` : `Delivered: ${it.name} (${it.qty} ${it.unit || 'Nos'})`);
+  // Undone: take back only what the delivery marked on this item's pieces (ticks from the tablet stay).
+  const c = window._cutlists?.[id];
+  if (it.deliveredAt && c?.pieces?.length) {
+    const ids = new Set(piecesOfItem(c, p.items, it).map(pc => pc.id));
+    let changed = false;
+    const pieces = c.pieces.map(pc => { const y = { ...pc }; if (ids.has(y.id) && unmarkDelivered(y)) changed = true; return y; });
+    if (changed) _updateDoc(_doc(_db, 'cutlists', id), { pieces, updatedAt: _serverTimestamp() }).catch(err => console.warn('Delivery marks not removed:', err));
+  }
 }
 function markAllDelivered(id) {
   if (!window._isAdmin) return;
@@ -3547,6 +3599,7 @@ const pieceStep = (pc, p) => pc.step ?? defaultStep(p);
 const cutMeta = p => ({ rank: p.rank ?? null, dept: p.projectType === 'lathe' || p.projectType === 'cnc' ? p.projectType : 'wood', orderNo: p.orderNo || 0, client: p.client || '', title: p.item || '', deadline: p.deadline || '', hidden: !!p.archived || (p.status ?? 0) >= 4 });
 // Keeps each cut list's name / number / deadline in step with its order (writes only when something changed).
 function syncCutLists() {
+  syncDeliveredPieces();
   for (const c of Object.values(window._cutlists || {})) {
     const p = (window._projects || []).find(x => x.id === c.id);
     if (!p) continue;
@@ -3602,7 +3655,7 @@ function copyItemsToCut() {
   const less = [];
   p.items.forEach(it => {
     const k = key(it.name, it.l, it.b, it.w), h = have.get(k), want = nos(it.qty);
-    const pc = { id: rid(), name: it.name, l: prettySize(it.l), w: prettySize(it.b), t: prettySize(it.w), qty: it.qty, note: it.note || '' };
+    const pc = { id: rid(), name: it.name, from: it.name, l: prettySize(it.l), w: prettySize(it.b), t: prettySize(it.w), qty: it.qty, note: it.note || '' };
     if (!h) { addCutRow(pc); n++; return; }
     if (want > h.q) {
       const r = h.row;   // the extra follows the line already there: same next step, "=" marks and wood
@@ -3628,6 +3681,7 @@ function addCutRow(pc = {}, parent) {
   // A piece the workshop has cut is locked: its name, sizes, "=", wood, next step and hold can't change and it
   // can't be removed (only the tablet can untick it). The note stays editable; a higher qty becomes an Extra line.
   if (pc.done) { row.dataset.cutQty = pc.qty || '1'; row.classList.add('locked'); }
+  if (pc.from) row.dataset.from = pc.from;   // the order item this piece was copied from (see part delivery)
   // Sizes are plain text so fractions like 1 1/8 can be typed; Qty gets the number pad.
   // L / W / T each get an "=" toggle under them: on = a cut size is OK for that side (shown double-underlined).
   const cs = pc.cs || [];
@@ -3795,7 +3849,7 @@ async function saveCutList() {
   const id = window._cutId;
   const p = (window._projects || []).find(x => x.id === id); if (!p) return;
   const val = (row, cls) => row.querySelector('.' + cls).value.trim().replace(/["\u201D]+$/, '').trim();
-  const pieceOf = (row, gid) => ({ id: row.dataset.id, ...(gid ? { group: gid } : {}), name: val(row, 'cut-name'), l: tidySize(val(row, 'cut-l')), w: tidySize(val(row, 'cut-w')), t: tidySize(val(row, 'cut-t')), qty: val(row, 'cut-q') || '1', wood: val(row, 'cut-wood'),
+  const pieceOf = (row, gid) => ({ id: row.dataset.id, ...(gid ? { group: gid } : {}), ...(row.dataset.from ? { from: row.dataset.from } : {}), name: val(row, 'cut-name'), l: tidySize(val(row, 'cut-l')), w: tidySize(val(row, 'cut-w')), t: tidySize(val(row, 'cut-t')), qty: val(row, 'cut-q') || '1', wood: val(row, 'cut-wood'),
       note: row.querySelector('.cut-note').value.trim(),
       // Only a step that differs from the order's type is stored, so the rest keep following the type.
       ...(row.querySelector('.cut-step').value !== defaultStep(p) ? { step: row.querySelector('.cut-step').value } : {}),
