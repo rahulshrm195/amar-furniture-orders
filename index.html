@@ -12,7 +12,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v4.8.3 — Cut lists for the workshop tablet (/cut/); UI is Concept A with the liquid glass layer ── */
+/* ── v4.9.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A with the liquid glass layer ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -177,6 +177,15 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .rp-row .dt{color:var(--ink2);white-space:nowrap;font-variant-numeric:tabular-nums}
 .rp-row.mc{grid-template-columns:minmax(0,2.2fr) minmax(0,1fr) minmax(0,.8fr) minmax(0,1fr);cursor:pointer}
 .rp-row.hd.mc{cursor:default}
+/* Cut list reports (v4.9.0): per customer (tap for their orders) and the most cut sizes */
+.rp-row.ct{grid-template-columns:minmax(0,2.2fr) minmax(0,.8fr) minmax(0,.8fr) minmax(0,.8fr) minmax(0,1fr);cursor:pointer}
+.rp-row.ct.sub{padding-left:34px;background:rgba(255,255,255,.35)}
+.rp-row.cz{grid-template-columns:minmax(0,2.2fr) minmax(0,.7fr) minmax(0,.7fr) minmax(0,.7fr) minmax(0,1.4fr)}
+.rp-row.hd.ct,.rp-row.hd.cz{cursor:default}
+.rp-row.ct .dt{text-align:right}
+.rp-row.hd.ct .dt{display:flex;justify-content:flex-end}
+.rp-row .mono-sz{font-family:var(--mono);letter-spacing:0}
+.rp-wood{font-size:12px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rp-row.hd .dt{justify-content:flex-start}
 .rp-ranges{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
 .rp-rg{font-size:12px;font-weight:700;color:var(--ink2);background:var(--surface);border:1px solid var(--border);padding:5px 10px;border-radius:16px}
@@ -242,6 +251,9 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
   .rp-cards,.rp-cards.c4{grid-template-columns:1fr}
   .rp-row,.rp-row.dp{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,1fr) 34px;padding:10px 12px}
   .rp-row .hide-m{display:none}
+  .rp-row.ct{grid-template-columns:minmax(0,1.6fr) minmax(0,.7fr) minmax(0,1fr)}
+  .rp-row.ct.sub{padding-left:24px}
+  .rp-row.cz{grid-template-columns:minmax(0,1.8fr) minmax(0,.7fr) minmax(0,.7fr)}
 }
 
 /* ── Order list ── */
@@ -868,7 +880,7 @@ html{touch-action:manipulation}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v4.8.3</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v4.9.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -1545,7 +1557,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v4.8.3';
+const APP_VERSION = 'v4.9.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -2695,6 +2707,10 @@ const REPORTS = [
     cards: ['Orders completed', 'Total value', 'Received'], countFirst:true, listTitle:'Performance by department', onlyDue:false, dept:true, ranged:true },
   { id:'machines', label:'Lathe & CNC', machines:true, ranged:true, rows: () => [], cards: ['', '', ''], listTitle: '',
     note:'What the Lathe and CNC machines did and earned, from their own orders and from pieces linked from other orders. Nos count by the day each piece was done on the tablet. Earnings count in the period the machine finished its last piece of an order (or the delivery date for orders without a cut list): a Lathe / CNC order earns its whole amount unless its Lathe / CNC work box is filled; other orders earn what is in those boxes. These are shares of the order value, not extra turnover.' },
+  { id:'cutcust', label:'Cuts by customer', cuts:'cust', ranged:true, rows: () => [], cards: ['', '', ''], listTitle: '',
+    note:'Cut lists per customer, all their orders together. Nos done count by the day each piece was ticked on the tablet (pieces marked done by a delivery count on the delivery day). On lists and Pending cover every piece, whatever the period. Tap a customer to see their orders.' },
+  { id:'cutsize', label:'Most cut sizes', cuts:'size', ranged:true, rows: () => [], cards: ['', '', ''], listTitle: '',
+    note:'Which sizes were cut most, by the day each piece was ticked (pieces marked done by a delivery count on the delivery day). Exact size is L × W × T; Section is W × T whatever the length, the timber section to buy. Sizes typed as 34.5 or 34 1/2 count as the same.' },
 ];
 // One line per order and machine: Nos done in the period, and the earning if the machine finished that order's pieces in it.
 const MACHINES = { lathe: { label: 'Lathe', f: 'turned', at: 'turnedAt', val: 'latheValue', did: 'turned' }, cnc: { label: 'CNC', f: 'cnc', at: 'cncAt', val: 'cncValue', did: 'done' } };
@@ -2734,6 +2750,107 @@ function machinesHtml(rng) {
       <div class="rp-row hd mc"><div>Order</div><div class="dt">Finished</div><div class="n">Nos in period</div><div class="n">Earned</div></div>${body}</div>`;
   };
   return `<div class="rp-cards c4">${cards}</div>${table('lathe')}${table('cnc')}`;
+}
+
+// ── Cut list reports: per customer, and the most cut sizes ──
+// The department picks the pieces and the tick that counts: Woodwork = every piece, cut (done); Lathe / CNC = the pieces
+// going to that machine, turned / done on it.
+const CUT_DEPTS = { wood: { label: 'Woodwork', f: 'done', at: 'doneAt', did: 'Cut' }, lathe: { label: 'Lathe', f: 'turned', at: 'turnedAt', did: 'Turned' }, cnc: { label: 'CNC', f: 'cnc', at: 'cncAt', did: 'CNC done' } };
+window._cutDept = 'wood'; window._sizeMode = 'exact'; window._cutOpen = new Set(); window._cutSort = { key: 'done', dir: 'desc' };
+const nosSum = ps => Math.round(ps.reduce((t, x) => t + (parseFloat(x.qty) || 1), 0) * 100) / 100;
+// Every cut-list piece of an order that still exists, with its order, for the chosen department.
+function cutPieces() {
+  const d = window._cutDept, out = [];
+  (window._projects || []).forEach(p => (window._cutlists?.[p.id]?.pieces || []).forEach(pc => {
+    if (d === 'wood' || pieceStep(pc, p) === d) out.push({ p, pc });
+  }));
+  return out;
+}
+// "34 1/2" → 34.5, for ordering sizes (anything else that isn't a number sorts as 0).
+const sizeNum = v => { const m = tidySize(v).match(/^(?:(\d+) )?(?:(\d+)\/(\d+))?$|^(\d+(?:\.\d+)?)$/); return !m ? 0 : m[4] ? +m[4] : (+m[1] || 0) + (m[3] ? m[2] / m[3] : 0); };
+function cutsHtml(rep, rng) {
+  const D = CUT_DEPTS[window._cutDept], r = rng.r;
+  const inR = pc => !!pc[D.f] && (!r || ((x => x >= r[0] && x <= r[1])(localDay(pc[D.at]))));
+  const all = cutPieces(), q = (document.getElementById('search-input')?.value || '').trim().toLowerCase();
+  const chip = (on, fn, label) => `<button class="rp-rg ${on ? 'on' : ''}" onclick="${fn}">${label}</button>`;
+  const deptBar = `<div class="rp-ranges" role="group" aria-label="Department"><span class="rp-rl">Department</span>${Object.entries(CUT_DEPTS).map(([k, x]) => chip(window._cutDept === k, `pickCutDept('${k}')`, x.label)).join('')}</div>`;
+  const arrows = '<svg width="9" height="13" viewBox="0 0 9 13" aria-hidden="true"><path class="up" d="M4.5 0 9 5H0z"/><path class="dn" d="M4.5 13 0 8h9z"/></svg>';
+  const th = (key, label, cls = '') => { const on = window._cutSort.key === key;
+    return `<div class="${cls}"><button class="rp-th ${on ? 'on ' + window._cutSort.dir : ''}" onclick="sortCuts('${key}')" aria-label="Sort by ${label.toLowerCase()}">${label}${arrows}</button></div>`; };
+  const sorted = (xs, name) => { const { key, dir } = window._cutSort, k = key === 'name' ? name : key;
+    return xs.sort((a, b) => (typeof a[k] === 'string' ? String(a[k]).localeCompare(b[k]) : a[k] - b[k]) * (dir === 'asc' ? 1 : -1) || b.done - a.done); };
+  const card = (lbl, num, sub, kc) => `<div class="rp-card" style="--kc:${kc}"><div class="rp-lbl">${lbl}</div><div class="rp-num">${num}</div>${sub ? `<div class="rp-sub">${sub}</div>` : ''}</div>`;
+  const doneAll = all.filter(x => inR(x.pc));
+
+  if (rep.cuts === 'cust') {
+    const by = new Map();
+    all.forEach(({ p, pc }) => {
+      const key = nameKey(p.client) || '—';
+      const c = by.get(key) || by.set(key, { key, name: p.client || '—', orders: new Map(), lists: 0, done: 0, pend: 0, last: '' }).get(key);
+      const o = c.orders.get(p.id) || c.orders.set(p.id, { p, lists: 0, done: 0, pend: 0, last: '' }).get(p.id);
+      const n = parseFloat(pc.qty) || 1, day = pc[D.f] ? localDay(pc[D.at]) : '', running = !isDelivered(p) && !isArchived(p);
+      for (const t of [c, o]) {
+        t.lists += n;
+        if (inR(pc)) t.done += n;
+        if (!pc[D.f] && !pc.hold && running) t.pend += n;
+        if (day > t.last) t.last = day;
+      }
+    });
+    const rows = sorted([...by.values()].filter(c => (r ? c.done : c.lists) && (!q || c.key.includes(q))), 'name');
+    rows.forEach(c => ['lists', 'done', 'pend'].forEach(f => { c[f] = Math.round(c[f] * 100) / 100; }));
+    const cards = card('Customers', rows.length, r ? `with pieces ${D.did.toLowerCase()} in this period` : 'with cut lists', 'var(--ink)')
+      + card(`Nos ${D.did.toLowerCase()}`, nosSum(doneAll.map(x => x.pc)), r ? 'in this period' : 'all time', 'var(--clay)')
+      + card('Nos pending', nosSum(all.filter(x => !x.pc[D.f] && !x.pc.hold && !isDelivered(x.p) && !isArchived(x.p)).map(x => x.pc)), 'on running lists, not on hold', 'var(--amber)')
+      + card('Top customer', rows.length ? escHtml([...rows].sort((a, b) => b.done - a.done)[0].name) : '—', rows.length ? `${[...rows].sort((a, b) => b.done - a.done)[0].done} Nos ${D.did.toLowerCase()}` : '', 'var(--green)');
+    const sub = o => `<div class="rp-row ct sub" onclick="openOrderModal('${o.p.id}')"><div class="rp-who"><b>${o.p.orderNo ? '#' + o.p.orderNo + ' ' : ''}${escHtml(o.p.item || typeLabelOf(o.p))}</b><small>${escHtml(typeLabelOf(o.p))}${isDelivered(o.p) ? ' · Delivered' : ''}</small></div>
+      <div class="n hide-m">${Math.round(o.lists * 100) / 100}</div><div class="n">${Math.round(o.done * 100) / 100 || '—'}</div><div class="n hide-m">${Math.round(o.pend * 100) / 100 || '—'}</div><div class="dt">${o.last ? fmtFull(o.last) : '—'}</div></div>`;
+    window._cutKeys = rows.map(c => c.key);
+    const body = rows.length ? rows.map((c, i) => { const open = window._cutOpen.has(c.key);
+      return `<div class="rp-row ct" onclick="toggleCutCust(${i})"><div class="rp-who"><b>${open ? '▾' : '▸'} ${escHtml(c.name)}</b><small>${c.orders.size} ${c.orders.size === 1 ? 'order' : 'orders'} with a cut list</small></div>
+        <div class="n hide-m">${c.lists}</div><div class="n"><b>${c.done || '—'}</b></div><div class="n hide-m">${c.pend || '—'}</div><div class="dt">${c.last ? fmtFull(c.last) : '—'}</div></div>`
+        + (open ? [...c.orders.values()].sort((a, b) => (b.p.orderNo || 0) - (a.p.orderNo || 0)).map(sub).join('') : ''); }).join('')
+      : `<div class="rp-empty">${q ? 'No customers match “' + escHtml(q) + '”.' : 'No pieces ' + D.did.toLowerCase() + (r ? ' in this period.' : ' yet.')}</div>`;
+    return { filters: deptBar, html: `<div class="rp-cards c4">${cards}</div><div class="rp-table"><div class="rp-table-h">Cut lists by customer${q ? ' · matching “' + escHtml(q) + '”' : ''}<span>${rows.length} ${rows.length === 1 ? 'customer' : 'customers'}</span></div>
+      <div class="rp-row hd ct">${th('name', 'Customer')}${th('lists', 'On lists', 'n hide-m')}${th('done', D.did, 'n')}${th('pend', 'Pending', 'n hide-m')}${th('last', 'Last ' + D.did.toLowerCase(), 'dt')}</div>${body}</div>` };
+  }
+
+  // Most cut sizes: exact L × W × T, or the section W × T (the two sorted, so 3 × 2 and 2 × 3 are one section).
+  const sec = window._sizeMode === 'section';
+  const by = new Map();
+  let noSize = 0;
+  doneAll.forEach(({ p, pc }) => {
+    const wt = [pc.w, pc.t].map(v => tidySize(v || '')).filter(Boolean).sort((a, b) => sizeNum(b) - sizeNum(a));
+    const l = tidySize(pc.l || '');
+    if (wt.length < 2 || (!sec && !l)) { noSize += parseFloat(pc.qty) || 1; return; }
+    const parts = sec ? wt : [l, ...wt], key = parts.join('|');
+    const z = by.get(key) || by.set(key, { key, parts, done: 0, lines: 0, orders: new Set(), woods: new Set(), names: new Map(), vol: 0 }).get(key);
+    const n = parseFloat(pc.qty) || 1;
+    z.done += n; z.lines++; z.orders.add(p.id);
+    if (pc.wood) z.woods.add(pc.wood);
+    const nm = (pc.name || '').trim(); if (nm) z.names.set(nm, (z.names.get(nm) || 0) + n);
+  });
+  const rows = sorted([...by.values()].map(z => ({ ...z, done: Math.round(z.done * 100) / 100, nOrders: z.orders.size, name: z.parts.map(sizeNum).reduce((a, b) => a * b, 1) }))
+    .filter(z => !q || [...z.names.keys()].some(n => n.toLowerCase().includes(q)) || [...z.woods].some(w => w.toLowerCase().includes(q))), 'name');
+  const top = [...rows].sort((a, b) => b.done - a.done)[0];
+  const sz = z => z.parts.map(fmtSize).join(' × ');
+  const cards = card(sec ? 'Sections' : 'Sizes', rows.length, `different ${sec ? 'sections' : 'sizes'} ${D.did.toLowerCase()}`, 'var(--ink)')
+    + card(`Nos ${D.did.toLowerCase()}`, nosSum(doneAll.map(x => x.pc)), r ? 'in this period' : 'all time', 'var(--clay)')
+    + card(sec ? 'Top section' : 'Top size', top ? sz(top) : '—', top ? `${top.done} Nos · ${top.nOrders} ${top.nOrders === 1 ? 'order' : 'orders'}` : '', 'var(--green)')
+    + card('No size', Math.round(noSize * 100) / 100 + ' Nos', 'pieces without a full size, not counted', 'var(--amber)');
+  const body = rows.length ? rows.map(z => `<div class="rp-row cz"><div class="rp-who"><b class="mono-sz">${sz(z)}</b><small>${escHtml([...z.names.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(e => e[0]).join(', ') || '—')}</small></div>
+      <div class="n"><b>${z.done}</b></div><div class="n hide-m">${z.lines}</div><div class="n">${z.nOrders}</div><div class="hide-m rp-wood">${escHtml([...z.woods].join(', ') || '—')}</div></div>`).join('')
+    : `<div class="rp-empty">${q ? 'No sizes match “' + escHtml(q) + '”.' : 'No pieces ' + D.did.toLowerCase() + (r ? ' in this period.' : ' yet.')}</div>`;
+  const modeBar = `<div class="rp-ranges" role="group" aria-label="Size"><span class="rp-rl">Size</span>${chip(!sec, "pickSizeMode('exact')", 'Exact (L × W × T)')}${chip(sec, "pickSizeMode('section')", 'Section (W × T)')}</div>`;
+  return { filters: deptBar + modeBar, html: `<div class="rp-cards c4">${cards}</div><div class="rp-table"><div class="rp-table-h">${sec ? 'Most cut sections' : 'Most cut sizes'}${q ? ' · matching “' + escHtml(q) + '”' : ''}<span>${rows.length} ${sec ? 'sections' : 'sizes'}</span></div>
+    <div class="rp-row hd cz">${th('name', sec ? 'Section' : 'Size')}${th('done', 'Nos', 'n')}${th('lines', 'Lines', 'n hide-m')}${th('nOrders', 'Orders', 'n')}<div class="hide-m">Wood</div></div>${body}</div>` };
+}
+function pickCutDept(k) { window._cutDept = k; renderReports(); }
+function pickSizeMode(m) { window._sizeMode = m; renderReports(); }
+function toggleCutCust(i) { const k = window._cutKeys?.[i]; if (k == null) return; window._cutOpen.has(k) ? window._cutOpen.delete(k) : window._cutOpen.add(k); renderReports(); }
+function sortCuts(key) {
+  const s = window._cutSort;
+  window._cutSort = { key, dir: s.key === key ? (s.dir === 'asc' ? 'desc' : 'asc') : (key === 'name' || key === 'last' ? (key === 'last' ? 'desc' : 'asc') : 'desc') };
+  renderReports();
 }
 
 // The Reports button is a real link (#reports), so Cmd/Ctrl+click or middle-click opens it in a new tab.
@@ -3245,6 +3362,12 @@ function renderReports() {
     return `<div class="${cls}"><button class="rp-th ${on ? 'on ' + window._rpSort.dir : ''}" onclick="sortBy('${key}')" title="Sort by ${label.toLowerCase()}" aria-label="Sort by ${label.toLowerCase()}">${label}${arrows}</button></div>`;
   };
 
+  if (rep.cuts) {
+    const c = cutsHtml(rep, rng);
+    document.getElementById('rp-body').innerHTML = `<div class="rp-filters">${rangeBar}${c.filters}${customBar}</div><div class="rp-info"><div class="rp-note">${rep.note}</div></div>${c.html}`;
+    if (window._odId) renderOrderModal();
+    return;
+  }
   if (rep.machines) {
     document.getElementById('rp-body').innerHTML = `<div class="rp-filters">${rangeBar}${customBar}</div><div class="rp-info"><div class="rp-note">${rep.note}</div></div>${machinesHtml(rng)}`;
     if (window._odId) renderOrderModal();
