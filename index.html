@@ -12,7 +12,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v4.8.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A with the liquid glass layer ── */
+/* ── v4.8.1 — Cut lists for the workshop tablet (/cut/); UI is Concept A with the liquid glass layer ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -868,7 +868,7 @@ html{touch-action:manipulation}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v4.8.0</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v4.8.1</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -1528,7 +1528,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v4.8.0';
+const APP_VERSION = 'v4.8.1';
 
 // -- LANGUAGE --
 const LANG = {
@@ -2520,7 +2520,7 @@ function openDrawer() {
     { label: 'Overview', icon: document.querySelector('.tb-btn[aria-label="Overview"] svg')?.outerHTML, run: () => openStats() }];
   if (shown('money-btn')) items.push({ label: window._showMoney ? 'Hide amounts' : 'Show amounts', icon: ico('money-btn'), run: () => toggleMoney() });
   if (shown('reports-btn')) items.push({ label: 'Reports', icon: ico('reports-btn'), run: () => openReports() });
-  if (shown('cut-btn')) items.push({ label: 'Cutting list (workshop)', icon: ico('cut-btn'), run: () => { location.href = '/cut/'; } });
+  if (shown('cut-btn')) items.push({ label: 'Cutting list (workshop)', icon: ico('cut-btn'), run: () => goAfterBack('/cut/') });
   if (shown('settings-gear-btn')) items.push({ label: 'Settings', icon: ico('settings-gear-btn'), run: () => openSettingsModal() });
   items.push({ label: 'Logout', icon: svgi('logout', 18, 1.9), run: () => signOut() });
   document.getElementById('m-sheet-head').innerHTML = `<b>Amar Furniture</b><span>${escHtml(document.getElementById('role-badge')?.textContent || '')} · Order Tracker ${APP_VERSION}</span>` + extra;
@@ -2530,6 +2530,12 @@ function openDrawer() {
   const d = document.getElementById('drawer');
   if (d.classList.contains('open')) return;
   d.classList.add('open');
+}
+// Leaving the page from the drawer: closing it pops its Back guard (history.back), which would cancel a navigation
+// started now, so go once that Back has landed.
+function goAfterBack(url) {
+  if (!history.state?.layer) { location.href = url; return; }
+  addEventListener('popstate', () => setTimeout(() => { location.href = url; }, 0), { once: true });
 }
 function closeDrawer() { document.getElementById('drawer').classList.remove('open'); }
 function pickDrawerRow(i) { const it = window._drawerItems?.[i]; closeDrawer(); it?.run(); }
