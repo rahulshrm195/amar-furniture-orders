@@ -12,7 +12,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v4.7.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A with the liquid glass layer ── */
+/* ── v4.8.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A with the liquid glass layer ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -827,6 +827,21 @@ html{touch-action:manipulation}
 @keyframes viewIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 #reports-view{animation:viewIn .3s cubic-bezier(.22,1,.36,1)}
 
+/* Pinned section headers (v4.8.0): in the List view each section (header + cards) is its own block, and its header
+   stays under the app bar (and the docked KPI bar on a computer) until the next section's header pushes it away. */
+.sec-grp{grid-column:1/-1;display:grid;grid-template-columns:inherit;gap:inherit;align-items:start;min-width:0}
+.sec-grp>.section-header{position:sticky;top:calc(var(--tb-h,76px) + var(--dock-h,0px) + 6px);z-index:20;
+  background:rgba(255,255,255,.85);background:color-mix(in srgb,var(--sb,#fff) 55%,rgba(255,255,255,.75))}
+.card-grid>.sec-grp:first-child>.section-header{margin-top:10px}
+/* Phones: one slim line (about 48px), so the pinned header takes little room */
+@media (max-width:640px){
+  .sec-grp>.section-header{gap:8px;padding:6px 8px 6px 10px;min-height:46px}
+  .sec-grp .sec-ico{width:28px;height:28px}
+  .sec-grp .sec-title{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .sec-grp .sec-count{background:none;border:0;box-shadow:none;padding:0;font-size:12px;white-space:nowrap}
+  .sec-grp .sec-count .sc-w{display:none}
+}
+
 /* No backdrop-filter support (older Android WebViews): solid translucent white instead */
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
   .topbar,.kpi,.section-header,.modal,.kpi-dock{background:var(--glass-bg-fallback)}
@@ -853,7 +868,7 @@ html{touch-action:manipulation}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v4.7.0</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v4.8.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -1513,7 +1528,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v4.7.0';
+const APP_VERSION = 'v4.8.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -2153,7 +2168,11 @@ function toggleSection(id) {
   if (id === 'sec-hold') { toggleHold(); return; }
   window._collapsed.has(id) ? window._collapsed.delete(id) : window._collapsed.add(id);
   try { localStorage.setItem('af-collapsed', JSON.stringify([...window._collapsed])); } catch {}
+  // A pinned header (its section scrolled past) stays where it is: the page moves to that section's start
+  const h = document.getElementById(id), grp = h?.closest('.sec-grp');
+  const pinned = grp && grp.getBoundingClientRect().top < h.getBoundingClientRect().top - 20;
   renderProjects();
+  if (pinned) { const g = document.getElementById(id)?.closest('.sec-grp'); if (g) window.scrollTo({ top: g.getBoundingClientRect().top + window.scrollY - parseFloat(getComputedStyle(g.firstElementChild).top) + 10 }); }
 }
 function sectionHeader(ico, bg, color, title, count, dim, id) {
   // While searching every section stays open, so no match is ever hidden.
@@ -2362,7 +2381,7 @@ function renderProjects() {
       const ps = bySize(activeAll.filter(sec.match));
       const links = sortList(linkedFor(sec.id, activeAll));
       if (!ps.length && !links.length && q) return;   // while searching, hide empty sections
-      const h = sectionHeader(sec.ico, sec.bg, sec.color, sec.label, ps.length + ' running' + (links.length ? ` \u00B7 ${links.length} linked` : ''), !ps.length && !links.length, sec.id);
+      const h = sectionHeader(sec.ico, sec.bg, sec.color, sec.label, ps.length + '<span class="sc-w"> running</span>' + (links.length ? ` \u00B7 ${links.length} linked` : ''), !ps.length && !links.length, sec.id);
       if (!q && isFolded(sec.id)) { groups.push({ h, b: '' }); return; }
       const firstSmall = ps.findIndex(x => jobSize(x) === 's');
       let b = ps.length ? ps.map((x, i) => (i === firstSmall && i > 0 ? '<div class="size-divider">Small jobs</div>' : '') + buildCard(x)).join('') : links.length ? '' : `<div class="section-empty">${sec.empty}</div>`;
@@ -2385,7 +2404,7 @@ function renderProjects() {
         b: open ? onHoldAll.map(buildCard).join('') : '' });
     }
     html += board ? `<div class="board">${groups.map(g => `<div class="bcol">${g.h}<div class="bcol-body">${g.b}</div></div>`).join('')}</div>`
-      : groups.map(g => g.h + g.b).join('');
+      : groups.map(g => `<div class="sec-grp">${g.h}${g.b}</div>`).join('');
     list.innerHTML = html;
     return;
   }
@@ -2540,7 +2559,11 @@ function onSearchInput() { if (window._reportsOpen) renderReports(); else render
 
 // ── KPI cards: scroll to a section (Overdue opens a filtered list) ──
 function scrollToEl(el) {
-  const off = (document.querySelector('.topbar')?.offsetHeight || 76) + (document.getElementById('kpi-dock')?.offsetHeight || 46) + 12;
+  let off = (document.querySelector('.topbar')?.offsetHeight || 76) + (document.getElementById('kpi-dock')?.offsetHeight ?? 46) + 12;
+  // List view: a section scrolls by its block (a pinned header reports its pinned spot); a card clears its pinned header
+  const grp = el.closest('.sec-grp');
+  if (grp && el.classList.contains('section-header')) el = grp;
+  else if (grp) off += grp.querySelector('.section-header').offsetHeight + 6;
   window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - off, behavior: 'smooth' });
 }
 function goKpi(key) {
@@ -2612,6 +2635,7 @@ function updateDock() {
   if (!dock || !strip || !bar) return;
   const tb = bar.offsetHeight;
   document.documentElement.style.setProperty('--tb-h', tb + 'px');
+  document.documentElement.style.setProperty('--dock-h', dock.offsetHeight + 'px');   // 0 on phones (no dock)
   const stripShown = strip.offsetParent !== null && !window._reportsOpen;
   dock.classList.toggle('show', stripShown && strip.getBoundingClientRect().bottom <= tb + 2);
 }
