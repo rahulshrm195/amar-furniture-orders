@@ -4,6 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#F4F0EA">
+<script>
+// Night mode (v4.10.0): Auto (follows the phone / computer), Light or Dark, chosen per device (localStorage af-theme).
+// Set before the page draws, so there is no white flash; the status bar colour follows.
+(function () {
+  var pref = 'auto', mq = matchMedia('(prefers-color-scheme: dark)');
+  try { pref = localStorage.getItem('af-theme') || 'auto'; } catch (e) {}
+  function apply() {
+    var dark = pref === 'dark' || (pref === 'auto' && mq.matches);
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    var m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = dark ? '#16130F' : '#F4F0EA';
+  }
+  apply();
+  if (mq.addEventListener) mq.addEventListener('change', apply);
+  window.themePref = function () { return pref; };
+  window.setThemePref = function (v) { pref = v; try { localStorage.setItem('af-theme', v); } catch (e) {} apply(); };
+})();
+</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="AF Orders">
@@ -12,7 +29,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v4.9.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A with the liquid glass layer ── */
+/* ── v4.10.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A with the liquid glass layer ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -864,6 +881,85 @@ html{touch-action:manipulation}
   *,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}
   :is(.btn,.tb-btn,.icon-btn,.prep-btn,.fab,.sort-opt,.rp-tab,.rp-rg,.size-opt,.dlv,.pill-btn,.logout-btn,.dk):active{transform:none}
 }
+
+/* ── Night mode (v4.10.0): the same liquid glass on a deep warm background. Only when <html data-theme="dark">
+   (Auto follows the device, or Light / Dark chosen in Settings). Prints and the workshop tablet stay light. ── */
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ivory:#1C1813; --surface:#26211A; --border:rgba(255,255,255,.12); --ink:#F2ECE1; --ink2:#CFC6B4; --ink3:#ABA290;
+  --clay:#F0985F; --clay-soft:rgba(240,152,95,.16);
+  --green:#72D49C; --green-soft:rgba(114,212,156,.15);
+  --amber:#F0B65C; --amber-soft:rgba(240,182,92,.15);
+  --red:#FF8B79; --red-soft:rgba(255,139,121,.15);
+  --slate:#0F0D0A;
+  --glass-bg:rgba(48,42,34,.55);
+  --glass-bg-list:rgba(40,35,28,.74);
+  --glass-sheen:linear-gradient(135deg,rgba(255,255,255,.07),rgba(255,255,255,0));
+  --glass-bg-header:rgba(22,19,15,.8);
+  --glass-header-line:rgba(255,255,255,.08);
+  --field-bg:rgba(0,0,0,.25); --field-border:rgba(255,255,255,.12); --field-inset:inset 0 1px 2px rgba(0,0,0,.4);
+  --fab-bg:#F2ECE1; --fab-gloss:inset 0 1px 0 rgba(255,255,255,.7); --fab-shadow:0 10px 24px -8px rgba(0,0,0,.8);
+  --glass-bg-modal:rgba(34,30,24,.9);
+  --glass-bg-fallback:rgba(34,30,24,.94);
+  --glass-border:rgba(255,255,255,.1);
+  --glass-highlight:inset 0 1px 0 rgba(255,255,255,.1),inset 0 -1px 0 rgba(0,0,0,.25);
+  --glass-shadow:0 8px 24px rgba(0,0,0,.35);
+  --btn-dark:#F2ECE1; --btn-dark-hover:#FFFFFF;
+  --btn-gloss:inset 0 1px 0 rgba(255,255,255,.8),inset 0 14px 14px -12px rgba(255,255,255,.5);
+  --blob-orange:rgba(214,110,58,.46); --blob-blue:rgba(84,124,190,.42); --blob-green:rgba(76,150,104,.38); --blob-peach:rgba(196,116,84,.34);
+  --blob-orange-2:rgba(214,110,58,.32); --blob-green-2:rgba(76,150,104,.32); --blob-blue-2:rgba(84,124,190,.32);
+}
+[data-theme="dark"] body{background:#16130F}
+[data-theme="dark"] ::-webkit-scrollbar-thumb{background:#4A4237}
+/* Light-on-dark primary buttons, the + buttons and the active chips */
+[data-theme="dark"] :is(.btn-primary,.tb-btn.tb-new,.sort-opt.on,.fab){color:#16130F}
+[data-theme="dark"] .tb-btn.tb-new svg{stroke:#16130F}
+[data-theme="dark"] .fab:hover{background:#FFFFFF}
+[data-theme="dark"] .tb-search-x:hover{color:#16130F}
+/* Glass hovers and tinted buttons: dark glass instead of white */
+[data-theme="dark"] :is(.tb-btn,.logout-btn,.sort-opt,.icon-btn,.prep-btn,.dk,.btn-ghost):hover{background:rgba(70,62,50,.75)}
+[data-theme="dark"] .tb-search input:focus{background:rgba(0,0,0,.35)}
+[data-theme="dark"] .topbar .brand-ver{background:rgba(255,255,255,.08)}
+[data-theme="dark"] .icon-btn.on{background:rgba(240,152,95,.18)}
+[data-theme="dark"] :is(.icon-btn,.prep-btn).has{background:rgba(114,212,156,.15);border-color:rgba(114,212,156,.35)}
+[data-theme="dark"] :is(.icon-btn,.prep-btn).prep{background:rgba(240,182,92,.15);border-color:rgba(240,182,92,.35)}
+[data-theme="dark"] .prep-btn.na{background:rgba(255,139,121,.15);border-color:rgba(255,139,121,.35)}
+[data-theme="dark"] .view-seg{background:rgba(0,0,0,.2)}
+[data-theme="dark"] .chip{border-color:rgba(255,255,255,.08)}
+/* Status chips: the same colours, as dark tints */
+[data-theme="dark"] .chip.s0{background:rgba(207,198,180,.14);color:#D8D0BF}
+[data-theme="dark"] .chip.s1{background:rgba(120,165,220,.18);color:#A9C8F0}
+[data-theme="dark"] .chip.s2{background:rgba(180,140,215,.18);color:#D4B6EE}
+[data-theme="dark"] .chip.s3{background:rgba(220,180,100,.18);color:#EBCB86}
+/* Group headers: tinted from their strong colour; icon tiles and board columns in dark glass */
+[data-theme="dark"] .section-header{background:color-mix(in srgb,var(--sc,#888) 24%,rgba(30,26,21,.7))}
+[data-theme="dark"] .sec-grp>.section-header{background:rgba(34,30,24,.92);background:color-mix(in srgb,var(--sc,#888) 26%,rgba(26,22,18,.9))}
+[data-theme="dark"] .sec-ico{background:rgba(255,255,255,.08)}
+[data-theme="dark"] .bcol{background:rgba(255,255,255,.04)}
+[data-theme="dark"] .kpi.overdue{background:rgba(255,139,121,.14)}
+[data-theme="dark"] .order-card.linked{background:rgba(40,35,28,.55)}
+/* Forms and dialogs */
+[data-theme="dark"] .field :is(input,select,textarea){background:rgba(0,0,0,.25);border-color:rgba(255,255,255,.12);color:var(--ink)}
+[data-theme="dark"] :is(.type-opt,.status-opt){background:rgba(255,255,255,.05)}
+[data-theme="dark"] .modal-backdrop{background:rgba(0,0,0,.5)}
+[data-theme="dark"] .tb-burger{background:#F2ECE1;color:#16130F}
+/* Clay fills with light text use a deeper clay, so the text stays readable */
+[data-theme="dark"] :is(.brand-tile,.step.on,.chip.size-b,.note-send,.cs-tg.on,.st-cp-btn.on,.ibtn-yes,.on-hold-toggle.active .toggle-switch){background:#B85C2E;border-color:#B85C2E;color:#FFF8F0}
+[data-theme="dark"] .tb-search-x:hover{background:#B85C2E;color:#FFF8F0}
+[data-theme="dark"] .toggle-switch{background:rgba(255,255,255,.2)}
+[data-theme="dark"] .role-badge{background:rgba(255,255,255,.1);color:var(--ink)}
+[data-theme="dark"] :is(.kpi,.dk).overdue .kpi-lbl{color:var(--red)}
+[data-theme="dark"] .od-badge{background:rgba(255,139,121,.16);border-color:rgba(255,139,121,.35)}
+[data-theme="dark"] .dlv.on{background:var(--green-soft);border-color:rgba(114,212,156,.35)}
+[data-theme="dark"] #cut-list-edit .item-edit-row.hold .hold-btn{background:#B9761C;border-color:#B9761C;color:#FFF8F0}
+[data-theme="dark"] #cut-list-edit .item-edit-row.locked :is(input,select):disabled{background:rgba(255,255,255,.05)}
+[data-theme="dark"] .mode-seg{background:rgba(0,0,0,.3)}
+[data-theme="dark"] .mode-seg button.on{background:rgba(255,255,255,.14)}
+/* Phone menu */
+[data-theme="dark"] :is(.m-ico,.m-kpi){background:rgba(255,255,255,.07)}
+[data-theme="dark"] .m-kpi.overdue{background:rgba(255,139,121,.16)}
+[data-theme="dark"] .m-seg{background:rgba(0,0,0,.3)}
+[data-theme="dark"] .m-seg button.on{background:rgba(255,255,255,.16);color:var(--ink)}
 </style>
 </head>
 <body>
@@ -880,7 +976,7 @@ html{touch-action:manipulation}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v4.9.0</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v4.10.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -965,7 +1061,7 @@ html{touch-action:manipulation}
   </div>
 
   <button class="fab" id="fab-btn" aria-label="New order" onclick="openAddModal()">
-    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#FAF9F5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
   </button>
 </div>
 
@@ -1131,6 +1227,8 @@ html{touch-action:manipulation}
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title spaced">Settings</div>
+    <div class="m-sec" style="margin-top:0">Appearance (this device)</div>
+    <div class="m-seg theme-seg" style="margin-bottom:14px"></div>
     <div class="on-hold-toggle" id="drive-automation-toggle" onclick="toggleDriveAutomation()">
       <div class="on-hold-toggle-left">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4.2l2 2.2H19a1.5 1.5 0 0 1 1.5 1.5v7.8A1.5 1.5 0 0 1 19 19H5a1.5 1.5 0 0 1-1.5-1.5v-10Z"/></svg>
@@ -1557,7 +1655,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v4.9.0';
+const APP_VERSION = 'v4.10.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -2542,6 +2640,7 @@ function openDrawer() {
   const extra = `<div class="m-sec">Summary</div><div class="m-kpis">${kpis}</div>
     <div class="m-sec">View</div><div class="m-seg">${seg(window._viewMode !== 'board', "menuSet(() => setViewMode('list'))", 'List')}${seg(window._viewMode === 'board', "menuSet(() => setViewMode('board'))", 'Board')}</div>
     <div class="m-sec">Sort</div><div class="m-seg">${Object.entries(SORT_LABELS).map(([m, l]) => seg(window._sortMode === m, `menuSet(() => setSortMode('${m}'))`, l)).join('')}</div>
+    <div class="m-sec">Appearance</div><div class="m-seg theme-seg">${themeButtons()}</div>
     <div class="m-sec"></div>`;
   const shown = id => { const el = document.getElementById(id); return el && el.style.display !== 'none'; };
   const ico = id => (document.getElementById(id)?.querySelector('svg')?.outerHTML || '');
@@ -2560,6 +2659,11 @@ function openDrawer() {
   if (d.classList.contains('open')) return;
   d.classList.add('open');
 }
+// Night mode switch (Settings and the phone menu): Auto / Light / Dark, remembered on this device (see the <head> script).
+const THEMES = { auto: 'Auto', light: 'Light', dark: 'Dark' };
+const themeButtons = () => Object.entries(THEMES).map(([k, l]) => `<button class="${window.themePref() === k ? 'on' : ''}" data-t="${k}" onclick="setTheme('${k}')">${l}</button>`).join('');
+function fillThemeSegs() { document.querySelectorAll('.theme-seg').forEach(el => { el.innerHTML = themeButtons(); }); }
+function setTheme(k) { window.setThemePref(k); fillThemeSegs(); }
 // Leaving the page from the drawer: closing it pops its Back guard (history.back), which would cancel a navigation
 // started now, so go once that Back has landed.
 function goAfterBack(url) {
@@ -4048,6 +4152,7 @@ function closeStatusModal() { document.getElementById('status-modal').classList.
 
 window.openSettingsModal = function() {
   updateSettingsModalUI();
+  fillThemeSegs();
   document.getElementById('settings-modal').classList.add('open');
 };
 window.closeSettingsModal = function() { document.getElementById('settings-modal').classList.remove('open'); };
