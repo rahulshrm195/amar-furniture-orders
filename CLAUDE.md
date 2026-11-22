@@ -141,6 +141,7 @@ A single-page PWA for tracking furniture orders. It is hosted on GitHub Pages (s
   - In "My order", admins drag cards within a section on desktop (HTML5 drag and drop on `.order-card.movable`), or use the Move to front / Earlier / Later buttons in the card details. `applyOrder` reuses the section's own ranks and saves them in one `writeBatch`.
   - `cutMeta` copies `rank` to the cut list, and the tablet sorts by rank, then due date.
 - **Drive folders**: `createDriveFolder` POSTs the order to an Apps Script webhook with `client`, `projectType`, `orderNo` and `otherLabel`. The script then writes the folder URL back to the order document.
+  - The order form's "Create Drive Folder" switch (`#create-folder-toggle`, `_editCreateFolder`, beside Put on Hold) shows while Drive automation is on: in New Order, and in Edit Order for an order with no folder yet that isn't pending or archived (v4.10.2). Saving with it on sets `driveFolderStatus: 'pending'` and runs `runFolderCreation`; a pasted Drive link wins over the switch. Nothing is requested offline.
 - **Keyboard shortcuts**:
   - `N` opens a new order (admins only).
   - `R` opens or closes Reports (admins only).
