@@ -29,7 +29,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v4.10.2 — Cut lists for the workshop tablet (/cut/); UI is Concept A with the liquid glass layer ── */
+/* ── v4.10.3 — Cut lists for the workshop tablet (/cut/); UI is Concept A with the liquid glass layer ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -976,7 +976,7 @@ html{touch-action:manipulation}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v4.10.2</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v4.10.3</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -1013,7 +1013,7 @@ html{touch-action:manipulation}
       <button class="tb-btn" id="money-btn" aria-label="Show amounts" title="Show amounts" onclick="toggleMoney()" style="display:none">
         <svg id="money-ico" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#D8D2C2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></svg>
       </button>
-      <a class="tb-btn" id="cut-btn" href="/cut/" aria-label="Cutting List" title="Cutting List (workshop page)" style="display:none">
+      <a class="tb-btn" id="cut-btn" href="/cut/" onclick="if(!event.metaKey&&!event.ctrlKey&&!event.shiftKey&&event.button===0){event.preventDefault();_leaveTo('/cut/')}" aria-label="Cutting List" title="Cutting List (workshop page)" style="display:none">
         <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#D8D2C2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 15 14 4.5h5.5V10L9 20.5H3.5Z"/><path d="M6.5 15.5l1.5 1.5M9 13l1.5 1.5M11.5 10.5 13 12M14 8l1.5 1.5"/></svg>
       </a>
       <a class="tb-btn" id="reports-btn" href="#reports" aria-label="Reports" title="Reports" onclick="return reportsClick(event)" style="display:none">
@@ -1300,7 +1300,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, signInWithEmailAndPassword, signOut as fbSignOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, addDoc, updateDoc, setDoc, deleteDoc, doc,
-  onSnapshot, query, orderBy, serverTimestamp, runTransaction, writeBatch }
+  onSnapshot, query, orderBy, serverTimestamp, runTransaction, writeBatch, terminate }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // ── YOUR FIREBASE CONFIG ──
@@ -1329,9 +1329,19 @@ const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 // Orders are kept on the device (IndexedDB), so the app opens straight onto the last list and works offline;
 // live changes still arrive as soon as there is a connection. Falls back to the plain in-memory setup.
+// af-nocache (this browser session only): the on-device copy got stuck once (Safari can keep a left page's database
+// open), so this session reads straight from the server until the app is next opened.
+const NO_CACHE = (() => { try { return sessionStorage.getItem('af-nocache') === '1'; } catch { return false; } })();
 let db;
-try { db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) }); }
+if (NO_CACHE) db = getFirestore(app);
+else try { db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) }); }
 catch (err) { console.warn('Offline cache not available:', err); db = getFirestore(app); }
+// Leaving for another page of the app (the workshop cutting list): close Firestore first, so the page left behind
+// (which Safari may keep frozen) doesn't hold the device database the next page needs. At most 1.5 s.
+window._leaveTo = async url => {
+  try { await Promise.race([terminate(db), new Promise(r => setTimeout(r, 1500))]); } catch {}
+  location.href = url;
+};
 
 Object.assign(window, {
   _auth:auth, _db:db, _ADMIN_EMAILS:ADMIN_EMAILS,
@@ -1462,13 +1472,13 @@ function listenProjects() {
   const q = _query(_collection(_db, 'projects'), _orderBy('createdAt', 'desc'));
   _projTimer = setTimeout(() => {
     if (_projLoaded) return;
-    let tried = false; try { tried = sessionStorage.getItem('af-reloaded') === '1'; sessionStorage.setItem('af-reloaded', '1'); } catch {}
-    if (!tried && navigator.onLine) location.reload();
-    else showToast(navigator.onLine ? 'Orders are not loading. Close and reopen the app.' : 'No internet: orders will load when you\u2019re back online');
-  }, 10000);
+    if (!navigator.onLine) { showToast('No internet: orders will load when you\u2019re back online'); return; }
+    // Stuck on the device copy: reload once without it (this session only). Never a second time.
+    if (!NO_CACHE) { try { sessionStorage.setItem('af-nocache', '1'); } catch {} location.reload(); return; }
+    showToast('Orders are not loading. Close and reopen the app.');
+  }, 12000);
   _projUnsub = _onSnapshot(q, snap => {
     clearTimeout(_projTimer); _projLoaded = true;
-    try { sessionStorage.removeItem('af-reloaded'); } catch {}
     window._projects = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderProjects(); updateStats();
     backfillOrderNos();
@@ -1484,7 +1494,12 @@ function listenProjects() {
 }
 // A page brought back from the browser's back-forward cache has Firestore shut down (it closes on pagehide), so
 // its list would never update again: load it fresh instead.
-addEventListener('pageshow', e => { if (e.persisted) location.reload(); });
+// Not more than once in 30 s, so it can never turn into a reload loop.
+addEventListener('pageshow', e => {
+  if (!e.persisted) return;
+  let last = 0; try { last = +sessionStorage.getItem('af-bfreload') || 0; sessionStorage.setItem('af-bfreload', Date.now()); } catch {}
+  if (Date.now() - last > 30000) location.reload();
+});
 
 function startListening() {
   listenProjects();
@@ -1683,7 +1698,7 @@ window.saveStatusUpdate = async function() {
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v4.10.2';
+const APP_VERSION = 'v4.10.3';
 
 // -- LANGUAGE --
 const LANG = {
@@ -2695,8 +2710,8 @@ function setTheme(k) { window.setThemePref(k); fillThemeSegs(); }
 // Leaving the page from the drawer: closing it pops its Back guard (history.back), which would cancel a navigation
 // started now, so go once that Back has landed.
 function goAfterBack(url) {
-  if (!history.state?.layer) { location.href = url; return; }
-  addEventListener('popstate', () => setTimeout(() => { location.href = url; }, 0), { once: true });
+  if (!history.state?.layer) { window._leaveTo(url); return; }
+  addEventListener('popstate', () => setTimeout(() => { window._leaveTo(url); }, 0), { once: true });
 }
 function closeDrawer() { document.getElementById('drawer').classList.remove('open'); }
 function pickDrawerRow(i) { const it = window._drawerItems?.[i]; closeDrawer(); it?.run(); }
