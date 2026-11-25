@@ -29,7 +29,7 @@
 <title>Amar Furniture — Order Tracker</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── v4.10.3 — Cut lists for the workshop tablet (/cut/); UI is Concept A with the liquid glass layer ── */
+/* ── v4.11.0 — Cut lists for the workshop tablet (/cut/); UI is Concept A with the liquid glass layer ── */
 :root{
   --ivory:#FAF9F5; --surface:#FFFFFF; --border:#E7E1D3; --ink:#1A1812; --ink2:#726A58; --ink3:#9C9483;
   --clay:#C1602F; --clay-soft:#F5E3D5;
@@ -797,6 +797,13 @@ body::before{content:'';position:fixed;inset:-120px;z-index:-1;pointer-events:no
 .tb-burger{position:absolute;right:-5px;bottom:-5px;width:18px;height:18px;border-radius:50%;background:#fff;color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.25);align-items:center;justify-content:center}
 .od-badge{align-items:center;gap:5px;min-height:44px;padding:0 13px;border-radius:999px;border:1px solid rgba(191,51,36,.25);background:rgba(251,229,224,.85);color:var(--red);font:inherit;font-size:14px;cursor:pointer;box-shadow:var(--glass-highlight)}
 .od-badge b{font-family:var(--mono);font-weight:800}
+/* Sync badge (v4.11.0): Offline · N waiting / Syncing N… / Synced ✓; hidden when there is nothing to say */
+.net-badge{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;border-radius:999px;border:1px solid var(--glass-border);background:var(--glass-bg);color:var(--ink2);font:inherit;font-size:12.5px;font-weight:700;white-space:nowrap;cursor:pointer;box-shadow:var(--glass-highlight)}
+.net-badge.none{display:none!important}
+.net-badge .nb-n{display:none}
+.net-badge.off{background:var(--amber-soft);color:var(--amber);border-color:rgba(166,94,0,.3)}
+.net-badge.ok{background:var(--green-soft);color:var(--green);border-color:rgba(31,122,68,.3)}
+@media (pointer:coarse){ .net-badge{min-height:44px} }
 .drawer-bg{position:fixed;inset:0;z-index:600;background:rgba(23,22,15,.32);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .25s,visibility 0s linear .25s}
 .drawer-bg.open{opacity:1;visibility:visible;pointer-events:auto;transition-delay:0s}
 .drawer{position:absolute;left:0;top:0;bottom:0;width:min(86vw,380px);overflow-y:auto;overscroll-behavior:contain;padding:calc(18px + env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom));
@@ -831,8 +838,11 @@ body::before{content:'';position:fixed;inset:-120px;z-index:-1;pointer-events:no
   /* Header: logo + name, then search and ⋯; the + lives only in the floating button */
   .topbar{padding:10px 12px;gap:8px}
   .topbar .brand-sub{display:none}
-  .tb-right>:not(.tb-m){display:none!important}
+  .tb-right>:not(.tb-m):not(.net-badge){display:none!important}
   .tb-m,.tb-burger{display:flex}
+  .net-badge{padding:0 11px;gap:4px}
+  .net-badge .nb-t{display:none}                 /* phones: the cloud and the count only (the toast explains) */
+  .net-badge .nb-n{display:inline;font-family:var(--mono)}
   .od-badge.none{display:none}
   .tb-search{display:none}
   body.m-search .tb-search{display:block}
@@ -848,6 +858,13 @@ body::before{content:'';position:fixed;inset:-120px;z-index:-1;pointer-events:no
   .oc-prep,.oc-actions{display:contents}
   .oc-tools .icon-btn,.oc-tools .prep-btn{flex:0 1 44px;width:auto;min-width:36px;height:44px;padding:0;justify-content:center;gap:0;font-size:0}
   .oc-tools .prep-btn svg{width:17px;height:17px}
+}
+@media (max-width:374px){
+  /* the narrowest phones: a smaller name keeps the header on one row when the sync badge shows */
+  .topbar .brand-name{font-size:17px}
+  .topbar .tb-left{gap:9px}
+  .tb-right{gap:4px}
+  .net-badge{padding:0 9px}
 }
 
 /* Native feel (v4.6.0): no double-tap zoom delay, no text selection or callout on buttons, a soft view change */
@@ -976,7 +993,7 @@ html{touch-action:manipulation}
 <div id="auth-screen" style="display:none">
   <div class="brand-row">
     <div class="brand-tile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FAF9F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="4" rx="1.5"/><rect x="3" y="10.5" width="14" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></svg></div>
-    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v4.10.3</div></div>
+    <div><div class="brand-name">Amar Furniture</div><div class="brand-sub">Order Tracker · v4.11.0</div></div>
   </div>
   <div class="auth-card">
     <h2>Sign In</h2>
@@ -1004,6 +1021,7 @@ html{touch-action:manipulation}
     </div>
 
     <div class="tb-right">
+      <button class="net-badge none" id="net-badge" onclick="netInfo()" aria-live="polite"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 9.5a4 4 0 0 1-.5 8.5H7Z"/></svg><b class="nb-n"></b><span class="nb-t"></span></button>
       <button class="tb-btn tb-new" id="new-btn" aria-label="New order" title="New order" onclick="openAddModal()" style="display:none">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
       </button>
@@ -1300,7 +1318,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, signInWithEmailAndPassword, signOut as fbSignOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, addDoc, updateDoc, setDoc, deleteDoc, doc,
-  onSnapshot, query, orderBy, serverTimestamp, runTransaction, writeBatch, terminate }
+  onSnapshot, query, orderBy, serverTimestamp, runTransaction, writeBatch, terminate, arrayUnion, increment }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // ── YOUR FIREBASE CONFIG ──
@@ -1347,7 +1365,7 @@ Object.assign(window, {
   _auth:auth, _db:db, _ADMIN_EMAILS:ADMIN_EMAILS,
   _fbSignOut:fbSignOut, _signInWithEmailAndPassword:signInWithEmailAndPassword,
   _collection:collection, _addDoc:addDoc, _updateDoc:updateDoc, _setDoc:setDoc,
-  _deleteDoc:deleteDoc, _doc:doc, _onSnapshot:onSnapshot,
+  _deleteDoc:deleteDoc, _doc:doc, _onSnapshot:onSnapshot, _arrayUnion:arrayUnion, _increment:increment,
   _query:query, _orderBy:orderBy, _serverTimestamp:serverTimestamp
 });
 
@@ -1355,19 +1373,23 @@ Object.assign(window, {
 // One cutlists/{orderId} doc per order: name, number, deadline and pieces only (no phone or money),
 // because the workshop tablet (/cut/) can read this collection and nothing else.
 // Saved in a transaction so pieces the workshop ticked meanwhile keep their done / by / when.
-window._saveCutList = (id, meta, notes, edited, groups = []) => runTransaction(db, async tx => {
-  const ref = doc(db, 'cutlists', id);
-  const snap = await tx.get(ref);
-  const cur = snap.exists() ? snap.data() : null;
-  const old = Object.fromEntries((cur?.pieces || []).map(x => [x.id, x]));
+// The office's edited pieces, with the workshop's ticks (and delivery marks) taken from the current copy.
+window._mergeCutPieces = (curPieces, edited) => {
+  const old = Object.fromEntries((curPieces || []).map(x => [x.id, x]));
   const now = new Date().toISOString();
-  const pieces = edited.map(e => {
+  return edited.map(e => {
     const o = old[e.id] || {};
     return { ...e, done: !!o.done, doneBy: o.doneBy || '', doneAt: o.doneAt || '',
       turned: !!o.turned, turnedBy: o.turnedBy || '', turnedAt: o.turnedAt || '',
       cnc: !!o.cnc, cncBy: o.cncBy || '', cncAt: o.cncAt || '', createdAt: o.createdAt || now,
       ...(o.byDlv ? { byDlv: o.byDlv } : {}), ...((e.from || o.from) ? { from: e.from || o.from } : {}) };
   });
+};
+window._saveCutList = (id, meta, notes, edited, groups = []) => runTransaction(db, async tx => {
+  const ref = doc(db, 'cutlists', id);
+  const snap = await tx.get(ref);
+  const cur = snap.exists() ? snap.data() : null;
+  const pieces = window._mergeCutPieces(cur?.pieces, edited);
   const data = { dept: 'wood', ...meta, notes, pieces, groups, updatedAt: serverTimestamp() };
   if (cur) tx.update(ref, data);
   else tx.set(ref, { ...data, active: false, createdAt: serverTimestamp(), createdBy: auth.currentUser?.email || '' });
@@ -1477,7 +1499,12 @@ function listenProjects() {
     if (!NO_CACHE) { try { sessionStorage.setItem('af-nocache', '1'); } catch {} location.reload(); return; }
     showToast('Orders are not loading. Close and reopen the app.');
   }, 12000);
-  _projUnsub = _onSnapshot(q, snap => {
+  _projUnsub = _onSnapshot(q, { includeMetadataChanges: true }, snap => {
+    // Changes saved on this device and not yet on the server feed the header's sync badge
+    window._net.projPending = snap.docs.filter(d => d.metadata?.hasPendingWrites).length;
+    window._net.fromCache = !!snap.metadata?.fromCache;
+    updateNetBadge();
+    if (_projLoaded && snap.docChanges && !snap.docChanges().length) return;   // only the sync state changed
     clearTimeout(_projTimer); _projLoaded = true;
     window._projects = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderProjects(); updateStats();
@@ -1503,6 +1530,7 @@ addEventListener('pageshow', e => {
 
 function startListening() {
   listenProjects();
+  updateNetBadge();
   _onSnapshot(_doc(_db, 'settings', 'app'), snap => {
     window._settings = snap.exists() ? snap.data() : {};
     renderProjects();
@@ -1519,9 +1547,14 @@ function startListening() {
 // Cut lists + carpenter names (read by the workshop tablet too). If the Firestore rules
 // don't cover them yet, the app just works without them.
 function listenCutLists() {
-  _onSnapshot(_collection(_db, 'cutlists'), snap => {
+  _onSnapshot(_collection(_db, 'cutlists'), { includeMetadataChanges: true }, snap => {
+    window._net.cutPending = snap.docs.filter(d => d.metadata?.hasPendingWrites).length;
+    updateNetBadge();
+    if (window._cutsLoaded && snap.docChanges && !snap.docChanges().length) return;   // only the sync state changed
+    window._cutsLoaded = true;
     window._cutlists = Object.fromEntries(snap.docs.map(d => [d.id, { id: d.id, ...d.data() }]));
-    renderProjects(); syncCutLists();
+    applyCutQueue();   // cut lists saved offline show as saved until they reach the server
+    renderProjects(); syncCutLists(); sendCutQueue();
   }, err => console.warn('cutlists listener failed:', err));
   _onSnapshot(_doc(_db, 'workshop', 'config'), snap => {
     window._carpenters = (snap.exists() && snap.data().carpenters) || [];
@@ -1652,17 +1685,18 @@ async function saveProjectNow(openCut) {
 
 window.deleteProject = async function() {
   if (!confirm('Permanently delete this order? This cannot be undone.')) return;
-  await _deleteDoc(_doc(_db, 'projects', window._editId));
-  if (window._cutlists?.[window._editId]) _deleteDoc(_doc(_db, 'cutlists', window._editId)).catch(err => console.warn('Cut list not deleted:', err));
-  showToast('Deleted forever'); closeModal();
+  const id = window._editId;
+  fsDone(_deleteDoc(_doc(_db, 'projects', id)), 'Deleted forever');
+  if (window._cutlists?.[id]) _deleteDoc(_doc(_db, 'cutlists', id)).catch(err => console.warn('Cut list not deleted:', err));
+  closeModal();
 };
 
 window.archiveProject = async function() {
   if (!confirm('Archive this order? You can restore it anytime from Overview → Archived.')) return;
-  await _updateDoc(_doc(_db, 'projects', window._editId), {
+  fsDone(_updateDoc(_doc(_db, 'projects', window._editId), {
     archived: true, archivedAt: _serverTimestamp(), updatedAt: _serverTimestamp()
-  });
-  showToast('\ud83d\uddc4 Order archived'); closeModal();
+  }), '\ud83d\uddc4 Order archived');
+  closeModal();
 };
 
 window.toggleDrawing = async function(id) {
@@ -1670,18 +1704,15 @@ window.toggleDrawing = async function(id) {
   const p = (window._projects || []).find(x => x.id === id); if (!p) return;
   // Each tap moves on: pending → done (green) → not needed (red) → pending
   const next = p.drawingNA ? 'pending' : p.drawingDone ? 'na' : 'done';
-  try {
-    await _updateDoc(_doc(_db, 'projects', id), { drawingDone: next === 'done', drawingNA: next === 'na', updatedAt: _serverTimestamp() });
-    showToast(next === 'done' ? '\u2705 Drawing marked done' : next === 'na' ? 'Marked: no drawing needed' : 'Drawing marked pending');
-  } catch (err) { showToast('Could not update: ' + (err?.code || err?.message || 'error')); }
+  fsDone(_updateDoc(_doc(_db, 'projects', id), { drawingDone: next === 'done', drawingNA: next === 'na', updatedAt: _serverTimestamp() }),
+    next === 'done' ? '\u2705 Drawing marked done' : next === 'na' ? 'Marked: no drawing needed' : 'Drawing marked pending');
 };
 
 window.restoreProject = async function(id) {
   if (!confirm('Restore this order? It will come back as a fresh Order Taken.')) return;
-  await _updateDoc(_doc(_db, 'projects', id), {
+  fsDone(_updateDoc(_doc(_db, 'projects', id), {
     archived: false, archivedAt: null, status: 0, onHold: false, deliveredAt: '', updatedAt: _serverTimestamp()
-  });
-  showToast('\u2705 Order restored \u2014 back to Order Taken');
+  }), '\u2705 Order restored \u2014 back to Order Taken');
 };
 
 window.saveStatusUpdate = async function() {
@@ -1691,14 +1722,14 @@ window.saveStatusUpdate = async function() {
   const wasDel = prev && (prev.status ?? 0) === 4;
   if (patch.status === 4 && !wasDel)      patch.deliveredAt = _todayStr();   // remember the day it was delivered
   else if (patch.status !== 4 && wasDel)  patch.deliveredAt = '';            // moved back out of Delivered
-  await _updateDoc(_doc(_db, 'projects', window._statusUpdateId), patch);
-  showToast('Status updated'); closeStatusModal();
+  fsDone(_updateDoc(_doc(_db, 'projects', window._statusUpdateId), patch), 'Status updated');
+  closeStatusModal();
 };
 </script>
 
 <script>
 // ── v1.4.0 ──
-const APP_VERSION = 'v4.10.3';
+const APP_VERSION = 'v4.11.0';
 
 // -- LANGUAGE --
 const LANG = {
@@ -1845,10 +1876,8 @@ const DRIVE_FOLDER_WEBHOOK = 'https://script.google.com/macros/s/AKfycbwZxNY2brg
 const isCopyBackOn = () => window._settings?.copyItemsFromCut !== false;
 window.toggleCopyBack = async function() {
   const next = !isCopyBackOn();
-  try {
-    await _setDoc(_doc(_db, 'settings', 'app'), { copyItemsFromCut: next }, { merge: true });
-    showToast(next ? '"Copy items from cut list" shown' : '"Copy items from cut list" hidden');
-  } catch (err) { showToast('Could not save setting: ' + (err?.code || err?.message || 'unknown error')); }
+  fsDone(_setDoc(_doc(_db, 'settings', 'app'), { copyItemsFromCut: next }, { merge: true }),
+    next ? '"Copy items from cut list" shown' : '"Copy items from cut list" hidden');
 };
 function isDriveAutomationOn() {
   return window._settings?.driveFolderAutomation !== false;
@@ -1912,6 +1941,7 @@ async function runFolderCreation(id, project) {
 
 window.createFolderForProject = async function(id) {
   if (!isDriveAutomationOn()) { showToast('Drive folder automation is turned off'); return; }
+  if (!navigator.onLine) { showToast('Drive folders need internet. Try again when you\u2019re back online.'); return; }
   const p = (window._projects || []).find(x => x.id === id);
   if (!p) return;
   if (p.driveFolderUrl || p.driveFolderStatus === 'pending' || window._creatingFolders.has(id)) return;
@@ -2004,6 +2034,36 @@ function getPipeline() { return [
 ];}
 
 window._projects       = [];
+// Every write lands in the device copy at once and reaches the server when there is a signal: the screen never
+// waits for it. A failure (e.g. no permission) still shows.
+function fsDone(promise, msg) {
+  if (msg) showToast(msg + (navigator.onLine ? '' : ' (offline: it syncs when you\u2019re back online)'));
+  promise.catch(err => { console.warn(err); showToast('Could not save: ' + (err?.code || err?.message || 'error')); });
+}
+// Header sync badge: "Offline · 3 waiting", "Syncing 3…", then "Synced ✓" for 3 s. Waiting = changes saved on this
+// device that the server hasn't confirmed yet (orders, cut lists, and cut lists saved offline).
+window._net = { projPending: 0, cutPending: 0, fromCache: false, had: false, okT: 0 };
+const netWaiting = () => window._net.projPending + window._net.cutPending + Object.keys(typeof loadCutQ === 'function' ? loadCutQ() : {}).length;
+function updateNetBadge() {
+  const el = document.getElementById('net-badge'); if (!el) return;
+  const n = netWaiting(), off = !navigator.onLine, N = window._net;
+  let txt = '', cls = '';
+  if (off) { txt = 'Offline' + (n ? ' \u00B7 ' + n + ' waiting' : ''); cls = 'off'; }
+  else if (n) { txt = 'Syncing ' + n + '\u2026'; cls = 'sync'; }
+  else if (N.had) { txt = 'Synced \u2713'; cls = 'ok'; clearTimeout(N.okT); N.okT = setTimeout(() => { N.had = false; updateNetBadge(); }, 3000); }
+  if (n) N.had = true;
+  el.className = 'net-badge ' + cls + (txt ? '' : ' none');
+  el.querySelector('.nb-t').textContent = txt;
+  el.querySelector('.nb-n').textContent = n || '';
+  el.title = txt;
+}
+function netInfo() {
+  const n = netWaiting();
+  showToast(!navigator.onLine ? 'No internet. ' + (n ? n + (n === 1 ? ' change is' : ' changes are') + ' saved on this phone and' : 'Changes are saved on this phone and') + ' sent when you\u2019re back online.'
+    : n ? 'Sending ' + n + (n === 1 ? ' change' : ' changes') + ' to the server\u2026' : 'Everything is saved on the server.');
+}
+addEventListener('online', updateNetBadge);
+addEventListener('offline', updateNetBadge);
 window._settings       = {};
 window._editId         = null;
 window._editStatus     = 0;
@@ -2118,6 +2178,8 @@ function typeLabelOf(p) {
   return p.projectType === 'other' && p.otherLabel ? 'Other · ' + p.otherLabel : t.label;
 }
 
+// Notes newest first by their time (notes added offline on two phones arrive in any order)
+const logOf = p => [...(p.activityLog || [])].sort((a, b) => String(b.time || '').localeCompare(String(a.time || '')));
 function timelineHtml(log) {
   return log.length
     ? log.map(e => `<div class="tl-row"><div class="tl-dot"></div><div class="tl-text">${escHtml(e.text)}</div><div class="tl-time">${fmtStamp(e.time)}</div></div>`).join('')
@@ -2187,7 +2249,7 @@ function buildCard(p) {
   }
 
   // Note block (latest note always at index 0)
-  const log = p.activityLog || [];
+  const log = logOf(p);
   const latest = log.length ? escHtml(log[0].text) : '';
   const noteId = 'note-in-' + p.id;
 
@@ -2385,8 +2447,7 @@ const jobSize = p => p.size === 's' || p.size === 'b' ? p.size : 'm';
 const SIZE_ORDER = { b: 0, m: 1, s: 2 };
 const bySize = arr => [...arr].sort((a, b) => SIZE_ORDER[jobSize(a)] - SIZE_ORDER[jobSize(b)]);   // stable: keeps the chosen sort inside each size
 async function setJobSize(id, v) {
-  try { await _updateDoc(_doc(_db, 'projects', id), { size: v, updatedAt: _serverTimestamp() }); }
-  catch (err) { showToast('Could not save the size: ' + (err?.code || err?.message || 'error')); }
+  fsDone(_updateDoc(_doc(_db, 'projects', id), { size: v, updatedAt: _serverTimestamp() }));
 }
 function setSortMode(m) {
   window._sortMode = m;
@@ -2429,8 +2490,7 @@ async function applyOrder(ordered) {
   });
   if (!pairs.length) return;
   renderProjects();
-  try { await window._saveRanks(pairs); }
-  catch (err) { showToast('Could not save the order: ' + (err?.code || err?.message || 'error')); }
+  fsDone(window._saveRanks(pairs));
 }
 function moveCard(id, where) {
   const p = (window._projects || []).find(x => x.id === id); if (!p) return;
@@ -3144,7 +3204,7 @@ function renderOrderModal() {
     ${money ? `<div class="pay-sum od-sec"><div><small>Total</small><b>${rupee(Number(p.amount) || 0)}</b></div><div><small>Received</small><b>${rupee(Number(p.advance) || 0)}</b></div><div><small>Balance</small><b>${bal ? rupee(bal) : 'Paid'}</b></div></div>
     <div class="od-sec"><div class="dt-lbl">Payments</div>${historyHtml(p)}</div>` : ''}
     ${items}${specs}${admin ? internal : ''}
-    <div class="od-sec"><div class="dt-lbl">${T('activityHdr')}</div><div class="tl">${timelineHtml(p.activityLog || [])}</div></div>
+    <div class="od-sec"><div class="dt-lbl">${T('activityHdr')}</div><div class="tl">${timelineHtml(logOf(p))}</div></div>
     <div class="od-acts">
       ${money && bal ? `<button class="btn btn-primary" onclick="openPayModal('${p.id}')">Add payment</button>` : ''}
       ${admin ? `<button class="btn btn-ghost" onclick="openEditFromDetails('${p.id}')">Edit order</button>` : ''}
@@ -3188,7 +3248,7 @@ function syncDeliveredPieces() {
   if (!window._isAdmin) return;
   for (const p of window._projects || []) {
     const c = window._cutlists?.[p.id], items = p.items || [];
-    if (!c?.pieces?.length || !items.some(it => it.deliveredAt)) continue;
+    if (!c?.pieces?.length || c.queued || !items.some(it => it.deliveredAt)) continue;
     const pieces = c.pieces.map(pc => ({ ...pc }));
     let changed = false;
     for (const it of items.filter(x => x.deliveredAt)) {
@@ -3201,13 +3261,11 @@ function syncDeliveredPieces() {
   }
 }
 async function saveDelivery(p, items, text) {
-  const log = [{ text, time: new Date().toISOString() }, ...(p.activityLog || [])];
-  const patch = { items, activityLog: log, updatedAt: _serverTimestamp() };
+  const patch = { items, activityLog: _arrayUnion({ text, time: new Date().toISOString() }), updatedAt: _serverTimestamp() };
   if (!isDelivered(p) && items.every(it => it.deliveredAt) && confirm('All items are delivered. Mark the order Delivered?')) {
     patch.status = 4; patch.deliveredAt = todayYmd();
   }
-  try { await _updateDoc(_doc(_db, 'projects', p.id), patch); showToast(patch.status === 4 ? 'Order marked Delivered' : 'Delivery saved'); }
-  catch (err) { showToast('Could not save: ' + (err?.code || err?.message || 'error')); }
+  fsDone(_updateDoc(_doc(_db, 'projects', p.id), patch), patch.status === 4 ? 'Order marked Delivered' : 'Delivery saved');
 }
 async function toggleItemDelivered(id, i) {
   if (!window._isAdmin) return;
@@ -3308,15 +3366,11 @@ window.savePayment = async function() {
   const note = document.getElementById('pay-note').value.trim();
   const entry = { amount: amt, date, at: new Date().toISOString() };
   if (note) entry.note = note;
-  try {
-    await _updateDoc(_doc(_db, 'projects', p.id), {
-      advance: (Number(p.advance) || 0) + amt,
-      payments: [...(p.payments || []), entry],
-      updatedAt: _serverTimestamp()
-    });
-    showToast('Payment of ' + rupee(amt) + ' added');
-    closePayModal();
-  } catch (err) { console.warn(err); showToast('Could not save payment'); }
+  // Added to what is there, never replaced, so two phones adding payments offline both count
+  fsDone(_updateDoc(_doc(_db, 'projects', p.id), {
+    advance: _increment(amt), payments: _arrayUnion(entry), updatedAt: _serverTimestamp()
+  }), 'Payment of ' + rupee(amt) + ' added');
+  closePayModal();
 };
 // ── Client name suggestions: built from the orders already saved (no separate client list to maintain) ──
 (function () {
@@ -3921,7 +3975,7 @@ function syncCutLists() {
   syncDeliveredPieces();
   for (const c of Object.values(window._cutlists || {})) {
     const p = (window._projects || []).find(x => x.id === c.id);
-    if (!p) continue;
+    if (!p || c.queued) continue;   // a list saved offline is sent whole by sendCutQueue
     const m = cutMeta(p);
     if (Object.keys(m).every(k => c[k] === m[k])) continue;
     Object.assign(c, m);
@@ -4182,15 +4236,60 @@ async function saveCutList() {
     el.querySelectorAll('.cut-parts > .item-edit-row').forEach(r => pieces.push(pieceOf(r, gid)));
   });
   const kept = pieces.filter(x => x.name || x.l || x.w || x.t);
-  try {
-    await window._saveCutList(id, cutMeta(p), document.getElementById('cut-notes').value.trim(), kept, groups);
-    showToast('Cut list saved');
-    closeCutModal();
-  } catch (err) {
-    console.error('saveCutList failed:', err);
-    showToast('Could not save cut list: ' + (err?.code || err?.message || 'error'));
+  const notes = document.getElementById('cut-notes').value.trim();
+  // Online: the usual save, which keeps the workshop's ticks (it has to reach the server). No signal, or no answer
+  // in 8 s: the list is kept on this phone and sent the same way once online (sendCutQueue).
+  if (navigator.onLine) {
+    try {
+      await Promise.race([window._saveCutList(id, cutMeta(p), notes, kept, groups), new Promise((_, no) => setTimeout(() => no({ code: 'unavailable' }), 8000))]);
+      showToast('Cut list saved');
+      closeCutModal();
+      return;
+    } catch (err) {
+      if (!['unavailable', 'deadline-exceeded'].includes(err?.code)) {
+        console.error('saveCutList failed:', err);
+        showToast('Could not save cut list: ' + (err?.code || err?.message || 'error'));
+        return;
+      }
+    }
+  }
+  const q = loadCutQ(); q[id] = { notes, edited: kept, groups, at: Date.now() }; saveCutQ(q);
+  applyCutQueue(); renderProjects();
+  showToast('Cut list saved on this phone \u2014 it is sent when you\u2019re back online');
+  closeCutModal();
+}
+
+// ── Cut lists saved offline (localStorage af-cut-queue, one entry per order, the latest edit) ──
+// They show as saved on this phone (applyCutQueue) and are sent with the usual save once online, so the
+// workshop's ticks made in the meantime are kept.
+const CUT_Q = 'af-cut-queue';
+const loadCutQ = () => { try { return JSON.parse(localStorage.getItem(CUT_Q) || '{}'); } catch { return {}; } };
+const saveCutQ = q => { try { localStorage.setItem(CUT_Q, JSON.stringify(q)); } catch {} updateNetBadge(); };
+function applyCutQueue() {
+  const q = loadCutQ();
+  for (const [id, e] of Object.entries(q)) {
+    const c = window._cutlists?.[id] || { id, pieces: [] };
+    window._cutlists[id] = { ...c, notes: e.notes, groups: e.groups, pieces: window._mergeCutPieces(c.pieces, e.edited), queued: true };
   }
 }
+let _cutSending = false;
+async function sendCutQueue() {
+  if (_cutSending || !navigator.onLine || !window._isAdmin) return;
+  const q = loadCutQ(); if (!Object.keys(q).length) return;
+  _cutSending = true;
+  try {
+    for (const [id, e] of Object.entries(q)) {
+      const p = (window._projects || []).find(x => x.id === id);
+      if (!p) { delete q[id]; saveCutQ(q); continue; }   // the order was deleted
+      try { await Promise.race([window._saveCutList(id, cutMeta(p), e.notes, e.edited, e.groups), new Promise((_, no) => setTimeout(() => no({ code: 'unavailable' }), 10000))]); }
+      catch (err) { console.warn('Cut list not sent yet:', err); break; }   // try again later
+      const now = loadCutQ(); if (now[id]?.at === e.at) { delete now[id]; saveCutQ(now); }   // unless it was edited again meanwhile
+      showToast('Cut list sent \u2713' + (p.orderNo ? ' #' + p.orderNo : ''));
+    }
+  } finally { _cutSending = false; }
+}
+addEventListener('online', () => setTimeout(sendCutQueue, 2000));
+setInterval(sendCutQueue, 30000);
 
 function closeModal()       { document.getElementById('project-modal').classList.remove('open'); }
 function closeStatusModal() { document.getElementById('status-modal').classList.remove('open'); }
@@ -4212,8 +4311,7 @@ function updateSettingsModalUI() {
 
 // Carpenter names: the workshop tablet asks "who cut this?" from this list.
 async function saveCarpenters(list) {
-  try { await _setDoc(_doc(_db, 'workshop', 'config'), { carpenters: list }, { merge: true }); }
-  catch (err) { console.error('saveCarpenters failed:', err); showToast('Could not save names: ' + (err?.code || err?.message || 'error')); }
+  fsDone(_setDoc(_doc(_db, 'workshop', 'config'), { carpenters: list }, { merge: true }));
 }
 function addCarpenter() {
   const inp = document.getElementById('cp-input');
@@ -4233,13 +4331,8 @@ function removeCarpenter(i) {
 
 window.toggleDriveAutomation = async function() {
   const next = !isDriveAutomationOn();
-  try {
-    await _setDoc(_doc(_db, 'settings', 'app'), { driveFolderAutomation: next }, { merge: true });
-    showToast(next ? 'Drive folder automation turned on' : 'Drive folder automation turned off');
-  } catch (err) {
-    console.error('toggleDriveAutomation failed:', err);
-    showToast('Could not save setting: ' + (err?.code || err?.message || 'unknown error'));
-  }
+  fsDone(_setDoc(_doc(_db, 'settings', 'app'), { driveFolderAutomation: next }, { merge: true }),
+    next ? 'Drive folder automation turned on' : 'Drive folder automation turned off');
 };
 
 function showToast(msg) {
@@ -4250,16 +4343,15 @@ function showToast(msg) {
   window._undoT = setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-// ── Notes: newest always first (activityLog[0] is the latest everywhere) ──
+// ── Notes: shown newest first by time (logOf) ──
 function addActivityLog(id) {
   const inp  = document.getElementById('note-in-' + id);
   const text = (inp?.value || '').trim();
   if (!text) return;
   const p = window._projects.find(x => x.id === id);
   if (!p) return;
-  const now = new Date().toISOString();
-  const log = [{ text, time: now }, ...(p.activityLog || [])];
-  p.activityLog = log;
+  const now = new Date().toISOString(), entry = { text, time: now };
+  p.activityLog = [entry, ...(p.activityLog || [])];
 
   // Optimistic DOM update — no re-render, so the card keeps its open/closed state
   const cardEl = document.getElementById('card-' + id);
@@ -4273,11 +4365,9 @@ function addActivityLog(id) {
     row.innerHTML = `<div class="tl-dot"></div><div class="tl-text">${escHtml(text)}</div><div class="tl-time">${fmtStamp(now)}</div>`;
     tl.insertBefore(row, tl.firstChild);
   }
-  inp.value = ''; inp.disabled = true;
-
-  _updateDoc(_doc(_db, 'projects', id), { activityLog: log, updatedAt: _serverTimestamp() })
-    .then(() => { showToast('Note added ✓'); inp.disabled = false; inp.focus(); })
-    .catch(() => { showToast('Error saving note'); inp.disabled = false; });
+  inp.value = ''; inp.focus();
+  // Added to the list, never replacing it, so notes from two phones offline are both kept
+  fsDone(_updateDoc(_doc(_db, 'projects', id), { activityLog: _arrayUnion(entry), updatedAt: _serverTimestamp() }), 'Note added ✓');
 }
 </script>
 </body>

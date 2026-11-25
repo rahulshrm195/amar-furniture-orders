@@ -1,5 +1,5 @@
-// AF Orders Service Worker — v1.3.137
-const CACHE = 'af-orders-v1.3.137';
+// AF Orders Service Worker — v1.3.138
+const CACHE = 'af-orders-v1.3.138';
 const ASSETS = ['/', '/index.html', '/cut/', '/cut/manifest.json', '/manifest.json', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png'];
 
 // ── INSTALL ──
@@ -19,20 +19,29 @@ self.addEventListener('activate', e => {
   );
 });
 
-// ── FETCH (network-first, fallback to cache) ──
+// ── FETCH ──
+// Our own pages: network first, but on a weak signal the saved copy is shown after 3 s (the network answer still
+// refreshes the copy for next time). Firebase's code and the fonts (fixed version URLs): saved copy first.
+// Everything else (Firestore's live data, sign-in, Drive) is left alone, never cached.
+const STATIC = ['www.gstatic.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
+const save = (req, res) => { if (res && (res.ok || res.type === 'opaque')) { const clone = res.clone(); caches.open(CACHE).then(c => c.put(req, clone)); } return res; };
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
-  // Our own files: always ask the network (GitHub Pages lets browsers reuse a copy for 10 minutes, which is why updates looked stuck)
-  const own = new URL(e.request.url).origin === self.location.origin;
-  e.respondWith(
-    fetch(e.request, own ? { cache: 'no-store' } : undefined)
-      .then(res => {
-        const clone = res.clone();
-        caches.open(CACHE).then(c => c.put(e.request, clone));
-        return res;
-      })
-      .catch(() => caches.match(e.request))
-  );
+  const url = new URL(e.request.url);
+  if (url.origin === self.location.origin) {
+    // Always ask the network (GitHub Pages lets browsers reuse a copy for 10 minutes, which is why updates looked stuck)
+    const net = fetch(e.request, { cache: 'no-store' }).then(res => save(e.request, res));
+    e.respondWith(caches.match(e.request).then(hit => {
+      if (!hit) return net;
+      const slow = new Promise(r => setTimeout(() => r(hit), 3000));
+      return Promise.race([net.catch(() => hit), slow]);
+    }));
+    e.waitUntil(net.catch(() => {}));
+    return;
+  }
+  if (STATIC.includes(url.hostname)) {
+    e.respondWith(caches.match(e.request).then(hit => hit || fetch(e.request).then(res => save(e.request, res))));
+  }
 });
 
 // ── PUSH NOTIFICATIONS ──
